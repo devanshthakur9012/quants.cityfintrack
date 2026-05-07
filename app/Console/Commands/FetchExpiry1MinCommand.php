@@ -1,0 +1,271 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use App\Helpers\ZerodhaHelper;
+use App\Helpers\SupertrendCalculator;
+use App\Models\ExpiryData;
+use App\Models\ExpiryMonitored;
+use App\Models\ExpiryConfig;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Exception;
+
+class FetchExpiry1MinCommand extends Command
+{
+    protected $signature = 'expiry:fetch-1min 
+                            {--symbol= : Specific symbol to fetch}
+                            {--force : Force fetch even on holidays}
+                            {--backfill : Fetch full day data from 9:15 AM}';
+
+    protected $description = 'Fetch 1-minute expiry data with Supertrend indicator (ONLY on expiry day)';
+
+    private $zerodha;
+
+    public function handle()
+    {
+        $today = date("Y-m-d");
+        $dayName = date("l");
+
+        if (!$this->option('force')) {
+            if ($dayName == "Saturday" || $dayName == "Sunday") {
+                $this->info("Skipped: Weekend ($dayName)");
+                Log::info("Expiry 1-min fetch skipped: Weekend");
+                return 0;
+            }
+
+            $isHoliday = DB::table('market_holidays')
+                ->where('market_name', 'NSE')
+                ->where('holiday_date', $today)
+                ->exists();
+
+            if ($isHoliday) {
+                $this->info("Skipped: Market Holiday ($today)");
+                Log::info("Expiry 1-min fetch skipped: Holiday");
+                return 0;
+            }
+        }
+
+        try {
+            $this->zerodha = new ZerodhaHelper();
+
+            // Get symbols expiring TODAY
+            $symbols = ExpiryMonitored::getExpiringToday();
+
+            if ($symbols->isEmpty()) {
+                $this->info('⚠️ No symbols expiring today');
+                Log::info('Expiry fetch: No symbols expiring today');
+                return 0;
+            }
+
+            $this->info("🎯 EXPIRY DAY! Fetching 1-min data for " . $symbols->count() . " symbol(s)...\n");
+
+            foreach ($symbols as $symbol) {
+                $closestExpiry = $symbol->getClosestExpiry();
+                $this->info("📊 {$symbol->symbol} - Expiry: {$closestExpiry->format('Y-m-d')}");
+                $this->fetchExpiryData($symbol);
+            }
+
+            $this->info("\n✅ Expiry 1-minute data fetch completed!");
+            return 0;
+
+        } catch (Exception $e) {
+            $this->error("Error: " . $e->getMessage());
+            Log::error('Expiry 1-Min Fetch Error: ' . $e->getMessage());
+            return 1;
+        }
+    }
+
+    private function fetchExpiryData(ExpiryMonitored $symbol)
+    {
+        try {
+            $fromDate = $this->getFromDate($symbol);
+            $toDate = date('Y-m-d H:i:s');
+
+            $this->info("  From: {$fromDate} To: {$toDate}");
+
+            $data = $this->zerodha->getHistoricalDataByToken(
+                $symbol->instrument_token,
+                'minute', // 1-minute interval
+                $fromDate,
+                $toDate
+            );
+
+            if (empty($data)) {
+                $this->warn("  No data received");
+                return;
+            }
+
+            $this->info("  Received " . count($data) . " candles");
+
+            $config = ExpiryConfig::getForSymbol($symbol->symbol);
+
+            $insertedCount = $this->storeHistoricalData($symbol, $data);
+            $this->info("  ✓ Inserted/Updated {$insertedCount} records");
+
+            if ($insertedCount > 0) {
+                $this->calculateSupertrend($symbol, $config);
+                $this->info("  ✓ Supertrend calculated");
+            }
+
+            $symbol->update(['last_fetched_at' => now()]);
+
+        } catch (Exception $e) {
+            $this->error("  ✗ Error: " . $e->getMessage());
+            Log::error("Error fetching {$symbol->symbol}: " . $e->getMessage());
+        }
+    }
+
+    private function getFromDate(ExpiryMonitored $symbol)
+    {
+        $marketOpenToday = Carbon::today('Asia/Kolkata')->setTime(9, 15);
+
+        if ($this->option('backfill')) {
+            return $marketOpenToday->format('Y-m-d H:i:s');
+        }
+
+        $lastRecord = ExpiryData::where('symbol', $symbol->symbol)
+            ->orderBy('timestamp', 'desc')
+            ->first();
+
+        if ($lastRecord && $lastRecord->timestamp->isToday()) {
+            return $lastRecord->timestamp->format('Y-m-d H:i:s');
+        }
+
+        return $marketOpenToday->format('Y-m-d H:i:s');
+    }
+
+    private function storeHistoricalData(ExpiryMonitored $symbol, array $data)
+    {
+        $insertedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($data as $candle) {
+            try {
+                $candleDate = $candle->date;
+                
+                if ($candleDate instanceof \DateTime) {
+                    $timestamp = Carbon::instance($candleDate);
+                } else {
+                    $timestamp = Carbon::parse($candleDate);
+                }
+                
+                if ($timestamp->isWeekend()) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                $time = $timestamp->format('H:i:s');
+                if ($time < '09:15:00' || $time > '15:30:00') {
+                    $skippedCount++;
+                    continue;
+                }
+
+                ExpiryData::updateOrCreate(
+                    [
+                        'symbol' => $symbol->symbol,
+                        'timestamp' => $timestamp->format('Y-m-d H:i:s')
+                    ],
+                    [
+                        'exchange' => $symbol->exchange,
+                        'instrument_token' => $symbol->instrument_token,
+                        'open' => $candle->open,
+                        'high' => $candle->high,
+                        'low' => $candle->low,
+                        'close' => $candle->close,
+                        'volume' => $candle->volume
+                    ]
+                );
+
+                $insertedCount++;
+
+            } catch (Exception $e) {
+                Log::error("Error storing candle: " . $e->getMessage());
+            }
+        }
+
+        if ($skippedCount > 0) {
+            $this->info("  Skipped {$skippedCount} candles");
+        }
+
+        return $insertedCount;
+    }
+
+    private function calculateSupertrend(ExpiryMonitored $symbol, $config)
+    {
+        try {
+            $records = ExpiryData::where('symbol', $symbol->symbol)
+                ->orderBy('timestamp', 'ASC')
+                ->get();
+
+            $minRequired = $config->supertrend_atr_period + 2;
+
+            if ($records->count() < $minRequired) {
+                $this->warn("  Insufficient data for Supertrend");
+                return;
+            }
+
+            $ohlcData = $records->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'date' => $item->timestamp,
+                    'open' => (float)$item->open,
+                    'high' => (float)$item->high,
+                    'low' => (float)$item->low,
+                    'close' => (float)$item->close,
+                    'volume' => (int)$item->volume,
+                ];
+            })->toArray();
+
+            $calculator = new SupertrendCalculator(
+                $ohlcData,
+                $config->supertrend_atr_period,
+                $config->supertrend_multiplier
+            );
+            $results = $calculator->calculateSupertrend();
+
+            DB::beginTransaction();
+            try {
+                $updateCount = 0;
+                foreach ($results as $result) {
+                    $updated = DB::update("
+                        UPDATE expiry_data 
+                        SET 
+                            atr = ?,
+                            supertrend = ?,
+                            supertrend_direction = ?,
+                            supertrend_signal = ?,
+                            upper_band = ?,
+                            lower_band = ?,
+                            updated_at = NOW()
+                        WHERE id = ?
+                    ", [
+                        $result['atr'],
+                        $result['supertrend'],
+                        $result['direction'],
+                        $result['signal'],
+                        $result['basicUpperBand'],
+                        $result['basicLowerBand'],
+                        $result['id']
+                    ]);
+                    
+                    if ($updated > 0) {
+                        $updateCount++;
+                    }
+                }
+                DB::commit();
+                $this->info("  Updated {$updateCount} records with Supertrend");
+
+            } catch (Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+
+        } catch (Exception $e) {
+            Log::error("Supertrend calculation error: " . $e->getMessage());
+            $this->error("  ✗ Supertrend calculation failed: " . $e->getMessage());
+        }
+    }
+}

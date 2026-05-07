@@ -1,0 +1,7 @@
+{
+    "require": {
+        "php-webdriver/webdriver": "^1.15",
+        "spomky-labs/otphp": "^11.2",
+        "zerodha/phpkiteconnect": "^4.2"
+    }
+}
