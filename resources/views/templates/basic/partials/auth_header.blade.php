@@ -5,7 +5,7 @@
             <div class="container">
                 <nav class="navbar navbar-expand-xl p-0 align-items-center">
                     <a class="site-logo site-title" href="{{ route('home') }}">
-                        <img src="{{ getImage(getFilePath('logoIcon') . '/logo.png') }}" alt="logo">
+                        <img src="{{ getImage(getFilePath('logoIcon') . '/logo.png') }}" alt="logo" style="height:200px;">
                     </a>
                     <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
