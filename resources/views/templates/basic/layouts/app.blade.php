@@ -26,7 +26,132 @@
 
     <link rel="stylesheet" href="{{ asset($activeTemplateTrue. 'css/color.php?color='.$general->base_color.'&secondColor='.$general->secondary_color) }}">
 </head>
+<style>
+    /* ── Quantsapp-style Header ── */
+.qapp-header {
+    background-color: #000;
+    border-bottom: 1px solid #1a1a1a;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
 
+.qapp-header .header__bottom {
+    padding: 12px 0;
+}
+
+/* Logo */
+.qapp-header .site-logo img {
+    height: 42px;
+    width: auto;
+}
+
+/* Pill-shaped CTA buttons (Download App / Option App style) */
+.qapp-pill-btn {
+    display: inline-block;
+    padding: 7px 18px;
+    background: #fff;
+    border: none;
+    border-radius: 999px;
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.qapp-pill-btn:hover {
+    background-color: #F5A623;
+    color: #000;
+}
+
+/* Uppercase nav links */
+.qapp-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.qapp-nav-links li a {
+    display: block;
+    padding: 6px 14px;
+    color: #ccc;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.qapp-nav-links li a:hover,
+.qapp-nav-links li a.active {
+    color: #fff;
+}
+
+/* User icon button */
+.qapp-user-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #ccc;
+    font-size: 22px;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.qapp-user-icon:hover {
+    color: #fff;
+}
+
+/* Mobile toggler */
+.qapp-toggler {
+    border: 1.5px solid #444;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.qapp-toggler .menu-toggle,
+.qapp-toggler .menu-toggle::before,
+.qapp-toggler .menu-toggle::after {
+    background-color: #fff;
+}
+
+/* Mobile nav collapsed styles */
+@media (max-width: 1199px) {
+    .qapp-nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 8px 0;
+    }
+
+    .qapp-nav-links li a {
+        padding: 10px 4px;
+        font-size: 12px;
+    }
+
+    .qapp-cta-btns {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 0 4px;
+    }
+
+    .nav-right {
+        padding: 12px 0;
+        border-top: 1px solid #1a1a1a;
+        margin-top: 8px;
+    }
+}
+</style>
 <body>
 
     @stack('fbComment')
