@@ -66,10 +66,26 @@ class HomePageController extends Controller
             'video_url' => 'https://www.youtube.com/embed/htLQVsJWwN4?si=YWGvfiv1Y_Aw8FqC?rel=0',
             'title'     => 'Be a " Data Driven " Option Trader!',
             'stats'     => [
-                ['value' => '100+',     'label' => 'Options Analytics', 'sub' => 'largest in India'],
-                ['value' => '17 Lakh+', 'label' => 'Traders',           'sub' => 'Institutions, Brokers, HNI, Traders'],
-                ['value' => '50,000+',  'label' => 'Students',          'sub' => 'many options experts have been our students'],
-                ['value' => '23+',      'label' => 'Experience',        'sub' => 'of Leadership team'],
+                [
+                    'value' => '580+',
+                    'label' => 'Happy Families',
+                    'sub'   => 'trusted trading community across India'
+                ],
+                [
+                    'value' => '6500+',
+                    'label' => 'Happy Clients',
+                    'sub'   => 'active option traders & market participants'
+                ],
+                [
+                    'value' => '5+',
+                    'label' => 'Presence In Cities',
+                    'sub'   => 'offline trading workshops & seminars conducted'
+                ],
+                [
+                    'value' => '78.3%',
+                    'label' => 'Retention Rate',
+                    'sub'   => 'traders continuing with our learning ecosystem'
+                ],
             ],
         ];
 
@@ -137,24 +153,24 @@ class HomePageController extends Controller
             'tabs'  => [
                 [
                     'tab'         => 'Webinars',
-                    'highlight'   => 'More than 200 hours of FREE videos',
+                    'highlight'   => '200Hr of FREE videos',
                     'description' => 'Over 200 hours of recorded webinars to bring you up to speed on the markets & to help you get familiarized with our options trading & our tools.',
                     'btn_label'   => 'View Now',
                     'btn_url'     => '#',
-                    'video_id'    => 'dQw4w9WgXcQ',
-                    'video_title' => 'Positional Option Trading Strategy',
+                    'video_id'    => 'VvwjHncyQ88',
+                    'video_title' => 'Global Finance to Local Impact',
                     'video_sub'   => 'IN HINDI',
                     'video_date'  => '20 MARCH 2024',
                     'video_time'  => '6:00 PM',
                 ],
                 [
                     'tab'         => 'Demo Videos',
-                    'highlight'   => 'Step-by-step platform walkthroughs',
+                    'highlight'   => 'Platform walkthroughs',
                     'description' => 'Watch our demo videos to quickly learn how to use each tool on the CityQuants platform — perfect for beginners and advanced traders alike.',
                     'btn_label'   => 'Watch Now',
                     'btn_url'     => '#',
-                    'video_id'    => 'dQw4w9WgXcQ',
-                    'video_title' => 'CityQuants Platform Demo',
+                    'video_id'    => 'bPTPzZzal-0',
+                    'video_title' => 'Real insights. Real conversations',
                     'video_sub'   => 'IN HINDI',
                     'video_date'  => '15 JAN 2024',
                     'video_time'  => '5:00 PM',
@@ -184,6 +200,171 @@ class HomePageController extends Controller
         ));
     }
 
+    // // ─────────────────────────────────────────────────────────────────────────
+    // // ABOUT
+    // // ─────────────────────────────────────────────────────────────────────────
+    // public function about()
+    // {
+    //     $pageTitle = 'About Us';
+
+    //     // ── HERO / TOP BANNER ───────────────────────────
+    //     $heroBanner = [
+    //         'tagline'    => 'Empowering Traders with Intelligence',
+    //         'subtitle'   => 'India\'s most trusted options analytics platform — built by traders, for traders.',
+    //         'founded'    => '2017',
+    //         'hq'         => 'Belgaum, India',
+    //         'users'      => '17 Lakh+',
+    //         'experience' => '23+ Years',
+    //     ];
+
+    //     // ── WHO ARE WE + MISSION ────────────────────────
+    //     $whoWeAre = [
+    //         'heading' => 'Who Are We?',
+    //         'body'    => 'CityQuants is a dedicated Options Analytics Platform made for Traders by Traders, with the widest range of FREE option trading tools in the industry. We combine deep domain expertise with cutting-edge technology to bring institutional-grade analytics directly to retail traders — at a fraction of the cost.',
+    //         'pillars' => [
+    //             ['icon' => 'fa-chart-line',    'label' => 'Analytics First'],
+    //             ['icon' => 'fa-shield-halved', 'label' => 'Trusted Platform'],
+    //             ['icon' => 'fa-graduation-cap','label' => 'Trader Education'],
+    //             ['icon' => 'fa-bolt',          'label' => 'Real-Time Data'],
+    //         ],
+    //     ];
+
+    //     $mission = [
+    //         'heading' => 'Our Mission',
+    //         'body'    => 'Our goal is to equip Retail Traders with intelligent Algorithms via tools at much affordable cost & without putting much of knowledge — so they can be placed well in the battle of Futures & Options. We believe that access to powerful analytics should not be a privilege limited to institutional players.',
+    //         'values'  => [
+    //             ['icon' => 'fa-eye',          'label' => 'Transparency', 'desc' => 'Open, honest platform with no hidden costs.'],
+    //             ['icon' => 'fa-people-group', 'label' => 'Inclusivity',  'desc' => 'Democratising institutional tools for all traders.'],
+    //             ['icon' => 'fa-lightbulb',    'label' => 'Innovation',   'desc' => 'Constant iteration driven by real trader needs.'],
+    //             ['icon' => 'fa-handshake',    'label' => 'Community',    'desc' => 'A thriving ecosystem of 17 Lakh+ traders.'],
+    //         ],
+    //     ];
+
+    //     // ── IDEATORS ────────────────────────────────────
+    //     $ideators = [
+    //         [
+    //             'name'     => 'Shubham Agarwal',
+    //             'role'     => 'CEO, CityQuants',
+    //             'creds'    => 'CMT, CFA, CQF, CFTe',
+    //             'bio'      => 'A Chartered Market Technician (MTA, USA) & Chartered Financial Analyst (CFA Institute, USA), Shubham brings over a decade of expertise in Derivatives & Algorithmic trading. His vision drives CityQuants\'s mission to bring institutional-grade analytics to every retail trader in India.',
+    //             'avatar'   => '',
+    //             'linkedin' => '#',
+    //             'twitter'  => '#',
+    //         ],
+    //         [
+    //             'name'     => 'Tina Gadodia',
+    //             'role'     => 'President, CityQuants',
+    //             'creds'    => 'MMS – Finance',
+    //             'bio'      => 'With 15+ years of professional experience in Futures & Options Research, Tina leads CityQuants\'s product and research divisions. Her expertise in market dynamics and deep understanding of trader psychology shapes the platform\'s analytical approach.',
+    //             'avatar'   => '',
+    //             'linkedin' => '#',
+    //             'twitter'  => '#',
+    //         ],
+    //         [
+    //             'name'     => 'Bhavin Desai',
+    //             'role'     => 'President, CityQuants',
+    //             'creds'    => 'MMS – Finance',
+    //             'bio'      => 'Bhavin brings 20+ years of professional experience in Futures & Options Research. As co-architect of CityQuants\'s proprietary tools, he ensures the platform remains at the cutting edge of options analytics and algorithmic strategy.',
+    //             'avatar'   => '',
+    //             'linkedin' => '#',
+    //             'twitter'  => '#',
+    //         ],
+    //     ];
+
+    //     // ── WORKSPACE IMAGES + CITY OFFICES ────────────
+    //     $workspace = [
+    //         'heading' => 'Our Workspace',
+    //         'sub'     => 'Where ideas meet execution — our offices across India are built for focused, high-performance work.',
+    //         'slides'  => [
+    //             ['src' => '', 'caption' => 'Belgaum HQ — Main Trading Floor',     'sub' => 'Lower Parel, Belgaum',        'tag' => 'HEADQUARTERS'],
+    //             ['src' => '', 'caption' => 'Open Collaboration Zone',            'sub' => 'Belgaum HQ',                  'tag' => 'CREATIVE SPACE'],
+    //             ['src' => '', 'caption' => 'CityQuants Research Lab',             'sub' => 'Algo & Quant Division',      'tag' => 'R&D'],
+    //             ['src' => '', 'caption' => 'Webinar & Training Studio',          'sub' => 'Live Sessions & Recordings', 'tag' => 'STUDIO'],
+    //             ['src' => '', 'caption' => 'Executive Boardroom',                'sub' => 'Strategy & Leadership',      'tag' => 'BOARDROOM'],
+    //         ],
+    //         'offices' => [
+    //             [
+    //                 'city'    => 'Belgaum',
+    //                 'flag'    => '🏙️',
+    //                 'tag'     => 'HEADQUARTERS',
+    //                 'photo'   => '',
+    //                 'desc'    => 'Our main headquarters and nerve centre. Home to our core trading analytics, research, product, and leadership teams. The Belgaum office drives CityQuants\'s vision and day-to-day operations.',
+    //                 'address' => 'Lower Parel, Belgaum, Maharashtra — 400013',
+    //                 'team'    => '80+ team members across product, research & ops',
+    //                 'hours'   => 'Mon – Sat, 9:00 AM – 7:00 PM IST',
+    //             ],
+    //             [
+    //                 'city'    => 'Bangalore',
+    //                 'flag'    => '🌿',
+    //                 'tag'     => 'TECH HUB',
+    //                 'photo'   => '',
+    //                 'desc'    => 'Our Bangalore office powers the engineering and platform development behind CityQuants. The tech hub drives innovation on our algorithmic engine, real-time data infrastructure, and mobile products.',
+    //                 'address' => 'Koramangala, Bengaluru, Karnataka — 560034',
+    //                 'team'    => '35+ engineers, DevOps & QA professionals',
+    //                 'hours'   => 'Mon – Fri, 9:00 AM – 6:30 PM IST',
+    //             ],
+    //             [
+    //                 'city'    => 'Delhi',
+    //                 'flag'    => '🏛️',
+    //                 'tag'     => 'NORTH INDIA OFFICE',
+    //                 'photo'   => '',
+    //                 'desc'    => 'Serving traders across North India, our Delhi office focuses on institutional partnerships, sales, and regional trader education programmes. A growing hub for HNI and institutional client servicing.',
+    //                 'address' => 'Connaught Place, New Delhi — 110001',
+    //                 'team'    => '20+ sales, partnerships & support members',
+    //                 'hours'   => 'Mon – Sat, 9:30 AM – 6:30 PM IST',
+    //             ],
+    //             [
+    //                 'city'    => 'Hyderabad',
+    //                 'flag'    => '💎',
+    //                 'tag'     => 'SOUTH OFFICE',
+    //                 'photo'   => '',
+    //                 'desc'    => 'Our Hyderabad office manages south India trader communities and education initiatives. The team runs regional webinars, onboarding programmes, and works closely with local brokers and institutions.',
+    //                 'address' => 'Banjara Hills, Hyderabad, Telangana — 500034',
+    //                 'team'    => '15+ community, education & support members',
+    //                 'hours'   => 'Mon – Fri, 9:30 AM – 6:00 PM IST',
+    //             ],
+    //             [
+    //                 'city'    => 'Pune',
+    //                 'flag'    => '🎓',
+    //                 'tag'     => 'EDUCATION CENTRE',
+    //                 'photo'   => '',
+    //                 'desc'    => 'Pune hosts our dedicated Options Education Centre — the venue for our flagship certification programmes, in-person workshops, and trader bootcamps. Thousands of students have trained here.',
+    //                 'address' => 'Shivajinagar, Pune, Maharashtra — 411005',
+    //                 'team'    => '12+ trainers, curriculum & event coordinators',
+    //                 'hours'   => 'Mon – Sat, 9:00 AM – 7:00 PM IST',
+    //             ],
+    //         ],
+    //     ];
+
+    //     // ── CEO VISION ──────────────────────────────────
+    //     $ceoVision = [
+    //         'name'      => 'Shubham Agarwal',
+    //         'title'     => 'CEO & Founder, CityQuants',
+    //         'signature' => 'Shubham Agarwal',
+    //         'avatar'    => '',
+    //         'paras'     => [
+    //             'I have a firm belief that Start-ups are not meant to start a diversified business — it starts with a unique idea where opportunity is visible and it walks faster than the world due to a sharp focus. At CityQuants, we are backed by Industry Veterans who work without limits because we love what we do.',
+    //             'The idea behind CityQuants was to look within our own interests and expertise. After being in this field for above a decade, combining Options Trading & Algorithms is ultimate and will change how people trade today. As researchers, we foresee a world tomorrow where we are confident we will make that a reality ourselves.',
+    //             'After serving Retail / HNI Traders since ever, we surely have a bias towards Derivatives — it is a zero sum game. Institutions have an upper hand of advance research, but retail clients cannot afford the same. We are a team of researchers with this being our passion, having honed the art of keeping complexity low and offering it as a piece of cake for retail traders.',
+    //             'We are confident of making our platform the most unique one globally in the Options Trading domain. We are currently live with our application in India and soon will be available in US, Europe & Canada. Options is the most traded and least understood instrument globally — and our mentors are enthusiasts to pass on the knowledge you need to trade options wisely.',
+    //             'I welcome you to join us in the journey bringing equality in the game of Options Trading.',
+    //         ],
+    //     ];
+
+    //     // ── CTA AT BOTTOM ───────────────────────────────
+    //     $cta = [
+    //         'heading'   => 'Get The App Here!',
+    //         'appstore'  => '#',
+    //         'playstore' => '#',
+    //         'webapp'    => '#',
+    //     ];
+
+    //     return view($this->activeTemplate . 'about', compact(
+    //         'pageTitle', 'heroBanner', 'whoWeAre', 'mission',
+    //         'ideators', 'workspace', 'ceoVision', 'cta'
+    //     ));
+    // }
+
     // ─────────────────────────────────────────────────────────────────────────
     // ABOUT
     // ─────────────────────────────────────────────────────────────────────────
@@ -193,7 +374,7 @@ class HomePageController extends Controller
 
         // ── HERO / TOP BANNER ───────────────────────────
         $heroBanner = [
-            'tagline'    => 'Empowering Traders with Intelligence',
+            'tagline'    => 'Experts in Providing Investment Consulting Services',
             'subtitle'   => 'India\'s most trusted options analytics platform — built by traders, for traders.',
             'founded'    => '2017',
             'hq'         => 'Belgaum, India',
@@ -204,51 +385,43 @@ class HomePageController extends Controller
         // ── WHO ARE WE + MISSION ────────────────────────
         $whoWeAre = [
             'heading' => 'Who Are We?',
-            'body'    => 'CityQuants is a dedicated Options Analytics Platform made for Traders by Traders, with the widest range of FREE option trading tools in the industry. We combine deep domain expertise with cutting-edge technology to bring institutional-grade analytics directly to retail traders — at a fraction of the cost.',
+            'body'    => 'CityQuants is a dedicated Options Analytics Platform made for Traders by Traders, with the widest range of FREE option trading tools in the industry. CITY INDEX serves with a profoundly rooted competence in investment strategy, risk management, and strategic consulting at institutional levels. Today, CITY INDEX technologies, captures group-wide decisions to maximize the advantages of quantitative investment, ensuring consistency, reliability, and scalability across all business portfolios.',
             'pillars' => [
-                ['icon' => 'fa-chart-line',    'label' => 'Analytics First'],
-                ['icon' => 'fa-shield-halved', 'label' => 'Trusted Platform'],
-                ['icon' => 'fa-graduation-cap','label' => 'Trader Education'],
-                ['icon' => 'fa-bolt',          'label' => 'Real-Time Data'],
+                ['icon' => 'fa-chart-line',    'label' => 'Capital Risk Frameworks'],
+                ['icon' => 'fa-cogs',          'label' => 'Proprietary Trading Systems'],
+                ['icon' => 'fa-microchip',     'label' => 'Technology & Infrastructure'],
+                ['icon' => 'fa-graduation-cap','label' => 'Training & Capability Building'],
             ],
         ];
 
         $mission = [
-            'heading' => 'Our Mission',
-            'body'    => 'Our goal is to equip Retail Traders with intelligent Algorithms via tools at much affordable cost & without putting much of knowledge — so they can be placed well in the battle of Futures & Options. We believe that access to powerful analytics should not be a privilege limited to institutional players.',
+            'heading' => 'Our Mission & Vision',
+            'body'    => 'Our Vision: To build a globally impactful financial services platform that delivers disciplined wealth creation through robust governance, advanced technology, and repeatable investment systems. Our Mission: To serve as the central governance and operating entity of the CITY INDEX Group. To design, oversee, and institutionalise structured investment strategies and capital frameworks. To develop scalable, technology-driven systems that emphasise risk control and consistency. To strengthen institutional capabilities through research, training, and process excellence. To align capital, technology, and human expertise toward long-term value creation.',
             'values'  => [
-                ['icon' => 'fa-eye',          'label' => 'Transparency', 'desc' => 'Open, honest platform with no hidden costs.'],
-                ['icon' => 'fa-people-group', 'label' => 'Inclusivity',  'desc' => 'Democratising institutional tools for all traders.'],
-                ['icon' => 'fa-lightbulb',    'label' => 'Innovation',   'desc' => 'Constant iteration driven by real trader needs.'],
-                ['icon' => 'fa-handshake',    'label' => 'Community',    'desc' => 'A thriving ecosystem of 17 Lakh+ traders.'],
+                ['icon' => 'fa-balance-scale', 'label' => 'Discipline over Speculation', 'desc' => 'Focused, systematic investing with strict process adherence.'],
+                ['icon' => 'fa-eye',           'label' => 'Transparency & Accountability', 'desc' => 'Open, honest platform with no hidden costs or conflicts.'],
+                ['icon' => 'fa-shield-halved', 'label' => 'Risk-First Thinking',           'desc' => 'Robust risk management at the core of every decision.'],
+                ['icon' => 'fa-sitemap',       'label' => 'Systems & Process Integrity',   'desc' => 'Scalable, technology-driven systems that ensure consistency.'],
+                ['icon' => 'fa-clock-rotate-left', 'label' => 'Long-Term Orientation',     'desc' => 'Building sustainable wealth through patient, long-term strategies.'],
             ],
         ];
 
-        // ── IDEATORS ────────────────────────────────────
+        // ── IDEATORS / FOUNDING MEMBERS ─────────────────
         $ideators = [
             [
-                'name'     => 'Shubham Agarwal',
-                'role'     => 'CEO, CityQuants',
+                'name'     => 'Vitthal Tallur',
+                'role'     => 'Founder & CTO, CityQuants',
                 'creds'    => 'CMT, CFA, CQF, CFTe',
-                'bio'      => 'A Chartered Market Technician (MTA, USA) & Chartered Financial Analyst (CFA Institute, USA), Shubham brings over a decade of expertise in Derivatives & Algorithmic trading. His vision drives CityQuants\'s mission to bring institutional-grade analytics to every retail trader in India.',
+                'bio'      => 'Vitthal Tallur is the Founder & CTO of CityQuants. He brings over a decade of expertise in Derivatives & Algorithmic trading. His vision drives CityQuants\'s mission to bring institutional-grade analytics to every retail trader in India. The founders believe that sustainable wealth creation is achieved not through short-term speculation but through disciplined processes, robust risk management, and scalable systems.',
                 'avatar'   => '',
                 'linkedin' => '#',
                 'twitter'  => '#',
             ],
             [
-                'name'     => 'Tina Gadodia',
-                'role'     => 'President, CityQuants',
+                'name'     => 'Rahul Karakulle',
+                'role'     => 'Co-Founder & CTO, CityQuants',
                 'creds'    => 'MMS – Finance',
-                'bio'      => 'With 15+ years of professional experience in Futures & Options Research, Tina leads CityQuants\'s product and research divisions. Her expertise in market dynamics and deep understanding of trader psychology shapes the platform\'s analytical approach.',
-                'avatar'   => '',
-                'linkedin' => '#',
-                'twitter'  => '#',
-            ],
-            [
-                'name'     => 'Bhavin Desai',
-                'role'     => 'President, CityQuants',
-                'creds'    => 'MMS – Finance',
-                'bio'      => 'Bhavin brings 20+ years of professional experience in Futures & Options Research. As co-architect of CityQuants\'s proprietary tools, he ensures the platform remains at the cutting edge of options analytics and algorithmic strategy.',
+                'bio'      => 'Rahul Karakulle is the Co-Founder & CTO of CityQuants. With extensive professional experience in Futures & Options Research, Rahul leads CityQuants\'s product and research divisions. His expertise in market dynamics and deep understanding of trader psychology shapes the platform\'s analytical approach and drives innovation across all product lines.',
                 'avatar'   => '',
                 'linkedin' => '#',
                 'twitter'  => '#',
@@ -273,7 +446,7 @@ class HomePageController extends Controller
                     'tag'     => 'HEADQUARTERS',
                     'photo'   => '',
                     'desc'    => 'Our main headquarters and nerve centre. Home to our core trading analytics, research, product, and leadership teams. The Belgaum office drives CityQuants\'s vision and day-to-day operations.',
-                    'address' => 'Lower Parel, Belgaum, Maharashtra — 400013',
+                    'address' => 'Lower Parel, Belgaum, Karnataka — 590001',
                     'team'    => '80+ team members across product, research & ops',
                     'hours'   => 'Mon – Sat, 9:00 AM – 7:00 PM IST',
                 ],
@@ -320,18 +493,18 @@ class HomePageController extends Controller
             ],
         ];
 
-        // ── CEO VISION ──────────────────────────────────
+        // ── CEO VISION (Founder) ────────────────────────
         $ceoVision = [
-            'name'      => 'Shubham Agarwal',
-            'title'     => 'CEO & Founder, CityQuants',
-            'signature' => 'Shubham Agarwal',
+            'name'      => 'Vitthal Tallur',
+            'title'     => 'Founder & CTO, CityQuants',
+            'signature' => 'Vitthal Tallur',
             'avatar'    => '',
             'paras'     => [
                 'I have a firm belief that Start-ups are not meant to start a diversified business — it starts with a unique idea where opportunity is visible and it walks faster than the world due to a sharp focus. At CityQuants, we are backed by Industry Veterans who work without limits because we love what we do.',
                 'The idea behind CityQuants was to look within our own interests and expertise. After being in this field for above a decade, combining Options Trading & Algorithms is ultimate and will change how people trade today. As researchers, we foresee a world tomorrow where we are confident we will make that a reality ourselves.',
                 'After serving Retail / HNI Traders since ever, we surely have a bias towards Derivatives — it is a zero sum game. Institutions have an upper hand of advance research, but retail clients cannot afford the same. We are a team of researchers with this being our passion, having honed the art of keeping complexity low and offering it as a piece of cake for retail traders.',
-                'We are confident of making our platform the most unique one globally in the Options Trading domain. We are currently live with our application in India and soon will be available in US, Europe & Canada. Options is the most traded and least understood instrument globally — and our mentors are enthusiasts to pass on the knowledge you need to trade options wisely.',
-                'I welcome you to join us in the journey bringing equality in the game of Options Trading.',
+                'CITY INDEX follows a governance-first approach, ensuring that capital deployment, strategy execution, and operational decisions are guided by structured processes and accountability. The company prioritises transparency, internal controls, and long-term alignment with stakeholder interests while operating within applicable regulatory frameworks.',
+                'We are confident of making our platform the most unique one globally in the Options Trading domain. I welcome you to join us in the journey bringing equality in the game of Options Trading.',
             ],
         ];
 
@@ -1071,7 +1244,7 @@ class HomePageController extends Controller
         ];
  
         // Promo video shown on right (YouTube embed or hosted video URL)
-        $promoVideo = 'https://www.youtube.com/embed/htLQVsJWwN4?si=YWGvfiv1Y_Aw8FqC?autoplay=1&mute=1&rel=0&modestbranding=1&controls=1';
+        $promoVideo = 'https://www.youtube.com/embed/MxpeY6j-_XE?si=7BILhTJxdUhdBP5O?autoplay=1&mute=1&rel=0&modestbranding=1&controls=1';
  
         return view($this->activeTemplate . 'login', compact(
             'pageTitle',
@@ -1081,7 +1254,6 @@ class HomePageController extends Controller
         ));
     }
 
-
     // ─────────────────────────────────────────────────────────────────────────
     // EVENTS  — add inside HomePageController
     // ─────────────────────────────────────────────────────────────────────────
@@ -1089,24 +1261,270 @@ class HomePageController extends Controller
     {
         $pageTitle = 'Events';
 
-        // Empty array = shows "No upcoming events scheduled." (matches screenshot 1)
-        // Populate when real events exist using the structure below.
-        $events = [
-            // [
-            //     'id'        => 1,
-            //     'title'     => 'Option Symposium 8.0',
-            //     'date'      => '15 & 16 February 2026',
-            //     'time'      => '9:00 AM – 6:00 PM',
-            //     'location'  => 'Online',
-            //     'price'     => 13099,
-            //     'thumbnail' => 'https://img.freepik.com/...jpg',
-            //     'url'       => route('optionsymposium'),
-            // ],
+        // Upcoming events — populate as real events are created
+        $upcomingEvents = [
+            [
+                'id'          => 1,
+                'title'       => 'Option Symposium 8.0 - India\'s Biggest Options Conference',
+                'badge'       => 'symposium',
+                'badge_label' => 'Symposium',
+                'date'        => '26 & 27 July 2026',
+                'time'        => '9:00 AM - 7:00 PM IST',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 13099,
+                'mrp'         => 18000,
+                'disc'        => '27% off',
+                'type'        => 'paid',
+                'seats'       => '500 seats left',
+                'seats_low'   => false,
+                'speakers'    => '18+ Experts',
+                'duration'    => '2 Days',
+                'tags'        => ['Symposium', 'Options Strategies', 'Algo Trading', 'SEBI F&O'],
+                'desc'        => 'CityQuants flagship annual conference with India\'s top option traders, fund managers, derivative analysts & educators.',
+                'countdown'   => '2026-07-26 09:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/business-conference-concept-illustration_114360-1537.jpg?w=600',
+                'url'         => route('optionsymposium'),
+                'featured'    => true,
+            ],
+            [
+                'id'          => 2,
+                'title'       => 'Options Bootcamp - Intraday Mastery',
+                'badge'       => 'bootcamp',
+                'badge_label' => 'Bootcamp',
+                'date'        => '14 June 2026',
+                'time'        => '10:00 AM - 5:00 PM',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 4999,
+                'mrp'         => 7999,
+                'disc'        => '37% off',
+                'type'        => 'paid',
+                'seats'       => '120 seats left',
+                'seats_low'   => false,
+                'speakers'    => '4 Experts',
+                'duration'    => '1 Day',
+                'tags'        => ['Intraday', 'Options Buying', 'Live Market'],
+                'desc'        => 'A full-day intensive bootcamp on intraday options strategies using OI data, PCR and real-time derivatives analytics.',
+                'countdown'   => '2026-06-14 10:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/gradient-stock-market-concept-illustration_23-2149166705.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 3,
+                'title'       => 'Derivative Analytics Workshop - Delhi',
+                'badge'       => 'workshop',
+                'badge_label' => 'Workshop',
+                'date'        => '28 June 2026',
+                'time'        => '9:30 AM - 6:00 PM',
+                'location'    => 'Connaught Place, Delhi',
+                'city'        => 'delhi',
+                'mode'        => 'offline',
+                'price'       => 8999,
+                'mrp'         => 12999,
+                'disc'        => '30% off',
+                'type'        => 'paid',
+                'seats'       => 'Only 18 seats left!',
+                'seats_low'   => true,
+                'speakers'    => '3 Experts',
+                'duration'    => '1 Day',
+                'tags'        => ['Derivatives', 'Open Interest', 'PCR'],
+                'desc'        => 'Hands-on in-person workshop covering derivative analytics, OI interpretation and real broker platform integration.',
+                'countdown'   => '2026-06-28 09:30:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/stock-market-analysis-concept-illustration_114360-5440.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 4,
+                'title'       => 'CityQuants Open House - Bangalore',
+                'badge'       => 'seminar',
+                'badge_label' => 'Seminar',
+                'date'        => '5 July 2026',
+                'time'        => '11:00 AM - 2:00 PM',
+                'location'    => 'Koramangala, Bangalore',
+                'city'        => 'bangalore',
+                'mode'        => 'offline',
+                'price'       => 0,
+                'mrp'         => 999,
+                'disc'        => 'Free',
+                'type'        => 'free',
+                'seats'       => '50 seats left',
+                'seats_low'   => false,
+                'speakers'    => '2 Speakers',
+                'duration'    => '3 Hrs',
+                'tags'        => ['Platform Demo', 'Options Basics', 'Networking'],
+                'desc'        => 'Free open-house session at our Bangalore office. Demo of CityQuants platform, live Q&A and networking with fellow traders.',
+                'countdown'   => '2026-07-05 11:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/market-launch-concept-illustration_114360-5508.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 5,
+                'title'       => 'Algo Trading Seminar with Python API',
+                'badge'       => 'seminar',
+                'badge_label' => 'Seminar',
+                'date'        => '19 July 2026',
+                'time'        => '3:00 PM - 7:00 PM',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 1999,
+                'mrp'         => 3499,
+                'disc'        => '42% off',
+                'type'        => 'paid',
+                'seats'       => '200 seats left',
+                'seats_low'   => false,
+                'speakers'    => '2 Experts',
+                'duration'    => '4 Hrs',
+                'tags'        => ['Algo Trading', 'Python', 'API'],
+                'desc'        => 'Live seminar on building and deploying options algo strategies using CityQuants SuperAPI and Python bridge.',
+                'countdown'   => '2026-07-19 15:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/programmer-concept-illustration_114360-2284.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 6,
+                'title'       => 'Volatility Trading Hybrid Workshop',
+                'badge'       => 'hybrid',
+                'badge_label' => 'Hybrid',
+                'date'        => '2 August 2026',
+                'time'        => '10:00 AM - 6:00 PM',
+                'location'    => 'Pune / Online',
+                'city'        => 'pune',
+                'mode'        => 'hybrid',
+                'price'       => 6999,
+                'mrp'         => 9999,
+                'disc'        => '30% off',
+                'type'        => 'paid',
+                'seats'       => 'Only 22 seats (offline)',
+                'seats_low'   => true,
+                'speakers'    => '5 Experts',
+                'duration'    => '1 Day',
+                'tags'        => ['Volatility', 'Options Selling', 'Greeks'],
+                'desc'        => 'Attend in-person in Pune or join the live stream. Deep dive into IV, realized vol and volatility trading strategies.',
+                'countdown'   => '2026-08-02 10:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/candlestick-chart-concept-illustration_114360-9504.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 7,
+                'title'       => 'Expiry Day Trading Masterclass',
+                'badge'       => 'workshop',
+                'badge_label' => 'Workshop',
+                'date'        => '16 August 2026',
+                'time'        => '9:00 AM - 1:00 PM',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 2499,
+                'mrp'         => 4499,
+                'disc'        => '44% off',
+                'type'        => 'paid',
+                'seats'       => '300 seats left',
+                'seats_low'   => false,
+                'speakers'    => '3 Experts',
+                'duration'    => '4 Hrs',
+                'tags'        => ['Expiry Day', 'Options Buying', 'Intraday'],
+                'desc'        => 'Master expiry-day dynamics - max pain, gamma spikes, last-hour moves and time-decay plays for weekly expiries.',
+                'countdown'   => '2026-08-16 09:00:00',
+                'thumbnail'   => 'https://img.freepik.com/free-vector/financial-analytics-concept-illustration_114360-6079.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
         ];
 
-        return view($this->activeTemplate . 'events', compact('pageTitle', 'events'));
-    }
+        // Past events
+        $pastEvents = [
+            [
+                'id'          => 101,
+                'title'       => 'Option Symposium 7.0',
+                'badge'       => 'symposium',
+                'badge_label' => 'Symposium',
+                'date'        => '18 & 19 Jan 2026',
+                'time'        => '9:00 AM to 7:00 PM',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 13099,
+                'mrp'         => 16000,
+                'disc'        => '18% off',
+                'type'        => 'paid',
+                'seats'       => '2400 Attended',
+                'seats_low'   => false,
+                'speakers'    => '15 Experts',
+                'duration'    => '2 Days',
+                'tags'        => ['Symposium', 'Options Strategies', 'Algo Trading'],
+                'desc'        => 'CityQuants flagship annual conference with India\'s top option traders, fund managers and derivative analysts.',
+                'countdown'   => null,
+                'thumbnail'   => 'https://img.freepik.com/free-vector/conference-concept-illustration_114360-1088.jpg?w=600',
+                'url'         => route('optionsymposium'),
+                'featured'    => false,
+            ],
+            [
+                'id'          => 102,
+                'title'       => 'Options Bootcamp Mumbai Batch 3',
+                'badge'       => 'bootcamp',
+                'badge_label' => 'Bootcamp',
+                'date'        => '22 Nov 2025',
+                'time'        => '10:00 AM - 6:00 PM',
+                'location'    => 'Andheri, Mumbai',
+                'city'        => 'mumbai',
+                'mode'        => 'offline',
+                'price'       => 7999,
+                'mrp'         => 11999,
+                'disc'        => '33% off',
+                'type'        => 'paid',
+                'seats'       => '185 Attended',
+                'seats_low'   => false,
+                'speakers'    => '5 Experts',
+                'duration'    => '1 Day',
+                'tags'        => ['Workshop', 'Options Buying', 'Intraday'],
+                'desc'        => 'Full-day in-person bootcamp for serious options traders covering breakout trading and position management.',
+                'countdown'   => null,
+                'thumbnail'   => 'https://img.freepik.com/free-vector/online-trading-concept-illustration_114360-4766.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+            [
+                'id'          => 103,
+                'title'       => 'Option Symposium 6.0 (2024)',
+                'badge'       => 'symposium',
+                'badge_label' => 'Symposium',
+                'date'        => '25 & 26 May 2025',
+                'time'        => '9:00 AM - 7:00 PM',
+                'location'    => 'Online',
+                'city'        => 'online',
+                'mode'        => 'online',
+                'price'       => 10498,
+                'mrp'         => 14000,
+                'disc'        => '25% off',
+                'type'        => 'paid',
+                'seats'       => '1980 Attended',
+                'seats_low'   => false,
+                'speakers'    => '14 Experts',
+                'duration'    => '2 Days',
+                'tags'        => ['Symposium', 'Derivatives', 'Volatility'],
+                'desc'        => 'The 2024 edition of Option Symposium covering volatility strategies, OI analytics and algo deployment.',
+                'countdown'   => null,
+                'thumbnail'   => 'https://img.freepik.com/free-vector/business-conference-concept-illustration_114360-1537.jpg?w=600',
+                'url'         => '#',
+                'featured'    => false,
+            ],
+        ];
 
+        return view($this->activeTemplate . 'events', compact(
+            'pageTitle',
+            'upcomingEvents',
+            'pastEvents'
+        ));
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // OPTION SYMPOSIUM  — add inside HomePageController
@@ -1222,12 +1640,12 @@ class HomePageController extends Controller
 
             // ── GALLERY ──────────────────────────────────
             'gallery' => [
-                ['src'=>'https://img.freepik.com/free-photo/people-attending-business-conference_23-2148888868.jpg?w=600', 'year'=>'2023'],
-                ['src'=>'https://img.freepik.com/free-photo/conference-event-audience_1048-1719.jpg?w=400',                'year'=>'2022'],
-                ['src'=>'https://img.freepik.com/free-photo/audience-applauding-speaker-conference-hall_23-2148000015.jpg?w=400','year'=>'2022'],
-                ['src'=>'https://img.freepik.com/free-photo/people-networking-professional-conference_23-2148888875.jpg?w=600','year'=>'2021'],
-                ['src'=>'https://img.freepik.com/free-photo/medium-shot-man-speaking-crowd_23-2148888872.jpg?w=400',       'year'=>'2021'],
-                ['src'=>'https://img.freepik.com/free-photo/close-up-group-people-sitting-conference_1048-3068.jpg?w=400', 'year'=>'2020'],
+                ['src'=>'https://img.freepik.com/free-photo/businessman-analyzing-stock-market-charts_53876-124663.jpg?w=600', 'year'=>'2023'],
+                ['src'=>'https://img.freepik.com/free-photo/stock-market-data-laptop-screen_53876-124658.jpg?w=400', 'year'=>'2022'],
+                ['src'=>'https://img.freepik.com/free-photo/business-team-discussing-financial-graphs_53876-124665.jpg?w=400', 'year'=>'2022'],
+                ['src'=>'https://img.freepik.com/free-photo/trader-working-with-multiple-monitors-stock-market_53876-124660.jpg?w=600', 'year'=>'2021'],
+                ['src'=>'https://img.freepik.com/free-photo/financial-analyst-checking-market-performance_53876-124662.jpg?w=400', 'year'=>'2021'],
+                ['src'=>'https://img.freepik.com/free-photo/businesspeople-meeting-office-analyzing-charts_53876-124664.jpg?w=400', 'year'=>'2020'],
             ],
         ];
 
@@ -1599,4 +2017,324 @@ class HomePageController extends Controller
             'videos'
         ));
     }
+
+    // ── BOOK A DEMO ───────────────────────────────────────────────────────────
+    public function bookDemo()
+    {
+        $pageTitle = 'Book a Free Demo';
+    
+        // Feature bullets shown on the promo panel
+        $demoFeatures = [
+            [
+                'icon'  => 'fa-chart-bar',
+                'title' => 'Live Platform Walkthrough',
+                'desc'  => 'See all 47+ tools — OI analytics, option chain, PCR, IV charts and algo engine — live with real market data.',
+            ],
+            [
+                'icon'  => 'fa-user-tie',
+                'title' => '1-on-1 with an Expert Trader',
+                'desc'  => 'Not a sales call — a genuine session with an options analytics expert who trades the same strategies.',
+            ],
+            [
+                'icon'  => 'fa-sliders-h',
+                'title' => 'Personalised to Your Style',
+                'desc'  => 'Intraday buyer, expiry seller or positional trader — we tailor the demo to what you actually trade.',
+            ],
+            [
+                'icon'  => 'fa-gift',
+                'title' => 'Free Trial Access',
+                'desc'  => 'Every demo attendee gets 7-day premium trial access — no credit card required.',
+            ],
+        ];
+    
+        $stats = [
+            ['value' => '6,500+', 'label' => 'Demos Given'],
+            ['value' => '30 Min', 'label' => 'Duration'],
+            ['value' => '100%',   'label' => 'Free'],
+            ['value' => '4.9★',   'label' => 'Avg Rating'],
+        ];
+    
+        $brokers = [
+            ['name' => 'Zerodha',      'letter' => 'Z', 'bg' => '#e53935'],
+            ['name' => 'Upstox',       'letter' => 'U', 'bg' => '#7b1fa2'],
+            ['name' => 'Dhan',         'letter' => 'D', 'bg' => '#00897b'],
+            ['name' => '5Paisa',       'letter' => '5', 'bg' => '#455a64'],
+            ['name' => 'Fyers',        'letter' => 'F', 'bg' => '#1565c0'],
+            ['name' => 'Groww',        'letter' => 'G', 'bg' => '#00695c'],
+            ['name' => 'Angel',        'letter' => 'A', 'bg' => '#2e7d32'],
+            ['name' => 'ICICI',        'letter' => 'I', 'bg' => '#b71c1c'],
+            ['name' => 'Kotak',        'letter' => 'K', 'bg' => '#e65100'],
+            ['name' => 'Zerodha',      'letter' => 'Z', 'bg' => '#e53935'],
+            ['name' => 'Upstox',       'letter' => 'U', 'bg' => '#7b1fa2'],
+            ['name' => 'Dhan',         'letter' => 'D', 'bg' => '#00897b'],
+        ];
+    
+        $testimonial = [
+            'quote'  => '"The demo session completely changed how I look at options data. The expert spent 40 minutes with me and walked through exactly the tools I needed for expiry trading. Booked a subscription the same day."',
+            'name'   => 'Rohit Sharma',
+            'role'   => 'Positional Options Trader, Pune',
+            'letter' => 'R',
+            'rating' => 5,
+        ];
+    
+        return view($this->activeTemplate . 'book-demo', compact(
+            'pageTitle',
+            'demoFeatures',
+            'stats',
+            'brokers',
+            'testimonial'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MEDIA  — add inside HomePageController
+    // ─────────────────────────────────────────────────────────────────────────
+    public function media()
+    {
+        $pageTitle = 'Media';
+    
+        // Featured media item (shown as hero card)
+        $featuredMedia = [
+            'id'          => 1,
+            'title'       => 'CityQuants on CNBC TV18 - Options Market Outlook 2026',
+            'category'    => 'tv',
+            'cat_label'   => 'TV Interview',
+            'date'        => '28 Apr 2026',
+            'channel'     => 'CNBC TV18',
+            'duration'    => '22 min',
+            'desc'        => 'Our founder and chief strategist discusses the evolving F&O landscape post-SEBI regulations, key options strategies for 2026 and how retail traders can adapt to new expiry structures.',
+            'thumbnail'   => 'https://img.freepik.com/free-vector/news-broadcast-concept-illustration_114360-5260.jpg?w=800',
+            'tags'        => ['CNBC', 'F&O Outlook', 'Options Strategy', 'SEBI Regulations'],
+            'url'         => '#',
+            'featured'    => true,
+        ];
+    
+        // All media items
+        $mediaItems = [
+            // ── TV & VIDEO INTERVIEWS ──
+            [
+                'id'        => 2,
+                'title'     => 'ET Now: Understanding Weekly vs Monthly Expiry Dynamics',
+                'category'  => 'tv',
+                'cat_label' => 'TV Interview',
+                'date'      => '15 Apr 2026',
+                'channel'   => 'ET Now',
+                'duration'  => '18 min',
+                'desc'      => 'A deep dive into how weekly and monthly expiry cycles create different gamma environments and what traders should do differently on each.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/breaking-news-realistic-television_52683-47374.jpg?w=600',
+                'tags'      => ['ET Now', 'Weekly Expiry', 'Gamma', 'Options'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 3,
+                'title'     => 'Zee Business: How Algo Trading is Changing Indian Options Markets',
+                'category'  => 'tv',
+                'cat_label' => 'TV Interview',
+                'date'      => '2 Mar 2026',
+                'channel'   => 'Zee Business',
+                'duration'  => '14 min',
+                'desc'      => 'Discussion on the rise of retail algo trading, SuperAPI integrations and how HFT activity affects intraday options pricing.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/news-broadcast-concept-illustration_114360-5260.jpg?w=600',
+                'tags'      => ['Algo Trading', 'HFT', 'Retail Trading', 'API'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 4,
+                'title'     => 'Bloomberg Quint: Volatility Surface and Skew Explained',
+                'category'  => 'tv',
+                'cat_label' => 'TV Interview',
+                'date'      => '10 Jan 2026',
+                'channel'   => 'Bloomberg Quint',
+                'duration'  => '20 min',
+                'desc'      => 'An accessible breakdown of implied volatility surface, skew trading strategies and how institutional desks position around major events.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/breaking-news-realistic-television_52683-47374.jpg?w=600',
+                'tags'      => ['Volatility', 'IV Skew', 'Institutional', 'Bloomberg'],
+                'url'       => '#',
+            ],
+    
+            // ── PODCASTS ──
+            [
+                'id'        => 5,
+                'title'     => 'Traders Podcast Ep. 84 - Building a Systematic Options Strategy from Scratch',
+                'category'  => 'podcast',
+                'cat_label' => 'Podcast',
+                'date'      => '20 Apr 2026',
+                'channel'   => 'Traders Podcast',
+                'duration'  => '58 min',
+                'desc'      => 'Step-by-step walkthrough of how to design, backtest and deploy a systematic options selling strategy using Python and CityQuants data feeds.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-5428.jpg?w=600',
+                'tags'      => ['Podcast', 'Systematic Trading', 'Python', 'Backtesting'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 6,
+                'title'     => 'Market Wizards India Ep. 31 - The Journey from Discretionary to Quant Trading',
+                'category'  => 'podcast',
+                'cat_label' => 'Podcast',
+                'date'      => '5 Mar 2026',
+                'channel'   => 'Market Wizards India',
+                'duration'  => '72 min',
+                'desc'      => 'A candid conversation about transitioning from gut-feel trading to rule-based quant strategies, common pitfalls and how to stay disciplined.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-5428.jpg?w=600',
+                'tags'      => ['Podcast', 'Quant Trading', 'Psychology', 'Discipline'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 7,
+                'title'     => 'FinTech India Podcast - Options Analytics Platforms for Retail Traders',
+                'category'  => 'podcast',
+                'cat_label' => 'Podcast',
+                'date'      => '18 Jan 2026',
+                'channel'   => 'FinTech India',
+                'duration'  => '45 min',
+                'desc'      => 'Comparing OI analytics tools, discussing CityQuants platform features and how data-driven decisions can improve retail options trading outcomes.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-5428.jpg?w=600',
+                'tags'      => ['Podcast', 'OI Analytics', 'FinTech', 'Platform'],
+                'url'       => '#',
+            ],
+    
+            // ── PRESS / ARTICLES ──
+            [
+                'id'        => 8,
+                'title'     => 'Economic Times: CityQuants Crosses 2 Lakh Registered Traders on Platform',
+                'category'  => 'press',
+                'cat_label' => 'Press',
+                'date'      => '22 Apr 2026',
+                'channel'   => 'Economic Times',
+                'duration'  => '4 min read',
+                'desc'      => 'ET covers CityQuants milestone of 2 lakh registered users, platform growth story and the road ahead for options analytics in India.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/newspaper-concept-illustration_114360-5308.jpg?w=600',
+                'tags'      => ['Economic Times', 'Milestone', 'Platform Growth', 'Coverage'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 9,
+                'title'     => 'Mint: How SEBI F&O Reforms are Reshaping Retail Derivatives Participation',
+                'category'  => 'press',
+                'cat_label' => 'Press',
+                'date'      => '8 Apr 2026',
+                'channel'   => 'Mint',
+                'duration'  => '6 min read',
+                'desc'      => 'Mint features CityQuants analysis on how the new SEBI F&O norms have changed volumes, strategy preferences and risk management among retail traders.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/newspaper-concept-illustration_114360-5308.jpg?w=600',
+                'tags'      => ['Mint', 'SEBI F&O', 'Retail Derivatives', 'Policy'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 10,
+                'title'     => 'Business Standard: Top 10 Options Trading Platforms in India 2026',
+                'category'  => 'press',
+                'cat_label' => 'Press',
+                'date'      => '14 Feb 2026',
+                'channel'   => 'Business Standard',
+                'duration'  => '5 min read',
+                'desc'      => 'Business Standard ranks CityQuants among India\'s top options analytics and trading platforms, citing OI data depth and algo capabilities.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/newspaper-concept-illustration_114360-5308.jpg?w=600',
+                'tags'      => ['Business Standard', 'Rankings', 'Platform', 'Options'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 11,
+                'title'     => 'Forbes India: The Quant Revolution in Indian Retail Trading',
+                'category'  => 'press',
+                'cat_label' => 'Press',
+                'date'      => '30 Nov 2025',
+                'channel'   => 'Forbes India',
+                'duration'  => '8 min read',
+                'desc'      => 'Forbes India profiles the quant trading movement in India and how platforms like CityQuants are democratising institutional-grade analytics for retail.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/newspaper-concept-illustration_114360-5308.jpg?w=600',
+                'tags'      => ['Forbes India', 'Quant Trading', 'Retail', 'Analytics'],
+                'url'       => '#',
+            ],
+    
+            // ── WEBINAR RECORDINGS ──
+            [
+                'id'        => 12,
+                'title'     => 'Webinar Recording: Iron Condor vs Jade Lizard in High IV Environments',
+                'category'  => 'webinar',
+                'cat_label' => 'Webinar',
+                'date'      => '12 Apr 2026',
+                'channel'   => 'CityQuants',
+                'duration'  => '90 min',
+                'desc'      => 'Full recording of our April webinar comparing Iron Condor and Jade Lizard setups, entry rules, adjustment tactics and P&L simulations in high IV regimes.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/webinar-concept-illustration_114360-4881.jpg?w=600',
+                'tags'      => ['Iron Condor', 'Jade Lizard', 'High IV', 'Options Selling'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 13,
+                'title'     => 'Webinar Recording: Reading OI and PCR for Intraday Directional Bias',
+                'category'  => 'webinar',
+                'cat_label' => 'Webinar',
+                'date'      => '22 Mar 2026',
+                'channel'   => 'CityQuants',
+                'duration'  => '75 min',
+                'desc'      => 'How to use Open Interest data, Put-Call Ratio and max pain levels to establish intraday directional bias before taking options positions.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/webinar-concept-illustration_114360-4881.jpg?w=600',
+                'tags'      => ['OI Data', 'PCR', 'Max Pain', 'Intraday'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 14,
+                'title'     => 'Webinar Recording: Delta Hedging Masterclass for Retail Options Traders',
+                'category'  => 'webinar',
+                'cat_label' => 'Webinar',
+                'date'      => '5 Feb 2026',
+                'channel'   => 'CityQuants',
+                'duration'  => '110 min',
+                'desc'      => 'A comprehensive guide to delta hedging concepts, practical implementation with small capital and how to think about gamma exposure over time.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/webinar-concept-illustration_114360-4881.jpg?w=600',
+                'tags'      => ['Delta Hedging', 'Greeks', 'Gamma', 'Options Basics'],
+                'url'       => '#',
+            ],
+    
+            // ── AWARDS ──
+            [
+                'id'        => 15,
+                'title'     => 'Best Options Analytics Platform - FinTech Awards India 2026',
+                'category'  => 'award',
+                'cat_label' => 'Award',
+                'date'      => '10 Mar 2026',
+                'channel'   => 'FinTech Awards India',
+                'duration'  => 'Award',
+                'desc'      => 'CityQuants wins Best Options Analytics Platform at FinTech Awards India 2026, recognised for OI data depth, algo integration and user experience.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/trophy-concept-illustration_114360-5501.jpg?w=600',
+                'tags'      => ['Award', 'Best Platform', 'FinTech', 'Recognition'],
+                'url'       => '#',
+            ],
+            [
+                'id'        => 16,
+                'title'     => 'Top 25 FinTech Startups to Watch - Inc42 2025',
+                'category'  => 'award',
+                'cat_label' => 'Award',
+                'date'      => '5 Dec 2025',
+                'channel'   => 'Inc42',
+                'duration'  => 'Award',
+                'desc'      => 'Inc42 recognises CityQuants in their annual list of Top 25 FinTech Startups to Watch, highlighting platform innovation in derivatives analytics.',
+                'thumbnail' => 'https://img.freepik.com/free-vector/trophy-concept-illustration_114360-5501.jpg?w=600',
+                'tags'      => ['Inc42', 'Startup', 'FinTech', 'Innovation'],
+                'url'       => '#',
+            ],
+        ];
+    
+        // Press logos (for the "As seen in" strip)
+        $pressLogos = [
+            ['name' => 'Economic Times',   'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/The_Economic_Times_logo.svg/320px-The_Economic_Times_logo.svg.png'],
+            ['name' => 'Mint',             'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Mint_logo.svg/320px-Mint_logo.svg.png'],
+            ['name' => 'Business Standard','logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Business_Standard_Logo.svg/320px-Business_Standard_Logo.svg.png'],
+            ['name' => 'CNBC TV18',        'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/CNBC-TV18_logo.svg/320px-CNBC-TV18_logo.svg.png'],
+            ['name' => 'ET Now',           'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/ET_Now_Logo.svg/320px-ET_Now_Logo.svg.png'],
+            ['name' => 'Forbes India',     'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Forbeslogo.svg/320px-Forbeslogo.svg.png'],
+            ['name' => 'Bloomberg',        'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/New_Bloomberg_Logo.svg/320px-New_Bloomberg_Logo.svg.png'],
+            ['name' => 'Zee Business',     'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Zee_Business_logo.png/320px-Zee_Business_logo.png'],
+        ];
+    
+        return view($this->activeTemplate . 'media', compact(
+            'pageTitle',
+            'featuredMedia',
+            'mediaItems',
+            'pressLogos'
+        ));
+    }
+
 }

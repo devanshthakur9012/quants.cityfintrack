@@ -81,7 +81,7 @@
 ========================================= */
 .qa-filter-bar {
     background: #fff; border-bottom: 1px solid #e8e8e8;
-    padding: 0 48px; position: sticky; top: 0; z-index: 200;
+    padding: 0 48px;  top: 0; z-index: 200;
     box-shadow: 0 2px 8px rgba(0,0,0,.06);
 }
 /* main tabs */

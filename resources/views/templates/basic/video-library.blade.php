@@ -25,7 +25,7 @@
     background: #fff;
     border-bottom: 1px solid #e8e8e8;
     padding: 0 28px;
-    position: sticky; top: 0; z-index: 200;
+    top: 0; z-index: 200;
     box-shadow: 0 2px 6px rgba(0,0,0,.05);
 }
 /* page heading row */

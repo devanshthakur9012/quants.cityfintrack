@@ -484,9 +484,13 @@
         <div class="qos-sec-line"></div>
         <div class="qos-about-inner">
             <div class="qos-about-body">
+                <h2 class="text-dark mb-2"><b>CityQuants Conference</b></h2>
                 @foreach($symposium['about'] as $para)
                 <p>{{ $para }}</p>
                 @endforeach
+                <div class="d-flex">
+                 <button class="qos-about-card-btn w-auto px-4" onclick="qosScrollTo('pricing')">Request a callback</button>
+                </div>
             </div>
             <div class="qos-about-card">
                 <div class="qos-about-card-img">
@@ -495,7 +499,6 @@
                 <div class="qos-about-card-body">
                     <div class="qos-about-card-title">{{ $symposium['title'] }}</div>
                     <div class="qos-about-card-sub">India's Largest Option Conference &nbsp;|&nbsp; {{ $symposium['date'] }}</div>
-                    <button class="qos-about-card-btn" onclick="qosScrollTo('pricing')">Request a callback</button>
                 </div>
             </div>
         </div>

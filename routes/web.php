@@ -127,6 +127,9 @@ Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.registe
 Route::get('/events',  [HomePageController::class, 'events'])->name('events');
 Route::get('/option-symposium', [HomePageController::class, 'optionSymposium'])->name('optionsymposium');
 Route::get('/video-library', [HomePageController::class, 'videoLibrary'])->name('video.library');
+Route::get('/events',    [HomePageController::class, 'events'])->name('events');
+Route::get('/book-demo', [HomePageController::class, 'bookDemo'])->name('book.demo');
+Route::get('/media', [HomePageController::class, 'media'])->name('media');
 
 Route::middleware('guest')->group(function () {
     Route::post('/send-email-otp',   [EmailOtpController::class, 'sendOtp'])->name('send.email.otp');

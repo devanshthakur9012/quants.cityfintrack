@@ -627,7 +627,7 @@
             <div class="qh-lpanel {{ $i===0?'on':'' }}">
                 <div class="qh-ltext">
                     <div class="qh-lpanel-title">{{ $tab['tab'] }}</div>
-                    <div class="qh-lhl">{{ $tab['highlight'] }}</div>
+                    <div class="qh-lhl ms-2">{{ $tab['highlight'] }}</div>
                     <p>{{ $tab['description'] }}</p>
                     <a href="{{ $tab['btn_url'] }}" class="qh-lbtn">{{ $tab['btn_label'] }}</a>
                 </div>

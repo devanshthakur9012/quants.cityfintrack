@@ -213,17 +213,16 @@
 .qa-value-desc  { font-size: 12px; color: #7A90B5; line-height: 1.6; }
 
 /* =========================================
-   3. IDEATORS
+   3. FOUNDING MEMBERS
 ========================================= */
 .qa-ideators-sec {
     background: linear-gradient(180deg, #06101A 0%, #0C2040 50%, #06101A 100%);
     padding: 80px 24px;
 }
 .qa-ideators-grid {
-    max-width: 1100px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    max-width: 860px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;
 }
-@media(max-width:900px){ .qa-ideators-grid { grid-template-columns: 1fr 1fr; } }
 @media(max-width:580px){ .qa-ideators-grid { grid-template-columns: 1fr; } }
 .qa-ideator-card {
     background: linear-gradient(160deg, #0E1E35, #142540);
@@ -438,7 +437,7 @@
 @media(max-width:560px){ .qa-city-info { padding: 28px 22px; } }
 
 /* =========================================
-   5. CEO VISION
+   5. FOUNDER VISION
 ========================================= */
 .qa-ceo-sec {
     background: linear-gradient(135deg, #06101A 0%, #0C2040 50%, #06101A 100%);
@@ -556,7 +555,7 @@
     <div class="qa-hero-bar"></div>
     <div class="qa-hero-inner qa-anim">
         <div class="qa-hero-badge"><i class="fas fa-circle" style="font-size:7px"></i> Est. {{ $heroBanner['founded'] }} &nbsp;·&nbsp; {{ $heroBanner['hq'] }}</div>
-        <h1 class="qa-hero-h1">About <span>Quantsapp</span></h1>
+        <h1 class="qa-hero-h1">About <span>CityQuants</span></h1>
         <p class="qa-hero-p">{{ $heroBanner['tagline'] }}<br>{{ $heroBanner['subtitle'] }}</p>
         <div class="qa-hero-stats qa-anim d3">
             <div class="qa-hstat">
@@ -621,12 +620,12 @@
 
 
 {{-- ═══════════════════════════════════════
-     3. OUR IDEATORS
+     3. FOUNDING MEMBERS
 ═══════════════════════════════════════ --}}
 <section class="qa-ideators-sec">
-    <span class="qa-title qa-anim">Our Ideators!</span>
+    <span class="qa-title qa-anim">Our Founding Members</span>
     <span class="qa-line qa-anim d1"></span>
-    <span class="qa-sub qa-anim d2">The visionaries behind Quantsapp — seasoned professionals who turned their passion for derivatives into India's most powerful options analytics platform.</span>
+    <span class="qa-sub qa-anim d2">The visionaries behind CityQuants — seasoned professionals who turned their passion for derivatives into India's most powerful options analytics platform.</span>
 
     <div class="qa-ideators-grid">
         @foreach($ideators as $idx => $person)
@@ -739,7 +738,7 @@
 
 
 {{-- ═══════════════════════════════════════
-     5. VISION FROM CEO
+     5. VISION FROM FOUNDER
 ═══════════════════════════════════════ --}}
 <section class="qa-ceo-sec">
     <div class="qa-ceo-inner">
@@ -767,7 +766,7 @@
 
         {{-- Vision text --}}
         <div class="qa-anim d2">
-            <div class="qa-vision-label"><i class="fas fa-quote-left"></i> Vision From CEO</div>
+            <div class="qa-vision-label"><i class="fas fa-quote-left"></i> Vision From Founder</div>
             <h2 class="qa-vision-h">The <span>Future</span> We Are Building Together</h2>
             <div class="qa-vision-body">
                 @foreach($ceoVision['paras'] as $para)

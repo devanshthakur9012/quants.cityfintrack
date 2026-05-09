@@ -31,7 +31,7 @@
                             <ul class="sub-menu">
                                 <li><a href="{{ route('webinars') }}">@lang('Webinars')</a></li>
                                 <li><a href="{{ route('courses') }}">@lang('Courses')</a></li>
-                                <li><a href="{{ route('user.login') }}">@lang('Book a Demo')</a></li>
+                                <li><a href="{{ route('book.demo') }}">@lang('Book a Demo')</a></li>
                                 <li><a href="{{ route('events') }}">@lang('Event')</a></li>
                                 <li><a href="{{ route('optionsymposium') }}">@lang('Option Symposium 7.0')</a></li>
                             </ul>
