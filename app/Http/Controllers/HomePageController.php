@@ -47,7 +47,7 @@ class HomePageController extends Controller
                 'badge'    => 'Intermediate >> Advance Course',
                 'lang'     => 'In Hindi',
                 'trainers' => [
-                    ['name' => 'Bhavin Desai', 'role' => '(President, Quantsapp)', 'avatar' => ''],
+                    ['name' => 'Bhavin Desai', 'role' => '(President, CityQuants)', 'avatar' => ''],
                     ['name' => 'Varun Shetty',  'role' => '(Trainer)',              'avatar' => ''],
                 ],
             ],
@@ -56,14 +56,14 @@ class HomePageController extends Controller
                 'badge'    => 'Beginner >> Intermediate Course',
                 'lang'     => 'In Hindi',
                 'trainers' => [
-                    ['name' => 'Bhavin Desai', 'role' => '(President, Quantsapp)', 'avatar' => ''],
+                    ['name' => 'Bhavin Desai', 'role' => '(President, CityQuants)', 'avatar' => ''],
                 ],
             ],
         ];
 
         // ── 4. ABOUT THE APP ────────────────────────────
         $about = [
-            'video_url' => 'https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0',
+            'video_url' => 'https://www.youtube.com/embed/htLQVsJWwN4?si=YWGvfiv1Y_Aw8FqC?rel=0',
             'title'     => 'Be a " Data Driven " Option Trader!',
             'stats'     => [
                 ['value' => '100+',     'label' => 'Options Analytics', 'sub' => 'largest in India'],
@@ -75,7 +75,7 @@ class HomePageController extends Controller
 
         // ── 5. FEATURE TOOLS ────────────────────────────
         $features = [
-            'title'   => 'Quantsapp App Feature Tools',
+            'title'   => 'CityQuants App Feature Tools',
             'tagline' => 'Analyze | Backtest | Optimize | Manage your Option Trades',
             'utilities' => [
                 [
@@ -150,11 +150,11 @@ class HomePageController extends Controller
                 [
                     'tab'         => 'Demo Videos',
                     'highlight'   => 'Step-by-step platform walkthroughs',
-                    'description' => 'Watch our demo videos to quickly learn how to use each tool on the Quantsapp platform — perfect for beginners and advanced traders alike.',
+                    'description' => 'Watch our demo videos to quickly learn how to use each tool on the CityQuants platform — perfect for beginners and advanced traders alike.',
                     'btn_label'   => 'Watch Now',
                     'btn_url'     => '#',
                     'video_id'    => 'dQw4w9WgXcQ',
-                    'video_title' => 'Quantsapp Platform Demo',
+                    'video_title' => 'CityQuants Platform Demo',
                     'video_sub'   => 'IN HINDI',
                     'video_date'  => '15 JAN 2024',
                     'video_time'  => '5:00 PM',
@@ -171,11 +171,11 @@ class HomePageController extends Controller
             ['name' => 'Aashish Rajgaria', 'avatar' => '', 'rating' => 5,
              'review' => "Amazing app. I've been struggling to find option data organized and sorted in one place but this app is the ultimate answer. The parallel web login is just a cherry on the cake. I love their optimizer and tabulated chain data. The support is very clear too. 5 stars keep the good work up guys."],
             ['name' => 'Dhananjay Deo',    'avatar' => '', 'rating' => 5,
-             'review' => 'It is an excellent app for options traders. A must app to build your option trade namaste and test it. Features like maxpain max gain help in devising expiry trade. Kudos to quantsapp team.'],
+             'review' => 'It is an excellent app for options traders. A must app to build your option trade namaste and test it. Features like maxpain max gain help in devising expiry trade. Kudos to CityQuants team.'],
             ['name' => 'Priya Sharma',     'avatar' => '', 'rating' => 5,
              'review' => 'Best options analytics tool in India. The UI is clean and data is real-time. Highly recommended for serious traders who want an edge in the market.'],
             ['name' => 'Kiran Mehta',      'avatar' => '', 'rating' => 5,
-             'review' => 'Quantsapp has completely changed how I trade options. The backtesting feature alone is worth the subscription. Excellent platform overall!'],
+             'review' => 'CityQuants has completely changed how I trade options. The backtesting feature alone is worth the subscription. Excellent platform overall!'],
         ];
 
         return view($this->activeTemplate . 'home', compact(
@@ -196,7 +196,7 @@ class HomePageController extends Controller
             'tagline'    => 'Empowering Traders with Intelligence',
             'subtitle'   => 'India\'s most trusted options analytics platform — built by traders, for traders.',
             'founded'    => '2017',
-            'hq'         => 'Mumbai, India',
+            'hq'         => 'Belgaum, India',
             'users'      => '17 Lakh+',
             'experience' => '23+ Years',
         ];
@@ -204,7 +204,7 @@ class HomePageController extends Controller
         // ── WHO ARE WE + MISSION ────────────────────────
         $whoWeAre = [
             'heading' => 'Who Are We?',
-            'body'    => 'Quantsapp is a dedicated Options Analytics Platform made for Traders by Traders, with the widest range of FREE option trading tools in the industry. We combine deep domain expertise with cutting-edge technology to bring institutional-grade analytics directly to retail traders — at a fraction of the cost.',
+            'body'    => 'CityQuants is a dedicated Options Analytics Platform made for Traders by Traders, with the widest range of FREE option trading tools in the industry. We combine deep domain expertise with cutting-edge technology to bring institutional-grade analytics directly to retail traders — at a fraction of the cost.',
             'pillars' => [
                 ['icon' => 'fa-chart-line',    'label' => 'Analytics First'],
                 ['icon' => 'fa-shield-halved', 'label' => 'Trusted Platform'],
@@ -228,27 +228,27 @@ class HomePageController extends Controller
         $ideators = [
             [
                 'name'     => 'Shubham Agarwal',
-                'role'     => 'CEO, Quantsapp',
+                'role'     => 'CEO, CityQuants',
                 'creds'    => 'CMT, CFA, CQF, CFTe',
-                'bio'      => 'A Chartered Market Technician (MTA, USA) & Chartered Financial Analyst (CFA Institute, USA), Shubham brings over a decade of expertise in Derivatives & Algorithmic trading. His vision drives Quantsapp\'s mission to bring institutional-grade analytics to every retail trader in India.',
+                'bio'      => 'A Chartered Market Technician (MTA, USA) & Chartered Financial Analyst (CFA Institute, USA), Shubham brings over a decade of expertise in Derivatives & Algorithmic trading. His vision drives CityQuants\'s mission to bring institutional-grade analytics to every retail trader in India.',
                 'avatar'   => '',
                 'linkedin' => '#',
                 'twitter'  => '#',
             ],
             [
                 'name'     => 'Tina Gadodia',
-                'role'     => 'President, Quantsapp',
+                'role'     => 'President, CityQuants',
                 'creds'    => 'MMS – Finance',
-                'bio'      => 'With 15+ years of professional experience in Futures & Options Research, Tina leads Quantsapp\'s product and research divisions. Her expertise in market dynamics and deep understanding of trader psychology shapes the platform\'s analytical approach.',
+                'bio'      => 'With 15+ years of professional experience in Futures & Options Research, Tina leads CityQuants\'s product and research divisions. Her expertise in market dynamics and deep understanding of trader psychology shapes the platform\'s analytical approach.',
                 'avatar'   => '',
                 'linkedin' => '#',
                 'twitter'  => '#',
             ],
             [
                 'name'     => 'Bhavin Desai',
-                'role'     => 'President, Quantsapp',
+                'role'     => 'President, CityQuants',
                 'creds'    => 'MMS – Finance',
-                'bio'      => 'Bhavin brings 20+ years of professional experience in Futures & Options Research. As co-architect of Quantsapp\'s proprietary tools, he ensures the platform remains at the cutting edge of options analytics and algorithmic strategy.',
+                'bio'      => 'Bhavin brings 20+ years of professional experience in Futures & Options Research. As co-architect of CityQuants\'s proprietary tools, he ensures the platform remains at the cutting edge of options analytics and algorithmic strategy.',
                 'avatar'   => '',
                 'linkedin' => '#',
                 'twitter'  => '#',
@@ -260,20 +260,20 @@ class HomePageController extends Controller
             'heading' => 'Our Workspace',
             'sub'     => 'Where ideas meet execution — our offices across India are built for focused, high-performance work.',
             'slides'  => [
-                ['src' => '', 'caption' => 'Mumbai HQ — Main Trading Floor',     'sub' => 'Lower Parel, Mumbai',        'tag' => 'HEADQUARTERS'],
-                ['src' => '', 'caption' => 'Open Collaboration Zone',            'sub' => 'Mumbai HQ',                  'tag' => 'CREATIVE SPACE'],
-                ['src' => '', 'caption' => 'Quantsapp Research Lab',             'sub' => 'Algo & Quant Division',      'tag' => 'R&D'],
+                ['src' => '', 'caption' => 'Belgaum HQ — Main Trading Floor',     'sub' => 'Lower Parel, Belgaum',        'tag' => 'HEADQUARTERS'],
+                ['src' => '', 'caption' => 'Open Collaboration Zone',            'sub' => 'Belgaum HQ',                  'tag' => 'CREATIVE SPACE'],
+                ['src' => '', 'caption' => 'CityQuants Research Lab',             'sub' => 'Algo & Quant Division',      'tag' => 'R&D'],
                 ['src' => '', 'caption' => 'Webinar & Training Studio',          'sub' => 'Live Sessions & Recordings', 'tag' => 'STUDIO'],
                 ['src' => '', 'caption' => 'Executive Boardroom',                'sub' => 'Strategy & Leadership',      'tag' => 'BOARDROOM'],
             ],
             'offices' => [
                 [
-                    'city'    => 'Mumbai',
+                    'city'    => 'Belgaum',
                     'flag'    => '🏙️',
                     'tag'     => 'HEADQUARTERS',
                     'photo'   => '',
-                    'desc'    => 'Our main headquarters and nerve centre. Home to our core trading analytics, research, product, and leadership teams. The Mumbai office drives Quantsapp\'s vision and day-to-day operations.',
-                    'address' => 'Lower Parel, Mumbai, Maharashtra — 400013',
+                    'desc'    => 'Our main headquarters and nerve centre. Home to our core trading analytics, research, product, and leadership teams. The Belgaum office drives CityQuants\'s vision and day-to-day operations.',
+                    'address' => 'Lower Parel, Belgaum, Maharashtra — 400013',
                     'team'    => '80+ team members across product, research & ops',
                     'hours'   => 'Mon – Sat, 9:00 AM – 7:00 PM IST',
                 ],
@@ -282,7 +282,7 @@ class HomePageController extends Controller
                     'flag'    => '🌿',
                     'tag'     => 'TECH HUB',
                     'photo'   => '',
-                    'desc'    => 'Our Bangalore office powers the engineering and platform development behind Quantsapp. The tech hub drives innovation on our algorithmic engine, real-time data infrastructure, and mobile products.',
+                    'desc'    => 'Our Bangalore office powers the engineering and platform development behind CityQuants. The tech hub drives innovation on our algorithmic engine, real-time data infrastructure, and mobile products.',
                     'address' => 'Koramangala, Bengaluru, Karnataka — 560034',
                     'team'    => '35+ engineers, DevOps & QA professionals',
                     'hours'   => 'Mon – Fri, 9:00 AM – 6:30 PM IST',
@@ -323,12 +323,12 @@ class HomePageController extends Controller
         // ── CEO VISION ──────────────────────────────────
         $ceoVision = [
             'name'      => 'Shubham Agarwal',
-            'title'     => 'CEO & Founder, Quantsapp',
+            'title'     => 'CEO & Founder, CityQuants',
             'signature' => 'Shubham Agarwal',
             'avatar'    => '',
             'paras'     => [
-                'I have a firm belief that Start-ups are not meant to start a diversified business — it starts with a unique idea where opportunity is visible and it walks faster than the world due to a sharp focus. At Quantsapp, we are backed by Industry Veterans who work without limits because we love what we do.',
-                'The idea behind Quantsapp was to look within our own interests and expertise. After being in this field for above a decade, combining Options Trading & Algorithms is ultimate and will change how people trade today. As researchers, we foresee a world tomorrow where we are confident we will make that a reality ourselves.',
+                'I have a firm belief that Start-ups are not meant to start a diversified business — it starts with a unique idea where opportunity is visible and it walks faster than the world due to a sharp focus. At CityQuants, we are backed by Industry Veterans who work without limits because we love what we do.',
+                'The idea behind CityQuants was to look within our own interests and expertise. After being in this field for above a decade, combining Options Trading & Algorithms is ultimate and will change how people trade today. As researchers, we foresee a world tomorrow where we are confident we will make that a reality ourselves.',
                 'After serving Retail / HNI Traders since ever, we surely have a bias towards Derivatives — it is a zero sum game. Institutions have an upper hand of advance research, but retail clients cannot afford the same. We are a team of researchers with this being our passion, having honed the art of keeping complexity low and offering it as a piece of cake for retail traders.',
                 'We are confident of making our platform the most unique one globally in the Options Trading domain. We are currently live with our application in India and soon will be available in US, Europe & Canada. Options is the most traded and least understood instrument globally — and our mentors are enthusiasts to pass on the knowledge you need to trade options wisely.',
                 'I welcome you to join us in the journey bringing equality in the game of Options Trading.',
@@ -377,7 +377,7 @@ class HomePageController extends Controller
             'Put Call Ratio', 'Order Book Analysis', 'Technical Analysis',
             'Pair Trading', 'Event Trading', 'Backtesting',
             'Live Market', 'Python', 'Algotrading', 'Superapi',
-            'Quantsappsuperapi',
+            'CityQuantssuperapi',
         ];
 
         // ── UPCOMING / LIVE WEBINARS ─────────────────────
@@ -527,7 +527,7 @@ class HomePageController extends Controller
             ],
             [
                 'id'          => 105,
-                'title'       => 'Master Trade Execution with Quantsapp',
+                'title'       => 'Master Trade Execution with CityQuants',
                 'status'      => 'past',
                 'price'       => 0,
                 'mrp'         => 999,
@@ -543,7 +543,7 @@ class HomePageController extends Controller
             ],
             [
                 'id'          => 106,
-                'title'       => 'Webinar on Quantsapp Python Order API',
+                'title'       => 'Webinar on CityQuants Python Order API',
                 'status'      => 'past',
                 'price'       => 0,
                 'mrp'         => 999,
@@ -1071,7 +1071,7 @@ class HomePageController extends Controller
         ];
  
         // Promo video shown on right (YouTube embed or hosted video URL)
-        $promoVideo = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&rel=0&modestbranding=1&controls=1';
+        $promoVideo = 'https://www.youtube.com/embed/htLQVsJWwN4?si=YWGvfiv1Y_Aw8FqC?autoplay=1&mute=1&rel=0&modestbranding=1&controls=1';
  
         return view($this->activeTemplate . 'login', compact(
             'pageTitle',
@@ -1126,7 +1126,7 @@ class HomePageController extends Controller
 
             // ── ABOUT ────────────────────────────────────
             'about' => [
-                'Option Symposium 7.0 is Quantsapp\'s annual Conference on Options Trading that aims to bring together the country\'s top Option Fund Managers, Derivative Analysts, Option Trainers & Individual Option Traders to join hands & enlighten option enthusiasts with various Practical Options Trading styles and their winning strategies.',
+                'Option Symposium 7.0 is CityQuants\'s annual Conference on Options Trading that aims to bring together the country\'s top Option Fund Managers, Derivative Analysts, Option Trainers & Individual Option Traders to join hands & enlighten option enthusiasts with various Practical Options Trading styles and their winning strategies.',
                 'The cornerstone of the conference is to discuss actionable strategies which can help traders enhance their trading tools for a higher probability of success.',
             ],
 
@@ -1140,11 +1140,11 @@ class HomePageController extends Controller
 
             // ── SPEAKERS ─────────────────────────────────
             'speakers' => [
-                ['name'=>'Shubham Agarwal',  'role'=>'CEO, Quantsapp',                     'creds'=>'CMT, CFA, CQF, CFTe', 'topic'=>'Intraday Options Buying: Strategies & Automation with API Bridge',       'avatar'=>'https://img.freepik.com/free-photo/young-businessman-white-shirt_144627-16510.jpg?w=200'],
+                ['name'=>'Shubham Agarwal',  'role'=>'CEO, CityQuants',                     'creds'=>'CMT, CFA, CQF, CFTe', 'topic'=>'Intraday Options Buying: Strategies & Automation with API Bridge',       'avatar'=>'https://img.freepik.com/free-photo/young-businessman-white-shirt_144627-16510.jpg?w=200'],
                 ['name'=>'Avani Bhatt',      'role'=>'Derivative Research Analyst Sr VP, JM Financial',    'creds'=>'',     'topic'=>'Stock Options: Which ones & Why?',                                       'avatar'=>'https://img.freepik.com/free-photo/businesswoman-posing_23-2148142978.jpg?w=200'],
                 ['name'=>'Kushal Jain',      'role'=>'Co-founder of Algotix',               'creds'=>'',     'topic'=>'Index Options: Market Structure & Price Action',                                'avatar'=>'https://img.freepik.com/free-photo/portrait-man-laughing_23-2148859448.jpg?w=200'],
-                ['name'=>'Subhadra Nandy',   'role'=>'Founder of Quantsapp',                'creds'=>'',     'topic'=>'Mastering Options Buying: Direction, Timing & Spread',                          'avatar'=>'https://img.freepik.com/free-photo/confident-businesswoman_23-2148152868.jpg?w=200'],
-                ['name'=>'Tina Gadodia',     'role'=>'President, Quantsapp',                'creds'=>'',     'topic'=>'Derivative Analysis Using OI & Options Data',                                  'avatar'=>'https://img.freepik.com/free-photo/smiling-businesswoman-posing_23-2148142985.jpg?w=200'],
+                ['name'=>'Subhadra Nandy',   'role'=>'Founder of CityQuants',                'creds'=>'',     'topic'=>'Mastering Options Buying: Direction, Timing & Spread',                          'avatar'=>'https://img.freepik.com/free-photo/confident-businesswoman_23-2148152868.jpg?w=200'],
+                ['name'=>'Tina Gadodia',     'role'=>'President, CityQuants',                'creds'=>'',     'topic'=>'Derivative Analysis Using OI & Options Data',                                  'avatar'=>'https://img.freepik.com/free-photo/smiling-businesswoman-posing_23-2148142985.jpg?w=200'],
                 ['name'=>'Bhavin Desai',     'role'=>'Full Time Trader',                    'creds'=>'',     'topic'=>'Trading Realized Volatility with Long Options',                                 'avatar'=>'https://img.freepik.com/free-photo/businessman-suit_1439-874.jpg?w=200'],
                 ['name'=>'Jyoti Budhia',     'role'=>'Founder, B K Training',               'creds'=>'',     'topic'=>'Decoding the complexity of Option Chain',                                       'avatar'=>'https://img.freepik.com/free-photo/portrait-young-businesswoman_23-2149073960.jpg?w=200'],
                 ['name'=>'Ronak Unadkat',    'role'=>'Full Time Trader',                    'creds'=>'',     'topic'=>'Index Trading Via Spreads & Rule based Adjustment',                             'avatar'=>'https://img.freepik.com/free-photo/man-business-suit_1439-879.jpg?w=200'],
@@ -1208,7 +1208,7 @@ class HomePageController extends Controller
 
             // ── PAST EXPERTS ─────────────────────────────
             'past_experts' => [
-                ['name'=>'Joanika Singh',    'role'=>'CFO, Quantsapp, Managing Director of Consulting LLP',     'avatar'=>'https://img.freepik.com/free-photo/businesswoman-posing_23-2148142978.jpg?w=150'],
+                ['name'=>'Joanika Singh',    'role'=>'CFO, CityQuants, Managing Director of Consulting LLP',     'avatar'=>'https://img.freepik.com/free-photo/businesswoman-posing_23-2148142978.jpg?w=150'],
                 ['name'=>'Savrit Manjeet',   'role'=>'Trading Head, Derivative Consulting LLC',                  'avatar'=>'https://img.freepik.com/free-photo/portrait-man-laughing_23-2148859448.jpg?w=150'],
                 ['name'=>'Pankaj Chiftlangia','role'=>'Chief Executive Officer, B Square Advisors',              'avatar'=>'https://img.freepik.com/free-photo/smiling-businesswoman-posing_23-2148142985.jpg?w=150'],
                 ['name'=>'Amit Goel',         'role'=>'CEO, Finscope Pvt Ltd, IIT Delhi, Full Time Trader',     'avatar'=>'https://img.freepik.com/free-photo/young-businessman-white-shirt_144627-16510.jpg?w=150'],
@@ -1355,7 +1355,7 @@ class HomePageController extends Controller
                 'likes'       => 746,
                 'views'       => 33006,
                 'age'         => '24 months ago',
-                'description' => 'Trap Indicator is a proprietary algorithm of Quantsapp which searches for securities or indices where the call writers or put writers are getting trapped, with prices of options...',
+                'description' => 'Trap Indicator is a proprietary algorithm of CityQuants which searches for securities or indices where the call writers or put writers are getting trapped, with prices of options...',
                 'level'       => 'Intermediate Level',
                 'language'    => 'English',
                 'duration'    => '01:11 hr',
@@ -1440,7 +1440,7 @@ class HomePageController extends Controller
                 'likes'       => 365,
                 'views'       => 14228,
                 'age'         => '24 months ago',
-                'description' => 'Intraday Movers tool within Quantsapp empowers option traders and derivative traders on the NSE to assess the leading performers in the derivatives segment...',
+                'description' => 'Intraday Movers tool within CityQuants empowers option traders and derivative traders on the NSE to assess the leading performers in the derivatives segment...',
                 'level'       => 'Beginner Level',
                 'language'    => 'Hindi',
                 'duration'    => '07:09 hr',
@@ -1542,7 +1542,7 @@ class HomePageController extends Controller
                 'likes'       => 73,
                 'views'       => 2771,
                 'age'         => '24 months ago',
-                'description' => 'The Advance Decline chart, a tool within Quantsapp utilized in the Indian stock market, gauges the breadth of a market\'s movement. It aids investors and traders in...',
+                'description' => 'The Advance Decline chart, a tool within CityQuants utilized in the Indian stock market, gauges the breadth of a market\'s movement. It aids investors and traders in...',
                 'level'       => 'Intermediate Level',
                 'language'    => 'Hindi',
                 'duration'    => '01:55 hr',
