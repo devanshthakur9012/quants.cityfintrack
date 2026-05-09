@@ -4,11 +4,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::namespace('User\Auth')->name('user.')->group(function () {
 
-    Route::controller('LoginController')->group(function(){
-        Route::get('/login', 'showLoginForm')->name('login');
-        Route::post('/login', 'login');
-        Route::get('logout', 'logout')->middleware('auth')->name('logout');
-    });
+    // Route::controller('LoginController')->group(function(){
+    //     Route::get('/login', 'showLoginForm')->name('login');
+    //     Route::post('/login', 'login');
+    //     Route::get('logout', 'logout')->middleware('auth')->name('logout');
+    // });
 
     // Route::controller('RegisterController')->group(function(){
     //     Route::get('register', 'showRegistrationForm')->name('register');

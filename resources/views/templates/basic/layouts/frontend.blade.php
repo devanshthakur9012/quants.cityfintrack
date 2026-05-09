@@ -4,9 +4,9 @@
 @include($activeTemplate.'partials.header')
 
 <div class="main-wrapper">
-    @if(!request()->routeIs('home') && !request()->routeIs('user.login'))
+    {{-- @if(!request()->routeIs('home') && !request()->routeIs('login') && !request()->routeIs('optionsymposium'))
         @include($activeTemplate.'partials.bread_crumb')
-    @endif
+    @endif --}}
     @yield('content')
 </div>
 

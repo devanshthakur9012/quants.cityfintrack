@@ -120,7 +120,14 @@ Route::get('/import-data','SiteController@importExcelData')->name('importExcelDa
 // Route::get('/', 'SiteController@index')->name('home');
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
- 
+Route::get('/webinars', [HomePageController::class, 'webinars'])->name('webinars');
+Route::get('/courses', [HomePageController::class, 'courses'])->name('courses');
+Route::get('/login',   [HomePageController::class, 'login'])->name('user.login');
+Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.register');
+Route::get('/events',  [HomePageController::class, 'events'])->name('events');
+Route::get('/option-symposium', [HomePageController::class, 'optionSymposium'])->name('optionsymposium');
+Route::get('/video-library', [HomePageController::class, 'videoLibrary'])->name('video.library');
+
 Route::middleware('guest')->group(function () {
     Route::post('/send-email-otp',   [EmailOtpController::class, 'sendOtp'])->name('send.email.otp');
     Route::post('/verify-email-otp', [EmailOtpController::class, 'verifyOtp'])->name('verify.email.otp');
