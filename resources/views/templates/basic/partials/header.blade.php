@@ -37,7 +37,7 @@
                             </ul>
                         </li>
                         <li><a href="{{ route('video.library') }}">@lang('VIDEO LIBRARY')</a></li>
-                        <li><a href="{{ route('user.login') }}">@lang('MEDIA')</a></li>
+                        <li><a href="{{ route('media') }}">@lang('MEDIA')</a></li>
                         <li><a href="{{ route('about') }}">@lang('ABOUT')</a></li>
                         {{-- @php
                             $pages = App\Models\Page::where('tempname', $activeTemplate)
