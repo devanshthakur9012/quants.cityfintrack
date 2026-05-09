@@ -27,7 +27,7 @@ class HomePageController extends Controller
 
         // ── 1. HERO ─────────────────────────────────────
         $hero = [
-            'video_url' => asset('assets/video/hero.mp4'),
+            'video_url' => asset('assets/video/hero-main.mp4'),
             'app_url'   => 'cityquants.com',
             'appstore'  => '#',
             'playstore' => '#',
