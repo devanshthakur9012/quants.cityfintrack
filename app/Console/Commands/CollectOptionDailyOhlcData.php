@@ -18,7 +18,7 @@ use Exception;
  *
  * Collects daily OHLC + OI for FUT and Options (ATM ±5 strikes) — one candle per day.
  * Symbols : loaded from daily_option_symbols table
- * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: OQJ978)
+ * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: DB0542)
  *
  * ── MATCHES Collect30MinOhlcData patterns exactly ─────────────────────────
  *
@@ -42,7 +42,7 @@ class CollectOptionDailyOhlcData extends Command
     use OptionExpiryResolver;
 
     // ── Change this to switch the target broker without touching logic ────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     // ─────────────────────────────────────────────────────────────────────────
 

@@ -19,7 +19,7 @@ use Exception;
 
 class MutualFundStockOhlc1hrCollector extends Command
 {
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const KITE_API_BASE    = 'https://api.kite.trade';
 
     // Zerodha allows max 60 days per request for 60minute interval

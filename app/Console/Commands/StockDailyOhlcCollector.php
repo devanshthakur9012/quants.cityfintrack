@@ -19,7 +19,7 @@ use Exception;
 
 class StockDailyOhlcCollector extends Command
 {
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const KITE_API_BASE = 'https://api.kite.trade';
     protected $signature = 'stocks:collect-daily-ohlc
                             {--mode=live             : "live" = today only | "historical" = date range}

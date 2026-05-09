@@ -18,7 +18,7 @@ class DistributeSymbolsBackup extends Command
 
     // ONLY these symbols will be processed - all others will be skipped
     // protected $specificAssignments = [
-    //     'OQJ978' => [
+    //     'DB0542' => [
     //         '360ONE','ABB','APLAPOLLO','AUBANK','ADANIENSOL','ADANIENT','ADANIGREEN','ADANIPORTS',
     //         'ABCAPITAL','ALKEM','AMBER','AMBUJACEM','ANGELONE','APOLLOHOSP','ASHOKLEY','ASIANPAINT',
     //         'ASTRAL','AUROPHARMA','DMART','AXISBANK','BSE','BAJAJ-AUTO','BAJFINANCE','BAJAJFINSV',
@@ -33,7 +33,7 @@ class DistributeSymbolsBackup extends Command
     //         'IEX','IOC','IRCTC','IRFC','IREDA','INDUSTOWER'
     //     ],
 
-    //     'OQJ978' => [
+    //     'DB0542' => [
     //         'INDUSINDBK','NAUKRI','INFY','INOXWIND','INDIGO','JINDALSTEL','JSWENERGY','JSWSTEEL',
     //         'JIOFIN','JUBLFOOD','KEI','KPITTECH','KALYANKJIL','KAYNES','KFINTECH','KOTAKBANK',
     //         'LTF','LICHSGFIN','LTIM','LT','LAURUSLABS','LICI','LODHA','LUPIN','M&M','MANAPPURAM',
@@ -52,7 +52,7 @@ class DistributeSymbolsBackup extends Command
     // ];
 
     protected $specificAssignments = [
-        'OQJ978' => [
+        'DB0542' => [
             'APLAPOLLO', 'ASHOKLEY', 'ASIANPAINT', 'AXISBANK', 'BANKINDIA', 
             'BHARATFORG', 'BSE', 'HAVELLS', 'HDFCAMC', 'INDIGO', 
             'JSWENERGY', 'KALYANKJIL', 'KOTAKBANK', 'KPITTECH', 'LUPIN', 
@@ -70,7 +70,7 @@ class DistributeSymbolsBackup extends Command
             'TATACONSUM', 'TRENT', 'CAMS', 'PATANJALI', 'RVNL', 
             'TIINDIA','NIFTY','BANKNIFTY'
         ],
-        'OQJ978' => [
+        'DB0542' => [
             'AMBUJACEM', 'PNBHOUSING', 'INDIANB', 'RELIANCE', 'SUNPHARMA', 
             'INDUSINDBK', 'RBLBANK', 'HUDCO', 'OIL', 'ADANIENT', 
             'SONACOMS', 'ICICIBANK', 'ADANIPORTS', 'INFY', 'TCS', 
@@ -90,7 +90,7 @@ class DistributeSymbolsBackup extends Command
     ];
 
     // protected $specificAssignments = [
-    //     'OQJ978' => [
+    //     'DB0542' => [
     //         'APLAPOLLO', 'ASHOKLEY', 'ASIANPAINT', 'AXISBANK', 'BANKINDIA', 
     //         'BHARATFORG', 'BSE', 'HAVELLS', 'HDFCAMC', 'INDIGO', 
     //         'JSWENERGY', 'KALYANKJIL', 'KOTAKBANK', 'KPITTECH', 'LUPIN', 
@@ -108,7 +108,7 @@ class DistributeSymbolsBackup extends Command
     //         'TATACONSUM', 'TRENT', 'CAMS', 'PATANJALI'
     //     ],
 
-    //     'OQJ978' => [
+    //     'DB0542' => [
     //         'RVNL', 'TIINDIA', 'AMBUJACEM', 'PNBHOUSING', 'INDIANB', 
     //         'RELIANCE', 'SUNPHARMA', 'INDUSINDBK', 'RBLBANK', 'HUDCO', 
     //         'OIL', 'ADANIENT', 'SONACOMS', 'ICICIBANK', 'ADANIPORTS', 

@@ -15,7 +15,7 @@ use KiteConnect\KiteConnect;
 class SymbolBacktestProfitController extends Controller
 {
     private $kite;
-    private $userId = 'ZZL808'; // Hardcoded user ID
+    private $userId = 'DB0542'; // Hardcoded user ID
 
     /**
      * Calculate profit/loss for backtested signals (SYMBOLS)

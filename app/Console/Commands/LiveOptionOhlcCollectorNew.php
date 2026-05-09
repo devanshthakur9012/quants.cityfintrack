@@ -42,7 +42,7 @@ class LiveOptionOhlcCollectorNew extends Command
     use OptionExpiryResolver;
 
     // ── Change this constant to switch the target broker ─────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     protected $signature = 'options:live-collect-new
                             {--symbol= : Specific symbol}

@@ -19,7 +19,7 @@ use Exception;
 
 class MutualFundStockOhlcCollector extends Command
 {
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const KITE_API_BASE    = 'https://api.kite.trade';
 
     protected $signature = 'mf:collect-ohlc

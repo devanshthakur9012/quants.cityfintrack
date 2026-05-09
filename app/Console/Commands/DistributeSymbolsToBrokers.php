@@ -16,7 +16,7 @@ class DistributeSymbolsToBrokers extends Command
     
     protected string $defaultInterval = 'minute';
     protected $specificAssignments = [
-        'OQJ978' => [
+        'DB0542' => [
             '360ONE','ABB','APLAPOLLO','AUBANK','ADANIENSOL','ADANIENT','ADANIGREEN','ADANIPORTS',
             'ABCAPITAL','ALKEM','AMBER','AMBUJACEM','ANGELONE','APOLLOHOSP','ASHOKLEY','ASIANPAINT',
             'ASTRAL','AUROPHARMA','DMART','AXISBANK','BSE','BAJAJ-AUTO','BAJFINANCE','BAJAJFINSV',
@@ -31,7 +31,7 @@ class DistributeSymbolsToBrokers extends Command
             'IEX','IOC','IRCTC','IRFC','IREDA','INDUSTOWER'
         ],
 
-        'OQJ978' => [
+        'DB0542' => [
             'INDUSINDBK','NAUKRI','INFY','INOXWIND','INDIGO','JINDALSTEL','JSWENERGY','JSWSTEEL',
             'JIOFIN','JUBLFOOD','KEI','KPITTECH','KALYANKJIL','KAYNES','KFINTECH','KOTAKBANK',
             'LTF','LICHSGFIN','LTIM','LT','LAURUSLABS','LICI','LODHA','LUPIN','M&M','MANAPPURAM',
@@ -51,7 +51,7 @@ class DistributeSymbolsToBrokers extends Command
 
 
     // protected $specificAssignments = [
-    //     'OQJ978' => [
+    //     'DB0542' => [
     //         'AXISBANK', 'BHARTIARTL', 'HINDUNILVR', 'SHRIRAMFIN', 'TMPV', 'HAL',
     //         'INDUSTOWER', 'LTF', 'TITAN', 'HINDZINC', 'M&M', 'PAYTM',
     //         'SRF', 'SBIN'

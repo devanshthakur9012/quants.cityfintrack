@@ -79,7 +79,7 @@ class NextSeriesDailyOhlcCollector extends Command
     use OptionExpiryResolver;
 
     // ── Change to switch the target broker ───────────────────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     private const MARKET_OPEN  = '09:15';
     private const MARKET_CLOSE = '15:30';

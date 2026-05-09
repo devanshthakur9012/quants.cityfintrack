@@ -64,7 +64,7 @@ class NextSeriesLiveOptionOhlcCollector extends Command
     use OptionExpiryResolver;
 
     // ── Broker ────────────────────────────────────────────────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     // ── ATM freeze — same as LiveOptionOhlcCollector ──────────────────────────
     private const ATM_FREEZE_TIME       = '09:15';

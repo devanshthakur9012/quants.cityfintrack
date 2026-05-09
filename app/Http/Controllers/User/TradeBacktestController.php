@@ -26,7 +26,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  *
  * FIX 2 — Missing OHLC fallback to live Zerodha API:
  *   OLD: if no DB candles → outcome = NO_DATA
- *   NEW: if no DB candles → fetch from Zerodha historical API (OQJ978 broker)
+ *   NEW: if no DB candles → fetch from Zerodha historical API (DB0542 broker)
  *        Batched per date to minimise API calls. Cached in memory per request.
  *        If API also has no data → NO_DATA as before.
  *
@@ -47,7 +47,7 @@ class TradeBacktestController extends Controller
 {
     const MARKET_OPEN     = '09:15:00';
     const EXIT_CUTOFF     = '14:15:00';
-    const BROKER_CLIENT   = 'OQJ978';   // Zerodha broker for live API fallback
+    const BROKER_CLIENT   = 'DB0542';   // Zerodha broker for live API fallback
 
     /** In-memory cache: date → token → ['H:i' => candle] */
     private array $apiCandleCache = [];

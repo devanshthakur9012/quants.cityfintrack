@@ -46,7 +46,7 @@ class CollectMcx3HrOhlcData extends Command
 {
     use McxExpiryResolver;
 
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const SLOTS            = ['09:00', '12:00', '15:00', '18:00', '21:00'];
     private const MCX_START        = '09:00';
     private const MCX_END          = '23:30';   // MCX trades until 23:30 IST

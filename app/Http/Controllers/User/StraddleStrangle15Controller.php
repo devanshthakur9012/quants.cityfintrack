@@ -41,7 +41,7 @@ class StraddleStrangle15Controller extends Controller
 {
     private const ENTRY_SLOT      = '09:15';
     private const LTP_CACHE_TTL   = 3600;           // 60 min
-    private const BROKER_CLIENT_ID = 'ZZL808';      // change to your broker
+    private const BROKER_CLIENT_ID = 'DB0542';      // change to your broker
 
     private const STRATEGIES = [
         'long_strangle'  => ['name' => 'Long Strangle',  'ce_type' => 'Buy',  'ce_pos' => 'ATM+1', 'pe_type' => 'Buy',  'pe_pos' => 'ATM-1'],

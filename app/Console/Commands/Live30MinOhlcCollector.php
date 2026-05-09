@@ -39,7 +39,7 @@ use Exception;
  *   - If strike interval cannot be determined, the symbol+expiry is SKIPPED
  *     and logged — no fallback, no guessing.
  *
- * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: OQJ978)
+ * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: DB0542)
  * Symbols : loaded from 30min_ohlc_symbols table
  *
  * Expiry handling:
@@ -52,7 +52,7 @@ class Live30MinOhlcCollector extends Command
     use OptionExpiryResolver;
 
     // ── Change this constant to switch the target broker ─────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     private const MARKET_START = '09:15';
     private const MARKET_END   = '15:15';

@@ -31,7 +31,7 @@ use Exception;
  */
 class RawDataCollector extends Command
 {
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const MARKET_OPEN      = '09:15';
     private const MARKET_CLOSE     = '15:15';
     private const FETCH_DELAY_MS   = 350_000; // 350ms between API calls (Zerodha: 3 req/sec max)

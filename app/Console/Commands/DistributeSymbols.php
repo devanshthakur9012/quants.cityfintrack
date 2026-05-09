@@ -17,7 +17,7 @@ class DistributeSymbols extends Command
     protected string $defaultInterval = '5minute';
 
     // protected $specificAssignments = [
-    //     'ZZL808' => [
+    //     'DB0542' => [
     //         'HINDALCO',
     //         'VEDL',
     //         'DRREDDY',
@@ -42,7 +42,7 @@ class DistributeSymbols extends Command
     // ];
 
     protected $specificAssignments = [
-        'ZZL808' => [
+        'DB0542' => [
             'ADANIPORTS',
             'AMBUJACEM',
             'ASIANPAINT',

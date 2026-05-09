@@ -46,7 +46,7 @@ class StockOhlcCollector5min extends Command
 {
     use OptionExpiryResolver;
 
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     protected $signature = 'stocks:collect-5min
                             {--symbol=      : Specific symbol only}

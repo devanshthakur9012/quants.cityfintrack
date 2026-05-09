@@ -113,9 +113,19 @@ use App\Http\Controllers\User\StrataOptionsFairValueController;
 use App\Http\Controllers\User\QuantEdgeSmartMoneyController;
 use App\Http\Controllers\User\PrimeFlowScannerController;
 use App\Http\Controllers\User\StraddleStrategyController;
+use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\User\Auth\EmailOtpController;
 
 Route::get('/import-data','SiteController@importExcelData')->name('importExcelData');
-Route::get('/', 'SiteController@index')->name('home');
+// Route::get('/', 'SiteController@index')->name('home');
+Route::get('/', [HomePageController::class, 'index'])->name('home');
+Route::get('/about', [HomePageController::class, 'about'])->name('about');
+ 
+Route::middleware('guest')->group(function () {
+    Route::post('/send-email-otp',   [EmailOtpController::class, 'sendOtp'])->name('send.email.otp');
+    Route::post('/verify-email-otp', [EmailOtpController::class, 'verifyOtp'])->name('verify.email.otp');
+});
+
 Route::get('/index-ajax', 'SiteController@indexAjax')->name('home-ajax');
 
 Route::get('get-market-data', 'SiteController@getMarketData')->name('get-market-data');

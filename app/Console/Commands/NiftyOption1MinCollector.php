@@ -38,7 +38,7 @@ class NiftyOption1MinCollector extends Command
     use OptionExpiryResolver;
 
     // ── Pin to broker account ──────────────────────────────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     // ── Symbol handled by this collector ──────────────────────────────────
     private const BASE_SYMBOL = 'NIFTY';

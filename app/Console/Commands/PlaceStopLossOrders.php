@@ -318,7 +318,7 @@ class PlaceStopLossOrders extends Command
 
                 // ── Guard 5: Skip if a pending SL already exists ──────────
                 // Scoped to broker_username so multi-broker users are not blocked:
-                // ZZL808+BIOCON and OQJ978+BIOCON are independent SL orders.
+                // DB0542+BIOCON and DB0542+BIOCON are independent SL orders.
                 $slAlreadyExists = \App\Models\OrderBook::where('user_id', $broker->user_id)
                     ->where('broker_username', $broker->account_user_name)
                     ->where('trading_symbol', $symbol)

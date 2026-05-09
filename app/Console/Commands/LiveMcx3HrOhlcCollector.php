@@ -34,7 +34,7 @@ class LiveMcx3HrOhlcCollector extends Command
 {
     use McxExpiryResolver;
 
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const SLOTS            = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 
     protected $signature = 'mcx:live-collect-3hr

@@ -26,7 +26,7 @@ use Exception;
 class CollectSensexExpiryCandles extends Command
 {
     // ── Pin to your broker account ────────────────────────────────────────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
     private const BASE_SYMBOL      = 'SENSEX';
     private const EXCHANGE         = 'BFO';
     private const MARKET_START     = '09:15';

@@ -48,7 +48,7 @@ class MfStockFutOptCollector extends Command
 {
     use OptionExpiryResolver;
 
-    private const BROKER_CLIENT_ID = 'ZZL808'; // ← change to your broker ID
+    private const BROKER_CLIENT_ID = 'DB0542'; // ← change to your broker ID
 
     protected $signature = 'mf:collect-fut-opt
                             {--mode=live         : "live" = today up to last completed candle | "historical" = date range}

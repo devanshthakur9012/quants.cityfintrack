@@ -64,7 +64,7 @@ class LiveOriginal30MinOhlcCollector extends Command
     use OptionExpiryResolver;
 
     // ── Change to switch the target broker ───────────────────────────────────
-    private const BROKER_CLIENT_ID = 'ZZL808';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     private const MARKET_START = '09:15';
     private const MARKET_END   = '15:15';

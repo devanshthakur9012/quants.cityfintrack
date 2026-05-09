@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class SymbolOnePercentController extends Controller
 {
     private $kite;
-    private $userId = 'ZZL808'; // Hardcoded user ID for Zerodha API
+    private $userId = 'DB0542'; // Hardcoded user ID for Zerodha API
 
     /**
      * Display the 1% Move Analysis Page

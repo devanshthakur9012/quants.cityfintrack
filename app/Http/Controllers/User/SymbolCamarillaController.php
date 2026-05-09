@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class SymbolCamarillaController extends Controller
 {
     private $kite;
-    private $userId = 'ZZL808';
+    private $userId = 'DB0542';
 
     /**
      * Display Camarilla Strategy Page

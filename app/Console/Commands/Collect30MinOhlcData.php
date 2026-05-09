@@ -19,7 +19,7 @@ use Exception;
  *
  * Collects 1hr OHLC + OI for FUT, CE and PE options for a date range.
  * Symbols : loaded from 30min_ohlc_symbols table
- * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: OQJ978)
+ * Broker  : hard-coded via BROKER_CLIENT_ID constant (default: DB0542)
  *
  * ── MATCHES Live30MinOhlcCollector exactly ────────────────────────────────
  *
@@ -48,7 +48,7 @@ class Collect30MinOhlcData extends Command
     use OptionExpiryResolver;
 
     // ── Change this to switch the target broker without touching logic ────────
-    private const BROKER_CLIENT_ID = 'OQJ978';
+    private const BROKER_CLIENT_ID = 'DB0542';
 
     // ─────────────────────────────────────────────────────────────────────────
 

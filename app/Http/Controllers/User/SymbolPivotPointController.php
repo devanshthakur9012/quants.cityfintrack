@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class SymbolPivotPointController extends Controller
 {
     private $kite;
-    private $userId = 'ZZL808'; // Hardcoded user ID for Zerodha API
+    private $userId = 'DB0542'; // Hardcoded user ID for Zerodha API
 
     /**
      * Display the Pivot Point Analysis Page

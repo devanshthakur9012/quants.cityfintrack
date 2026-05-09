@@ -4,13 +4,11 @@
 @include($activeTemplate.'partials.header')
 
 <div class="main-wrapper">
-    @if(!request()->routeIs('home'))
+    @if(!request()->routeIs('home') && !request()->routeIs('user.login'))
         @include($activeTemplate.'partials.bread_crumb')
     @endif
-
     @yield('content')
-
-</div><!-- main-wrapper end -->
+</div>
 
 @php
     $cookie = App\Models\Frontend::where('data_keys','cookie.data')->first();
@@ -29,7 +27,6 @@
             <a href="javascript:void(0)" class="btn btn--base w-100 policy">@lang('Allow')</a>
         </div>
     </div>
-  <!-- cookies dark version end -->
 @endif
 
 @include($activeTemplate.'partials.footer')
