@@ -9,16 +9,18 @@
                     <table class="table table--light style--two">
                         <thead>
                             <tr>
-                                <th>@lang('User')</th>
-                                <th>@lang('Email / Phone')</th>
+                                <th>@lang('Employee')</th>
+                                <th>@lang('Employee Code')</th>
+                                <th>@lang('Department')</th>
+                                <th>@lang('Designation')</th>
+                                <th>@lang('Date of Joining')</th>
                                 <th>@lang('Roles')</th>
-                                <th>@lang('Joined')</th>
                                 <th>@lang('Status')</th>
                                 <th>@lang('Action')</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($users as $user)
+                            @forelse($employees as $user)
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
@@ -35,17 +37,21 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {{ $user->email }}<br>
-                                    <small>{{ $user->mobile }}</small>
+                                    <code>{{ @$user->employeeProfile->employee_code ?? '—' }}</code>
+                                </td>
+                                <td>{{ @$user->employeeProfile->department ?? '—' }}</td>
+                                <td>{{ @$user->employeeProfile->designation ?? '—' }}</td>
+                                <td>
+                                    @if(@$user->employeeProfile->date_of_joining)
+                                        {{ $user->employeeProfile->date_of_joining->format('d M, Y') }}
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                                 <td>
                                     @foreach($user->roles as $role)
-                                        <span class="badge badge--primary">{{ $role->name }}</span>
+                                        <span class="badge badge--primary text-capitalize">{{ $role->name }}</span>
                                     @endforeach
-                                </td>
-                                <td>
-                                    {{ showDateTime($user->created_at) }}<br>
-                                    <small>{{ diffForHumans($user->created_at) }}</small>
                                 </td>
                                 <td>
                                     @if($user->status == \App\Constants\Status::USER_ACTIVE)
@@ -63,7 +69,9 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">{{ __($emptyMessage ?? 'No users found.') }}</td>
+                                <td colspan="8" class="text-center text-muted">
+                                    {{ __($emptyMessage ?? 'No employees found.') }}
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -71,9 +79,9 @@
                 </div>
             </div>
 
-            @if($users->hasPages())
+            @if($employees->hasPages())
             <div class="card-footer py-4">
-                {{ paginateLinks($users) }}
+                {{ paginateLinks($employees) }}
             </div>
             @endif
         </div>
@@ -84,6 +92,6 @@
 @push('breadcrumb-plugins')
     <x-search-form placeholder="Username / Email" />
     <a href="{{ route('admin.users.create') }}" class="btn btn--primary">
-        <i class="las la-plus"></i> @lang('Add User')
+        <i class="las la-plus"></i> @lang('Add Employee')
     </a>
 @endpush

@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CourseCategoryController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CourseVideoUploadController;
+use App\Http\Controllers\Admin\CoursePaymentGatewayController;
 
 Route::namespace('Auth')->group(function () {
     Route::controller('LoginController')->group(function () {
@@ -44,38 +48,38 @@ Route::middleware('admin')->group(function () {
     });
 
     // Users Manager
-    Route::controller('ManageUsersController')->name('users.')->prefix('users')->group(function(){
-        Route::get('/', 'allUsers')->name('all');
-        Route::get('add-user', 'addUser')->name('add-user');
-        Route::post('add-user', 'storeUser')->name('store-user');
-        Route::get('active', 'activeUsers')->name('active');
-        Route::get('banned', 'bannedUsers')->name('banned');
-        Route::get('email-verified', 'emailVerifiedUsers')->name('email.verified');
-        Route::get('email-unverified', 'emailUnverifiedUsers')->name('email.unverified');
-        Route::get('mobile-unverified', 'mobileUnverifiedUsers')->name('mobile.unverified');
-        Route::get('mobile-verified', 'mobileVerifiedUsers')->name('mobile.verified');
-        Route::get('with-balance', 'usersWithBalance')->name('with.balance');
+    // Route::controller('ManageUsersController')->name('users.')->prefix('users')->group(function(){
+    //     Route::get('/', 'allUsers')->name('all');
+    //     Route::get('add-user', 'addUser')->name('add-user');
+    //     Route::post('add-user', 'storeUser')->name('store-user');
+    //     Route::get('active', 'activeUsers')->name('active');
+    //     Route::get('banned', 'bannedUsers')->name('banned');
+    //     Route::get('email-verified', 'emailVerifiedUsers')->name('email.verified');
+    //     Route::get('email-unverified', 'emailUnverifiedUsers')->name('email.unverified');
+    //     Route::get('mobile-unverified', 'mobileUnverifiedUsers')->name('mobile.unverified');
+    //     Route::get('mobile-verified', 'mobileVerifiedUsers')->name('mobile.verified');
+    //     Route::get('with-balance', 'usersWithBalance')->name('with.balance');
 
-        Route::get('detail/{id}', 'detail')->name('detail');
-        Route::post('update/{id}', 'update')->name('update');
-        Route::post('add-sub-balance/{id}', 'addSubBalance')->name('add.sub.balance');
-        Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');
-        Route::post('send-notification/{id}', 'sendNotificationSingle')->name('notification.single');
-        Route::get('login/{id}', 'login')->name('login');
-        Route::post('status/{id}', 'status')->name('status');
+    //     Route::get('detail/{id}', 'detail')->name('detail');
+    //     Route::post('update/{id}', 'update')->name('update');
+    //     Route::post('add-sub-balance/{id}', 'addSubBalance')->name('add.sub.balance');
+    //     Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');
+    //     Route::post('send-notification/{id}', 'sendNotificationSingle')->name('notification.single');
+    //     Route::get('login/{id}', 'login')->name('login');
+    //     Route::post('status/{id}', 'status')->name('status');
 
-        Route::post('update/package/validity', 'updateValidity')->name('update.validity');
+    //     Route::post('update/package/validity', 'updateValidity')->name('update.validity');
 
-        Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
-        Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
-        Route::get('list', 'list')->name('list');
-        Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
-        Route::get('signal-log/{id}', 'signalLog')->name('signal.log');
-        Route::get('referrals/{id}', 'referrals')->name('referrals');
+    //     Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
+    //     Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
+    //     Route::get('list', 'list')->name('list');
+    //     Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
+    //     Route::get('signal-log/{id}', 'signalLog')->name('signal.log');
+    //     Route::get('referrals/{id}', 'referrals')->name('referrals');
 
         
-        Route::get('user-enquiry','getuserEnquiry')->name('getuserEnquiry');
-    });
+    //     Route::get('user-enquiry','getuserEnquiry')->name('getuserEnquiry');
+    // });
 
     // Route::controller('TradeController')->group(function(){
     
@@ -520,42 +524,6 @@ Route::middleware('admin')->group(function () {
 
     });
  
-    //  Route::controller('ZerodhaBrokerController')
-    //     ->prefix('zerodha-broker')
-    //     ->name('zerodha-broker.')
-    //     ->group(function () {
-    
-    //     // List all brokers
-    //     Route::get('/',          'index')->name('index');
- 
-    //     // Add a new broker
-    //     Route::post('/store',    'store')->name('store');
- 
-    //     // Edit modal partial (AJAX GET)
-    //     Route::get('/{id}/edit', 'edit')->name('edit');
- 
-    //     // Update broker details
-    //     Route::post('/{id}/update', 'update')->name('update');
- 
-    //     // Delete broker
-    //     Route::delete('/{id}',  'destroy')->name('destroy');
- 
-    //     // Manual login — redirects admin to Zerodha OAuth page
-    //     Route::get('/{id}/login', 'login')->name('login');
- 
-    //     // Zerodha OAuth callback — auto-saves token
-    //     Route::get('/callback',  'callback')->name('callback');
- 
-    //     // Paste callback URL manually to extract & save token
-    //     Route::post('/{id}/update-token', 'updateToken')->name('update-token');
- 
-    //     // Toggle active / inactive
-    //     Route::get('/{id}/toggle-status', 'toggleStatus')->name('toggle-status');
- 
-    //     // JSON: check token validity
-    //     Route::get('/{id}/token-status', 'checkTokenStatus')->name('token-status');
-    // });
- 
     Route::controller('BrokerTimeframeController')
     ->prefix('broker-timeframe')
     ->name('broker-timeframe.')
@@ -579,3 +547,136 @@ Route::middleware('admin')->group(function () {
 
 });
 
+// NEW APPLICATION ROUTES
+
+// ── Course Categories ─────────────────────────────────────────────────────────
+Route::controller(CourseCategoryController::class)
+->prefix('courses/categories')
+->name('courses.categories.')
+->group(function () {
+    Route::get('/',               'index')->name('index');
+    Route::get('/create',         'create')->name('create');
+    Route::post('/',              'store')->name('store');
+    Route::get('/{category}/edit','edit')->name('edit');
+    Route::put('/{category}',     'update')->name('update');
+    Route::delete('/{category}',  'destroy')->name('destroy');
+    Route::get('/{category}/status', 'statusToggle')->name('status');
+});
+ 
+// ── Courses ───────────────────────────────────────────────────────────────────
+Route::controller(CourseController::class)
+->prefix('courses')
+->name('courses.')
+->group(function () {
+
+    // CRUD
+    Route::get('/',               'index')->name('index');
+    Route::get('/create',         'create')->name('create');
+    Route::post('/',              'store')->name('store');
+    Route::get('/{course}/edit',  'edit')->name('edit');
+    Route::put('/{course}',       'update')->name('update');
+    Route::delete('/{course}',    'destroy')->name('destroy');
+
+    // Status / Featured
+    Route::post('/{course}/status',   'statusUpdate')->name('status');
+    Route::get('/{course}/featured',  'featuredToggle')->name('featured');
+
+    // Curriculum
+    Route::get('/{course}/curriculum', 'curriculum')->name('curriculum');
+
+    // Sections
+    Route::post('/{course}/sections',           'sectionStore')->name('sections.store');
+    Route::put('/sections/{section}',           'sectionUpdate')->name('sections.update');
+    Route::delete('/sections/{section}',        'sectionDestroy')->name('sections.destroy');
+    Route::post('/sections/reorder',            'sectionReorder')->name('sections.reorder');
+
+    // Lessons
+    Route::get('/{course}/sections/{section}/lessons/create',  'lessonCreate')->name('lessons.create');
+    Route::post('/{course}/sections/{section}/lessons',        'lessonStore')->name('lessons.store');
+    Route::get('/{course}/lessons/{lesson}/edit',              'lessonEdit')->name('lessons.edit');
+    Route::put('/{course}/lessons/{lesson}',                   'lessonUpdate')->name('lessons.update');
+    Route::delete('/{course}/lessons/{lesson}',                'lessonDestroy')->name('lessons.destroy');
+    Route::post('/lessons/reorder',                            'lessonReorder')->name('lessons.reorder');
+
+    // Secure video stream
+    Route::get('/lesson/{lesson}/stream', 'lessonStream')->name('lesson.stream');
+});
+ 
+// ── Chunked Video Upload ───────────────────────────────────────────────────────
+Route::controller(CourseVideoUploadController::class)
+->prefix('courses/video')
+->name('courses.video.')
+->group(function () {
+    Route::post('/upload-chunk',          'uploadChunk')->name('chunk');
+    Route::get('/status',                 'status')->name('status');
+    Route::delete('/lesson/{lesson}',     'deleteVideo')->name('delete');
+});
+
+// ── Payment Gateway ───────────────────────────────────────────────────────
+Route::controller(CoursePaymentGatewayController::class)
+->prefix('courses/gateway')
+->name('courses.gateway.')
+->group(function () {
+    Route::get('/',                       'index')->name('index');
+    Route::get('/{gateway}/edit',         'edit')->name('edit');
+    Route::put('/{gateway}',              'update')->name('update');
+    Route::get('/{gateway}/status',       'statusToggle')->name('status');
+    Route::get('/orders',                 'orders')->name('orders');
+    Route::get('/orders/{order}',         'orderDetail')->name('orders.detail');
+    Route::post('/orders/{order}/enroll', 'manualEnroll')->name('orders.enroll');
+});
+
+Route::controller('UserController')->name('users.')->prefix('users')->group(function () {
+ 
+    // List views
+    Route::get('/',                    'index')->name('index');
+    Route::get('active',               'activeUsers')->name('active');
+    Route::get('banned',               'bannedUsers')->name('banned');
+    Route::get('email-verified',       'emailVerifiedUsers')->name('email.verified');
+    Route::get('email-unverified',     'emailUnverifiedUsers')->name('email.unverified');
+    Route::get('mobile-verified',      'mobileVerifiedUsers')->name('mobile.verified');
+    Route::get('mobile-unverified',    'mobileUnverifiedUsers')->name('mobile.unverified');
+ 
+    // Create / Store
+    Route::get('create',               'create')->name('create');
+    Route::post('store',               'store')->name('store');
+ 
+    // Detail / Update
+    Route::get('detail/{id}',          'detail')->name('detail');
+    Route::post('update/{id}',         'update')->name('update');
+ 
+    // Status (ban/unban)
+    Route::post('status/{id}',         'status')->name('status');
+ 
+    // Login as user
+    Route::get('login/{id}',           'loginAsUser')->name('login');
+ 
+    // Notifications
+    Route::get('notify/{id}',          'showNotificationForm')->name('notification.single');
+    Route::post('notify/{id}',         'sendNotification')->name('notification.single.send');
+    Route::get('notification-log/{id}','notificationLog')->name('notification.log');
+ 
+    // AJAX list
+    Route::get('list',                 'list')->name('list');
+
+    // EMPLOYEE
+    Route::get('employees', 'employees')->name('employees');
+});
+ 
+// ─── Role & Permission Management ────────────────────────────────────────────
+Route::controller('RoleController')->name('roles.')->prefix('roles')->group(function () {
+ 
+    // Roles CRUD
+    Route::get('/',               'index')->name('index');
+    Route::get('create',          'create')->name('create');
+    Route::post('store',          'store')->name('store');
+    Route::get('edit/{id}',       'edit')->name('edit');
+    Route::post('update/{id}',    'update')->name('update');
+    Route::post('destroy/{id}',   'destroy')->name('destroy');
+ 
+    // Permissions CRUD
+    Route::get('permissions',              'permissions')->name('permissions');
+    Route::get('permissions/create',       'createPermission')->name('permissions.create');
+    Route::post('permissions/store',       'storePermission')->name('permissions.store');
+    Route::post('permissions/destroy/{id}','destroyPermission')->name('permissions.destroy');
+});

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'country',
         'password',
         'user_code',
+        'telegram_username',
         'ref_by',
         'address',
         'status',
@@ -32,60 +33,42 @@ class User extends Authenticatable
         'sv',
         'ts',
         'tv',
+        'ban_reason',
+        'profile_pic', 
     ];
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */ 
     protected $hidden = [
-        'password', 'remember_token','ver_code','balance'
+        'password', 'remember_token', 'ver_code',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'address' => 'object',
-        'ver_code_send_at' => 'datetime'
+        'address'           => 'object',
+        'ver_code_send_at'  => 'datetime',
     ];
 
-    public function referrals(){
-        return $this->hasMany(self::class, 'ref_by');
-    }
-
-    public function referrer()
-    {
-        return $this->belongsTo(User::class,'ref_by');
-    }
+    // ─────────────────────────────────────────────
+    //  RELATIONS
+    // ─────────────────────────────────────────────
 
     public function loginLogs()
     {
         return $this->hasMany(UserLogin::class);
     }
 
-    public function transactions()
+    public function deviceTokens()
     {
-        return $this->hasMany(Transaction::class)->orderBy('id','desc');
-    }
-
-    public function deposits()
-    {
-        return $this->hasMany(Deposit::class)->where('status','!=',Status::PAYMENT_INITIATE);
-    }
-
-    public function deviceTokens(){
         return $this->hasMany(DeviceToken::class);
     }
 
-    public function package()
+    public function employeeProfile()
     {
-        return $this->belongsTo(Package::class);
+        return $this->hasOne(EmployeeProfile::class);
     }
+
+    // ─────────────────────────────────────────────
+    //  ACCESSORS
+    // ─────────────────────────────────────────────
 
     public function fullname(): Attribute
     {
@@ -94,10 +77,22 @@ class User extends Authenticatable
         );
     }
 
-    // SCOPES
+    public function roleNames(): Attribute
+    {
+        return new Attribute(
+            get: fn () => $this->getRoleNames()->implode(', '),
+        );
+    }
+
+    // ─────────────────────────────────────────────
+    //  SCOPES
+    // ─────────────────────────────────────────────
+
     public function scopeActive($query)
     {
-        return $query->where('status', Status::USER_ACTIVE)->where('ev',Status::VERIFIED)->where('sv',Status::VERIFIED);
+        return $query->where('status', Status::USER_ACTIVE)
+                     ->where('ev', Status::VERIFIED)
+                     ->where('sv', Status::VERIFIED);
     }
 
     public function scopeBanned($query)
@@ -105,19 +100,14 @@ class User extends Authenticatable
         return $query->where('status', Status::USER_BAN);
     }
 
-    public function scopeEmailUnverified($query)
-    {
-        return $query->where('ev', Status::UNVERIFIED);
-    }
-
-    public function scopeMobileUnverified($query)
-    {
-        return $query->where('sv', Status::UNVERIFIED);
-    }
-
     public function scopeEmailVerified($query)
     {
         return $query->where('ev', Status::VERIFIED);
+    }
+
+    public function scopeEmailUnverified($query)
+    {
+        return $query->where('ev', Status::UNVERIFIED);
     }
 
     public function scopeMobileVerified($query)
@@ -125,22 +115,8 @@ class User extends Authenticatable
         return $query->where('sv', Status::VERIFIED);
     }
 
-    public function scopeWithBalance($query)
+    public function scopeMobileUnverified($query)
     {
-        return $query->where('balance','>', 0);
+        return $query->where('sv', Status::UNVERIFIED);
     }
-
-    // If user is an investor and has a trader
-    public function parent()
-    {
-        return $this->belongsTo(User::class, 'parent_id', 'id')->using('App\Models\UserParentLink');
-    }
-
-    // If user is a trader and has many investors
-    public function investors()
-    {
-        return $this->hasManyThrough(User::class, UserParentLink::class, 'parent_id', 'id', 'id', 'user_id');
-    }
-
-
 }

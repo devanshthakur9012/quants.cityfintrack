@@ -53,6 +53,13 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
 
+        'course_videos' => [
+            'driver'     => 'local',
+            'root'       => storage_path('app/course_videos'),
+            'visibility' => 'private',
+            // No 'url' key — never expose direct URLs
+        ],
+
     ],
 
     /*

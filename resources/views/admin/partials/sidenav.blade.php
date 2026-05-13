@@ -14,16 +14,37 @@
                     </a>
                 </li>
 
+                <li class="sidebar__menu-header">@lang('Roles')</li> 
+
+                <li class="sidebar-menu-item sidebar-dropdown">
+                    <a href="javascript:void(0)" class="{{menuActive('admin.roles*',3)}}">
+                        <i class="menu-icon las la-users"></i>
+                        <span class="menu-title">@lang('Roles & Permission')</span>
+                    </a>
+                    <div class="sidebar-submenu {{menuActive('admin.roles*',2)}} ">
+                        <ul>
+                            <li class="sidebar-menu-item {{menuActive('admin.roles.index')}} ">
+                                <a href="{{route('admin.roles.index')}}" class="nav-link">
+                                    <i class="menu-icon las la-dot-circle"></i>
+                                    <span class="menu-title">@lang('Roles')</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-menu-item {{menuActive('admin.roles.permissions')}} ">
+                                <a href="{{route('admin.roles.permissions')}}" class="nav-link">
+                                    <i class="menu-icon las la-dot-circle"></i>
+                                    <span class="menu-title">@lang('Permissions')</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="sidebar__menu-header">@lang('Users')</li> 
+                
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{menuActive('admin.users*',3)}}">
                         <i class="menu-icon las la-users"></i>
                         <span class="menu-title">@lang('Manage Users')</span>
-
-                        @if($bannedUsersCount > 0 || $emailUnverifiedUsersCount > 0 || $mobileUnverifiedUsersCount > 0)
-                            <span class="menu-badge pill bg--danger ms-auto">
-                                <i class="fa fa-exclamation"></i>
-                            </span>
-                        @endif
                     </a>
                     <div class="sidebar-submenu {{menuActive('admin.users*',2)}} ">
                         <ul>
@@ -42,281 +63,45 @@
                                     @endif
                                 </a>
                             </li>
-
-                            {{-- <li class="sidebar-menu-item  {{menuActive('admin.users.email.unverified')}}">
-                                <a href="{{route('admin.users.email.unverified')}}" class="nav-link">
+                            <li class="sidebar-menu-item {{menuActive('admin.users.employees')}} ">
+                                <a href="{{route('admin.users.employees')}}" class="nav-link">
                                     <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Email Unverified')</span>
-
-                                    @if($emailUnverifiedUsersCount)
-                                        <span class="menu-badge pill bg--danger ms-auto">{{$emailUnverifiedUsersCount}}</span>
-                                    @endif
+                                    <span class="menu-title">@lang('Employee')</span>
                                 </a>
-                            </li> --}}
-
-                            {{-- <li class="sidebar-menu-item {{menuActive('admin.users.mobile.unverified')}}">
-                                <a href="{{route('admin.users.mobile.unverified')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Mobile Unverified')</span>
-                                    @if($mobileUnverifiedUsersCount)
-                                        <span
-                                            class="menu-badge pill bg--danger ms-auto">{{$mobileUnverifiedUsersCount}}</span>
-                                    @endif
-                                </a>
-                            </li> --}}
-
-                            {{-- <li class="sidebar-menu-item {{menuActive('admin.users.with.balance')}}">
-                                <a href="{{route('admin.users.with.balance')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('With Balance')</span>
-                                </a>
-                            </li> --}}
-
-                            <li class="sidebar-menu-item {{menuActive('admin.users.all')}} ">
-                                <a href="{{route('admin.users.all')}}" class="nav-link">
+                            </li>
+                            <li class="sidebar-menu-item {{menuActive('admin.users.index')}} ">
+                                <a href="{{route('admin.users.index')}}" class="nav-link">
                                     <i class="menu-icon las la-dot-circle"></i>
                                     <span class="menu-title">@lang('All Users')</span>
                                 </a>
                             </li>
 
-
-                            <li class="sidebar-menu-item {{menuActive('admin.users.notification.all')}}">
-                                <a href="{{route('admin.users.notification.all')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Notification to All')</span>
-                                </a>
-                            </li>
-
                         </ul>
                     </div>
                 </li>
 
-                {{-- <li class="sidebar-menu-item sidebar-dropdown">
-                    <a href="javascript:void(0)" class="{{menuActive('admin.signal*',3)}}">
-                        <i class="menu-icon la la-signal"></i>
-                        <span class="menu-title">@lang('Manage Signal') </span>
+                <li class="sidebar__menu-header">@lang('Courses')</li>
+                <li class="sidebar-menu-item {{menuActive('admin.courses.categories.index')}}">
+                    <a href="{{route('admin.courses.categories.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Category')</span>
                     </a>
-                    <div class="sidebar-submenu {{menuActive('admin.signal*',2)}} ">
-                        <ul>
-                            <li class="sidebar-menu-item {{menuActive('admin.signal.sent')}}">
-                                <a href="{{route('admin.signal.sent')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Send Signals')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.signal.not.send')}}">
-                                <a href="{{route('admin.signal.not.send')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Not Send Signals')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.signal.all')}}">
-                                <a href="{{route('admin.signal.all')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('All Signals')</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
-
-                {{-- <li class="sidebar-menu-item sidebar-dropdown">
-                    <a href="javascript:void(0)" class="{{menuActive('admin.gateway*',3)}}">
-                        <i class="menu-icon las la-credit-card"></i>
-                        <span class="menu-title">@lang('Payment Gateways')</span>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.courses.index')}}">
+                    <a href="{{route('admin.courses.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Courses')</span>
                     </a>
-                    <div class="sidebar-submenu {{menuActive('admin.gateway*',2)}} ">
-                        <ul>
-
-                            <li class="sidebar-menu-item {{menuActive('admin.gateway.automatic.*')}} ">
-                                <a href="{{route('admin.gateway.automatic.index')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Automatic Gateways')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.gateway.manual.*')}} ">
-                                <a href="{{route('admin.gateway.manual.index')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Manual Gateways')</span>
-                                </a>
-                            </li>
-
-                        </ul>
-                    </div>
-                </li> --}}
-
-                {{-- <li class="sidebar-menu-item sidebar-dropdown">
-                    <a href="javascript:void(0)" class="{{menuActive('admin.deposit*',3)}}">
-                        <i class="menu-icon las la-file-invoice-dollar"></i>
-                        <span class="menu-title">@lang('Deposits')</span>
-                        @if(0 < $pendingDepositsCount)
-                            <span class="menu-badge pill bg--danger ms-auto">
-                                <i class="fa fa-exclamation"></i>
-                            </span>
-                        @endif
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.analysis-config.index')}}">
+                    <a href="{{route('admin.courses.gateway.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Payment Gateway')</span>
                     </a>
-                    <div class="sidebar-submenu {{menuActive('admin.deposit*',2)}} ">
-                        <ul>
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.pending')}} ">
-                                <a href="{{route('admin.deposit.pending')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Pending Deposits')</span>
-                                    @if($pendingDepositsCount)
-                                        <span class="menu-badge pill bg--danger ms-auto">{{$pendingDepositsCount}}</span>
-                                    @endif
-                                </a>
-                            </li>
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.approved')}} ">
-                                <a href="{{route('admin.deposit.approved')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Approved Deposits')</span>
-                                </a>
-                            </li>
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.successful')}} ">
-                                <a href="{{route('admin.deposit.successful')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Successful Deposits')</span>
-                                </a>
-                            </li>
-
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.rejected')}} ">
-                                <a href="{{route('admin.deposit.rejected')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Rejected Deposits')</span>
-                                </a>
-                            </li>
-
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.initiated')}} ">
-
-                                <a href="{{route('admin.deposit.initiated')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Initiated Deposits')</span>
-                                </a>
-                            </li>
-
-                            <li class="sidebar-menu-item {{menuActive('admin.deposit.list')}} ">
-                                <a href="{{route('admin.deposit.list')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('All Deposits')</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
-
-                {{-- <li class="sidebar-menu-item sidebar-dropdown">
-                    <a href="javascript:void(0)" class="{{menuActive('admin.ticket*',3)}}">
-                        <i class="menu-icon la la-ticket"></i>
-                        <span class="menu-title">@lang('Support Ticket') </span>
-                        @if(0 < $pendingTicketCount)
-                            <span class="menu-badge pill bg--danger ms-auto">
-                                <i class="fa fa-exclamation"></i>
-                            </span>
-                        @endif
-                    </a>
-                    <div class="sidebar-submenu {{menuActive('admin.ticket*',2)}} ">
-                        <ul>
-                            <li class="sidebar-menu-item {{menuActive('admin.ticket.pending')}} ">
-                                <a href="{{route('admin.ticket.pending')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Pending Ticket')</span>
-                                    @if($pendingTicketCount)
-                                    <span
-                                    class="menu-badge pill bg--danger ms-auto">{{$pendingTicketCount}}</span>
-                                    @endif
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.ticket.closed')}} ">
-                                <a href="{{route('admin.ticket.closed')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Closed Ticket')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.ticket.answered')}} ">
-                                <a href="{{route('admin.ticket.answered')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Answered Ticket')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.ticket.index')}} ">
-                                <a href="{{route('admin.ticket.index')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('All Ticket')</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
-
-
-                {{-- <li class="sidebar-menu-item sidebar-dropdown">
-                    <a href="javascript:void(0)" class="{{menuActive('admin.report*',3)}}">
-                        <i class="menu-icon la la-list"></i>
-                        <span class="menu-title">@lang('Report') </span>
-                    </a>
-                    <div class="sidebar-submenu {{menuActive('admin.report*',2)}} ">
-                        <ul>
-                            <li class="sidebar-menu-item {{menuActive(['admin.report.transaction','admin.report.transaction.search'])}}">
-                                <a href="{{route('admin.report.transaction')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Transaction Log')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive(['admin.report.login.history','admin.report.login.ipHistory'])}}">
-                                <a href="{{route('admin.report.login.history')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Login History')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive('admin.report.notification.history')}}">
-                                <a href="{{route('admin.report.notification.history')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Notification History')</span>
-                                </a>
-                            </li>
-                            <li class="sidebar-menu-item {{menuActive(['admin.report.signal'])}}">
-                                <a href="{{route('admin.report.signal')}}" class="nav-link">
-                                    <i class="menu-icon las la-dot-circle"></i>
-                                    <span class="menu-title">@lang('Signal Log')</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
-
-
-                {{-- <li class="sidebar-menu-item  {{menuActive('admin.subscriber.*')}}">
-                    <a href="{{route('admin.subscriber.index')}}" class="nav-link"
-                       data-default-url="{{ route('admin.subscriber.index') }}">
-                        <i class="menu-icon las la-thumbs-up"></i>
-                        <span class="menu-title">@lang('Subscribers') </span>
-                    </a>
-                </li> --}}
+                </li>
+                
 
                 <li class="sidebar__menu-header">@lang('Config')</li>
-                {{-- <li class="sidebar-menu-item {{menuActive('admin.trade.trade-desk-signal.all')}}">
-                    <a href="{{route('admin.trade.trade-desk-signal.all')}}" class="nav-link">
-                        <i class="menu-icon las la-life-ring"></i>
-                        <span class="menu-title">@lang('Trade Desk Signal')</span>
-                    </a>
-                </li>
-                <li class="sidebar-menu-item {{menuActive('admin.trade.trade-position.all')}}">
-                    <a href="{{route('admin.trade.trade-position.all')}}" class="nav-link">
-                        <i class="menu-icon las la-life-ring"></i>
-                        <span class="menu-title">@lang('Trade Position')</span>
-                    </a>
-                </li> --}}
-                {{-- <li class="sidebar-menu-item {{menuActive('admin.trade.order-book.all')}}">
-                    <a href="{{route('admin.trade.order-book.all')}}" class="nav-link">
-                        <i class="menu-icon las la-life-ring"></i>
-                        <span class="menu-title">@lang('Order Book')</span>
-                    </a>
-                </li> --}}
                 <li class="sidebar-menu-item {{menuActive('admin.zerodha-broker.index')}}">
                     <a href="{{route('admin.zerodha-broker.index')}}" class="nav-link">
                         <i class="menu-icon las la-life-ring"></i>
@@ -335,12 +120,6 @@
                         <span class="menu-title">@lang('Analysis Config')</span>
                     </a>
                 </li>
-                {{-- <li class="sidebar-menu-item {{menuActive('admin.trade.oms-config.all')}}">
-                    <a href="{{route('admin.trade.oms-config.all')}}" class="nav-link">
-                        <i class="menu-icon las la-life-ring"></i>
-                        <span class="menu-title">@lang('OMS Config')</span>
-                    </a>
-                </li> --}}
 
                 <li class="sidebar__menu-header">@lang('Settings')</li>
 
@@ -535,12 +314,12 @@
                     </div>
                 </li>
 
-                <li class="sidebar-menu-item {{menuActive('admin.users.getuserEnquiry')}}">
+                {{-- <li class="sidebar-menu-item {{menuActive('admin.users.getuserEnquiry')}}">
                     <a href="{{route('admin.users.getuserEnquiry')}}" class="nav-link">
                         <i class="menu-icon lab la-css3-alt"></i>
                         <span class="menu-title">@lang('User Enquiry')</span>
                     </a>
-                </li>
+                </li> --}}
 
                 {{-- <li class="sidebar-menu-item {{menuActive('admin.setting.custom.css')}}">
                     <a href="{{route('admin.setting.custom.css')}}" class="nav-link">

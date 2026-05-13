@@ -38,7 +38,7 @@
     <div class="row gy-4 mt-2">
         <div class="col-xxl-3 col-sm-6">
             <x-widget
-                link="{{route('admin.users.all')}}"
+                link="{{route('admin.users.index')}}"
                 icon="las la-users f-size--56"
                 title="Total Users"
                 value="{{$widget['total_users']}}"

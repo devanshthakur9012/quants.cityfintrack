@@ -115,14 +115,67 @@ use App\Http\Controllers\User\PrimeFlowScannerController;
 use App\Http\Controllers\User\StraddleStrategyController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\User\Auth\EmailOtpController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\LoginController;
+
+// COURSES //
+Route::get('/courses', [CourseController::class, 'index'])->name('courses');
+Route::get('/courses/{slug}', [CourseController::class, 'detail'])->name('courses.detail');
+
+// ── Auth-required payment routes (use your existing auth middleware name) ──────
+Route::middleware('auth:web')->group(function () {
+    Route::post('/courses/{course}/pay',      [CourseController::class, 'initiatePayment'])->name('courses.payment.initiate');
+    Route::post('/courses/payment/verify',    [CourseController::class, 'verifyPayment'])->name('courses.payment.verify');
+});
+ 
+// ── ADMIN routes (inside your admin middleware group) ─────────────────────────
+// Add inside: Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(...)
+Route::controller(CoursePaymentGatewayController::class)
+->prefix('courses/gateway')
+->name('courses.gateway.')
+->group(function () {
+    Route::get('/',                       'index')->name('index');
+    Route::get('/{gateway}/edit',         'edit')->name('edit');
+    Route::put('/{gateway}',              'update')->name('update');
+    Route::get('/{gateway}/status',       'statusToggle')->name('status');
+    Route::get('/orders',                 'orders')->name('orders');
+    Route::get('/orders/{order}',         'orderDetail')->name('orders.detail');
+    Route::post('/orders/{order}/enroll', 'manualEnroll')->name('orders.enroll');
+});
+
+// LOGIN START
+Route::get('/login',                [LoginController::class, 'showLogin'])->name('user.login');
+Route::post('/login/send-otp',      [LoginController::class, 'sendLoginOtp'])->name('user.login.send-otp');
+Route::post('/login/verify-otp',    [LoginController::class, 'verifyLoginOtp'])->name('user.login.verify-otp');
+Route::post('/login/password',      [LoginController::class, 'loginWithPassword'])->name('user.login.password');
+ 
+// Register
+Route::get('/register',             [LoginController::class, 'showRegister'])->name('user.register');
+Route::post('/register',            [LoginController::class, 'register'])->name('user.register.store');
+ 
+// Email verification + set password
+Route::get('/verify-email/{token}', [LoginController::class, 'verifyEmail'])->name('user.verify.email');
+Route::post('/set-password',        [LoginController::class, 'setPassword'])->name('user.set.password');
+ 
+// Forgot password
+Route::get('/forgot-password',      [LoginController::class, 'showForgotPassword'])->name('user.forgot.password');
+Route::post('/forgot-password',     [LoginController::class, 'sendResetLink'])->name('user.forgot.password.send');
+ 
+// Reset password
+Route::get('/reset-password/{token}', [LoginController::class, 'showResetPassword'])->name('user.reset.password');
+Route::post('/reset-password',        [LoginController::class, 'resetPassword'])->name('user.reset.password.store');
+ 
+// Logout
+Route::post('/logout',              [LoginController::class, 'logout'])->name('user.logout');
+// LOGIN END
 
 Route::get('/import-data','SiteController@importExcelData')->name('importExcelData');
 // Route::get('/', 'SiteController@index')->name('home');
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
 Route::get('/webinars', [HomePageController::class, 'webinars'])->name('webinars');
-Route::get('/courses', [HomePageController::class, 'courses'])->name('courses');
-Route::get('/login',   [HomePageController::class, 'login'])->name('user.login');
+// Route::get('/courses', [HomePageController::class, 'courses'])->name('courses');
+// Route::get('/login',   [HomePageController::class, 'login'])->name('user.login');
 Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.register');
 Route::get('/events',  [HomePageController::class, 'events'])->name('events');
 Route::get('/option-symposium', [HomePageController::class, 'optionSymposium'])->name('optionsymposium');
