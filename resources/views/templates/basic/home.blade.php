@@ -34,10 +34,8 @@
 }
 .qh-wrap a { text-decoration: none; }
 
-/* === ANIMATIONS: start visible, animate in === */
-.qh-anim {
-    animation: qhFadeUp .7s ease both;
-}
+/* === ANIMATIONS === */
+.qh-anim { animation: qhFadeUp .7s ease both; }
 .qh-anim.d1 { animation-delay: .1s; }
 .qh-anim.d2 { animation-delay: .2s; }
 .qh-anim.d3 { animation-delay: .3s; }
@@ -47,7 +45,6 @@
     to   { opacity:1; transform:none; }
 }
 
-/* section commons */
 .qh-sec { padding: 72px 24px; display:block; }
 .qh-title {
     display:block; text-align:center;
@@ -81,20 +78,6 @@
     display:flex; align-items:center; justify-content:space-between;
     max-width:1200px; width:100%; padding:0 48px; gap:40px; flex-wrap:wrap;
 }
-/* device mockup */
-.qh-hero-devices {
-    flex:1; min-width:280px; max-width:520px;
-    background:rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06);
-    border-radius:16px; aspect-ratio:16/9;
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden; position:relative; padding:20px;
-}
-.qh-dev-row { display:flex; gap:6px; align-items:flex-end; margin-bottom:6px; }
-.qh-dev-bar { border-radius:3px 3px 0 0; animation: devBarPulse 2.2s infinite alternate; }
-@keyframes devBarPulse { from{opacity:.4} to{opacity:.9} }
-
-/* right text */
 .qh-hero-right { flex:1; min-width:280px; text-align:left; }
 .qh-hero-h1 {
     font-family:'Rajdhani',sans-serif;
@@ -163,53 +146,74 @@
 }
 .qh-platform > p { color:#7A90B5; font-size:16px; margin-bottom:40px; position:relative; }
 
-/* cert slider */
-.qh-cert-slider { max-width:900px; margin:0 auto; position:relative; }
+/* cert slider — image-only with hover overlay */
+.qh-cert-slider { max-width:960px; margin:0 auto; position:relative; }
 .qh-cert-overflow { overflow:hidden; border-radius:18px; }
 .qh-cert-track { display:flex; transition:transform .55s cubic-bezier(.4,0,.2,1); }
 .qh-cert-slide { min-width:100%; }
+
+/* The image card */
 .qh-cert-card {
-    background: linear-gradient(120deg, rgba(12,24,44,.98), rgba(18,36,68,.98));
-    border:1px solid rgba(245,166,35,.25); border-radius:18px;
-    padding:36px 44px; display:flex; align-items:center; gap:40px; flex-wrap:wrap;
-    box-shadow:0 0 28px rgba(245,166,35,.18); position:relative; overflow:hidden;
+    position:relative; border-radius:18px; overflow:hidden;
+    aspect-ratio:16/6;
+    border:1px solid rgba(245,166,35,.25);
+    box-shadow:0 0 28px rgba(245,166,35,.18);
+    cursor:pointer;
+    background: linear-gradient(120deg,#0C1828,#132040);
 }
-.qh-cert-left { flex:1; min-width:220px; text-align:left; }
-.qh-cert-left h3 {
-    font-size:clamp(24px,3vw,30px); font-weight:700;
-    color:#fff; line-height:1.2; margin-bottom:18px;
+/* placeholder when no image */
+.qh-cert-ph {
+    width:100%; height:100%; display:flex; align-items:center;
+    justify-content:center; flex-direction:column; gap:12px;
+    background:linear-gradient(120deg,#0C1828,#132040);
 }
-.qh-cert-left h3 span { color:#F5A623; }
+.qh-cert-ph i    { font-size:40px; color:rgba(245,166,35,.2); }
+.qh-cert-ph span { font-size:12px; color:rgba(122,144,181,.3); letter-spacing:.1em; }
+/* actual image */
+.qh-cert-img {
+    width:100%; height:100%; object-fit:cover; display:block;
+    transition:transform .5s ease;
+}
+.qh-cert-card:hover .qh-cert-img { transform:scale(1.04); }
+
+/* permanent dark gradient at bottom */
+.qh-cert-grad {
+    position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top,rgba(6,16,26,.75) 0%,rgba(6,16,26,.15) 50%,transparent 100%);
+}
+/* hover overlay — full dark tint */
+.qh-cert-hover-overlay {
+    position:absolute; inset:0; pointer-events:none;
+    background:rgba(6,16,26,.55);
+    opacity:0; transition:opacity .35s;
+}
+.qh-cert-card:hover .qh-cert-hover-overlay { opacity:1; }
+
+/* text that appears on hover */
+.qh-cert-info {
+    position:absolute; inset:0; display:flex;
+    align-items:center; justify-content:space-between;
+    padding:28px 36px; pointer-events:none;
+    opacity:0; transform:translateY(10px);
+    transition:opacity .35s, transform .35s;
+}
+.qh-cert-card:hover .qh-cert-info { opacity:1; transform:none; }
 .qh-cert-badge-pill {
     display:inline-flex; align-items:center;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
-    color:rgba(255,255,255,.8); font-size:13px;
-    font-style:italic; font-weight:600;
-    padding:8px 20px; border-radius:30px; letter-spacing:.03em;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25);
+    color:#fff; font-size:14px; font-style:italic; font-weight:600;
+    padding:10px 22px; border-radius:30px; letter-spacing:.03em;
+    backdrop-filter:blur(6px);
 }
-.qh-cert-right { text-align:center; flex-shrink:0; }
 .qh-lang-pill {
     display:inline-block; background:#F5A623; color:#000;
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px;
-    padding:8px 26px; border-radius:24px; margin-bottom:24px;
-    letter-spacing:.05em; box-shadow:0 4px 14px rgba(245,166,35,.32);
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px;
+    padding:9px 26px; border-radius:24px;
+    letter-spacing:.06em; box-shadow:0 4px 14px rgba(245,166,35,.4);
 }
-.qh-trainers { display:flex; gap:36px; justify-content:center; flex-wrap:wrap; }
-.qh-trainer { text-align:center; }
-.qh-trainer-av {
-    width:80px; height:80px; border-radius:50%;
-    border:3px solid #F5A623;
-    background:linear-gradient(135deg,#1a3a6e,#d4840e);
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 10px; font-size:28px; color:#fff; overflow:hidden;
-    box-shadow:0 0 0 5px rgba(245,166,35,.14), 0 8px 24px rgba(0,0,0,.4);
-    transition:transform .3s;
-}
-.qh-trainer-av:hover { transform:scale(1.06); }
-.qh-trainer-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-.qh-trainer-name { font-size:14px; font-weight:700; color:#fff; margin-bottom:3px; }
-.qh-trainer-role { font-size:12px; color:#7A90B5; }
-.qh-cert-dots { display:flex; justify-content:center; gap:8px; margin-top:22px; }
+
+/* dots */
+.qh-cert-dots { display:flex; justify-content:center; gap:8px; margin-top:18px; }
 .qh-cert-dot {
     width:8px; height:8px; border-radius:50%; border:none; padding:0;
     background:rgba(255,255,255,.2); cursor:pointer; transition:all .3s;
@@ -237,6 +241,7 @@
     box-shadow:0 20px 60px rgba(0,0,0,.55); display:block;
 }
 .qh-about-video iframe { width:100%; height:100%; border:none; display:block; }
+.qh-about-video video  { width:100%; height:100%; object-fit:cover; display:block; }
 .qh-about-video-ring {
     position:absolute; inset:-3px; border-radius:19px;
     border:2px solid rgba(245,166,35,.2); pointer-events:none;
@@ -279,7 +284,6 @@
     background:linear-gradient(135deg,#0E1E35,#142540);
 }
 @media(max-width:900px){ .qh-feat-3col{ grid-template-columns:1fr; } }
-/* util col */
 .qh-util-col { background:rgba(0,0,0,.22); border-right:1px solid rgba(255,255,255,.07); padding:28px 0; }
 .qh-util-head {
     font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:700;
@@ -299,7 +303,6 @@
     background:#F5A623; color:#000; min-width:28px; text-align:center;
 }
 .qh-util-btn:not(.on) .qh-util-cnt { background:rgba(255,255,255,.1); color:#7A90B5; }
-/* phone col */
 .qh-phone-col {
     display:flex; align-items:center; justify-content:center;
     padding:36px 20px; background:rgba(0,0,0,.14);
@@ -317,7 +320,6 @@
 .qh-phone-chart { display:flex; align-items:flex-end; flex:1; gap:4px; padding:0 4px; }
 .qh-pbar { flex:1; border-radius:2px 2px 0 0; animation:pBarAni 2s infinite alternate; }
 @keyframes pBarAni { from{opacity:.45} to{opacity:1} }
-/* tool col */
 .qh-tool-col { padding:40px 36px; min-height:350px; display:flex; flex-direction:column; justify-content:center; }
 .qh-tool-name { font-family:'Rajdhani',sans-serif; font-size:30px; font-weight:700; color:#F5A623; margin-bottom:8px; }
 .qh-tool-divider { width:44px; height:3px; background:linear-gradient(90deg,rgba(255,255,255,.5),#F5A623); border-radius:2px; margin-bottom:22px; }
@@ -374,7 +376,6 @@
     box-shadow:0 4px 14px rgba(245,166,35,.25);
 }
 .qh-lbtn:hover { background:#FFD06A; transform:translateY(-2px); color:#000; }
-/* youtube card */
 .qh-lyvid { flex:0 0 310px; }
 .qh-yt-card { background:#0a0a0f; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.07); }
 .qh-yt-hd { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#111118; border-bottom:1px solid rgba(255,255,255,.06); }
@@ -453,33 +454,14 @@
     </video>
     <div class="qh-hero-overlay"></div>
     <div class="qh-hero-inner">
-        {{-- <div class="qh-hero-devices qh-anim">
-            <div style="width:100%">
-                @php
-                $rows = [
-                    [['#27AE60','70%'],['#E74C3C','45%'],['#F5A623','80%'],['#3498DB','55%'],['#27AE60','65%'],['#E74C3C','38%'],['#F5A623','90%']],
-                    [['#3498DB','50%'],['#27AE60','85%'],['#E74C3C','30%'],['#F5A623','72%'],['#9B59B6','60%'],['#27AE60','40%'],['#3498DB','88%']],
-                    [['#F5A623','62%'],['#E74C3C','78%'],['#27AE60','44%'],['#3498DB','95%'],['#F5A623','55%'],['#E74C3C','70%'],['#27AE60','35%']],
-                ];
-                @endphp
-                @foreach($rows as $ri => $row)
-                <div class="qh-dev-row">
-                    @foreach($row as $bi => $b)
-                    <div class="qh-dev-bar" style="background:{{ $b[0] }};height:{{ $b[1] }};flex:1;animation-delay:{{ ($ri*7+$bi)*0.14 }}s;"></div>
-                    @endforeach
-                </div>
-                @endforeach
-            </div>
-        </div> --}}
         <div class="qh-hero-right qh-anim d2">
-            <h1 class="qh-hero-h1">Complex <span>Option</span><br>Simplified</h1>
+            <h1 class="qh-hero-h1">
+                {{ $hero['heading_line1'] }}
+                <span>{{ $hero['heading_highlight'] }}</span><br>
+                {{ $hero['heading_line2'] }}
+            </h1>
             <div class="qh-hero-avail">Available on</div>
             <p class="qh-hero-url">{{ $hero['app_url'] }}</p>
-            <div class="qh-store-row">
-                <a href="{{ $hero['appstore'] }}" class="qh-store-btn"><i class="fab fa-apple"></i> APP STORE</a>
-                <a href="{{ $hero['playstore'] }}" class="qh-store-btn"><i class="fab fa-google-play"></i> PLAY STORE</a>
-                <a href="{{ $hero['webapp'] }}" class="qh-store-btn"><i class="fas fa-globe"></i> WEB APP</a>
-            </div>
         </div>
     </div>
     <div class="qh-scroll-cue"><i class="fas fa-chevron-down"></i></div>
@@ -493,29 +475,40 @@
     <h2>{{ $platform['title'] }}</h2>
     <span class="qh-platform-line"></span>
     <p>{{ $platform['subtitle'] }}</p>
+
+    @if(count($certBanners) > 0)
     <div class="qh-cert-slider">
         <div class="qh-cert-overflow">
             <div class="qh-cert-track" id="certTrack">
                 @foreach($certBanners as $cert)
                 <div class="qh-cert-slide">
                     <div class="qh-cert-card">
-                        <div class="qh-cert-left">
-                            <h3>{!! $cert['title'] !!}</h3>
-                            <div class="qh-cert-badge-pill">{{ $cert['badge'] }}</div>
-                        </div>
-                        <div class="qh-cert-right">
-                            <div class="qh-lang-pill">{{ $cert['lang'] }}</div>
-                            <div class="qh-trainers">
-                                @foreach($cert['trainers'] as $trainer)
-                                <div class="qh-trainer">
-                                    <div class="qh-trainer-av">
-                                        @if(!empty($trainer['avatar']))<img src="{{ $trainer['avatar'] }}" alt="{{ $trainer['name'] }}">@else<i class="fas fa-user"></i>@endif
-                                    </div>
-                                    <div class="qh-trainer-name">{{ $trainer['name'] }}</div>
-                                    <div class="qh-trainer-role">{{ $trainer['role'] }}</div>
-                                </div>
-                                @endforeach
+                        {{-- Image or placeholder --}}
+                        @if(!empty($cert['image']))
+                            <img src="{{ $cert['image'] }}" alt="{{ strip_tags($cert['title'] ?? 'Certification') }}" class="qh-cert-img">
+                        @else
+                            <div class="qh-cert-ph">
+                                <i class="fas fa-certificate"></i>
+                                <span>CERTIFICATION SLIDE</span>
                             </div>
+                        @endif
+
+                        {{-- Always-on bottom gradient --}}
+                        <div class="qh-cert-grad"></div>
+
+                        {{-- Hover dark tint --}}
+                        <div class="qh-cert-hover-overlay"></div>
+
+                        {{-- Hover info (badge left, lang right) --}}
+                        <div class="qh-cert-info">
+                            @if(!empty($cert['badge']))
+                            <div class="qh-cert-badge-pill">{{ $cert['badge'] }}</div>
+                            @else
+                            <div></div>
+                            @endif
+                            @if(!empty($cert['lang']))
+                            <div class="qh-lang-pill">{{ $cert['lang'] }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -530,6 +523,7 @@
         </div>
         @endif
     </div>
+    @endif
 </div>
 
 
@@ -542,9 +536,15 @@
     <span class="qh-about-sub qh-anim d2">{!! $about['title'] !!}</span>
     <div class="qh-about-inner">
         <div class="qh-about-video qh-anim d1">
-            <iframe src="{{ $about['video_url'] }}"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen title="About Quantsapp"></iframe>
+            @if(isset($about['video_type']) && $about['video_type'] === 'upload')
+                <video controls>
+                    <source src="{{ $about['video_url'] }}" type="video/mp4">
+                </video>
+            @else
+                <iframe src="{{ $about['video_url'] }}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen title="About CityQuants"></iframe>
+            @endif
             <div class="qh-about-video-ring"></div>
         </div>
         <div class="qh-stat-grid qh-anim d2">
@@ -552,7 +552,9 @@
             <div class="qh-stat-box">
                 <div class="qh-stat-val">{{ $stat['value'] }}</div>
                 <div class="qh-stat-lbl">{{ $stat['label'] }}</div>
+                @if(!empty($stat['sub']))
                 <div class="qh-stat-sub">{{ $stat['sub'] }}</div>
+                @endif
             </div>
             @endforeach
         </div>
@@ -566,10 +568,8 @@
 <section class="qh-sec qh-features">
     <span class="qh-title qh-anim">{{ $features['title'] }}</span>
     <span class="qh-line qh-anim d1"></span>
-    <span class="qh-feat-tagline qh-anim d2">
-        Analyze | Backtest | Optimize | Manage your <span>Option</span> Trades
-    </span>
     <div class="qh-feat-3col qh-anim d3">
+        {{-- Utilities column --}}
         <div class="qh-util-col">
             <div class="qh-util-head">Utilities</div>
             @foreach($features['utilities'] as $i => $u)
@@ -579,6 +579,7 @@
             </button>
             @endforeach
         </div>
+        {{-- Phone mockup --}}
         <div class="qh-phone-col">
             <div class="qh-phone-frame">
                 <div class="qh-phone-notch"></div>
@@ -594,6 +595,7 @@
                 </div>
             </div>
         </div>
+        {{-- Tool detail column --}}
         <div class="qh-tool-col">
             @foreach($features['utilities'] as $i => $u)
             <div id="qhTool{{ $i }}" style="{{ $i===0?'display:block':'display:none' }}">
@@ -601,7 +603,10 @@
                 <div class="qh-tool-divider"></div>
                 <span class="qh-tool-icon"><i class="fas {{ $u['tool_icon'] }}"></i></span>
                 @foreach($u['tool_points'] as $pt)
-                <div class="qh-tool-pt"><i class="fas fa-circle-dot"></i><span>{{ $pt }}</span></div>
+                <div class="qh-tool-pt">
+                    <i class="fas fa-circle-dot"></i>
+                    <span>{{ $pt }}</span>
+                </div>
                 @endforeach
             </div>
             @endforeach
@@ -619,7 +624,9 @@
     <div class="qh-learn-card qh-anim d2">
         <div class="qh-ltabs">
             @foreach($learning['tabs'] as $i => $tab)
-            <button class="qh-ltab {{ $i===0?'on':'' }}" onclick="learnSwitch({{ $i }},this)">{{ $tab['tab'] }}</button>
+            <button class="qh-ltab {{ $i===0?'on':'' }}" onclick="learnSwitch({{ $i }},this)">
+                {{ $tab['tab'] }}
+            </button>
             @endforeach
         </div>
         <div class="qh-lpanels">
@@ -627,23 +634,29 @@
             <div class="qh-lpanel {{ $i===0?'on':'' }}">
                 <div class="qh-ltext">
                     <div class="qh-lpanel-title">{{ $tab['tab'] }}</div>
+                    @if(!empty($tab['highlight']))
                     <div class="qh-lhl ms-2">{{ $tab['highlight'] }}</div>
+                    @endif
                     <p>{{ $tab['description'] }}</p>
                     <a href="{{ $tab['btn_url'] }}" class="qh-lbtn">{{ $tab['btn_label'] }}</a>
                 </div>
+                @if(!empty($tab['video_id']))
                 <div class="qh-lyvid">
                     <div class="qh-yt-card">
                         <div class="qh-yt-hd">
                             <div class="qh-yt-hd-logo">Q</div>
                             <div class="qh-yt-hd-info">
-                                <div class="qh-yt-hd-ch">Positional Options Trading</div>
-                                <div class="qh-yt-hd-sub">Quantsapp</div>
+                                <div class="qh-yt-hd-ch">Options Trading</div>
+                                <div class="qh-yt-hd-sub">CityQuants</div>
                             </div>
                             <div class="qh-yt-hd-badge"><i class="fas fa-circle" style="font-size:6px"></i> LIVE WEBINAR</div>
                         </div>
                         <div class="qh-yt-thumb" onclick="ytPlay('{{ $tab['video_id'] }}',{{ $i }})">
                             <div class="qh-yt-thumb-bg">
-                                <div class="qh-yt-vtitle">{{ strtoupper($tab['video_title']) }}<br><span>{{ $tab['video_sub'] }}</span></div>
+                                <div class="qh-yt-vtitle">
+                                    {{ strtoupper($tab['video_title']) }}<br>
+                                    @if(!empty($tab['video_sub']))<span>{{ $tab['video_sub'] }}</span>@endif
+                                </div>
                             </div>
                             <div class="qh-yt-play"><i class="fab fa-youtube"></i></div>
                         </div>
@@ -651,11 +664,15 @@
                             <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                         </div>
                         <div class="qh-yt-ft">
-                            <div class="qh-yt-ft-meta"><i class="far fa-calendar-alt"></i> {{ $tab['video_date'] }} &nbsp; {{ $tab['video_time'] }}</div>
+                            <div class="qh-yt-ft-meta">
+                                @if(!empty($tab['video_date']))<i class="far fa-calendar-alt"></i> {{ $tab['video_date'] }}@endif
+                                @if(!empty($tab['video_time'])) &nbsp; {{ $tab['video_time'] }}@endif
+                            </div>
                             <div class="qh-yt-ft-watch">Watch on <i class="fab fa-youtube"></i> YouTube</div>
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
             @endforeach
         </div>
@@ -674,12 +691,20 @@
             @foreach($testimonials as $t)
             <div class="qh-tcard">
                 <div class="qh-tcard-av">
-                    @if(!empty($t['avatar']))<img src="{{ $t['avatar'] }}" alt="{{ $t['name'] }}">@else<i class="fas fa-user"></i>@endif
+                    @if(!empty($t['avatar']))
+                        <img src="{{ $t['avatar'] }}" alt="{{ $t['name'] }}">
+                    @else
+                        <i class="fas fa-user"></i>
+                    @endif
                 </div>
                 <div class="qh-tcard-body">
                     <p class="qh-tcard-text">{{ $t['review'] }}</p>
                     <div class="qh-tcard-name">{{ $t['name'] }}</div>
-                    <div class="qh-tcard-stars">@for($s=0;$s<($t['rating']??5);$s++)<i class="fas fa-star"></i>@endfor</div>
+                    <div class="qh-tcard-stars">
+                        @for($s=0; $s < ($t['rating'] ?? 5); $s++)
+                            <i class="fas fa-star"></i>
+                        @endfor
+                    </div>
                 </div>
             </div>
             @endforeach
@@ -695,79 +720,88 @@
 </div>{{-- .qh-wrap --}}
 
 <script>
-/* CERT SLIDER */
-var _ci=0, _ct=document.querySelectorAll('.qh-cert-slide').length;
-function certGo(i){
-    _ci=i;
-    document.getElementById('certTrack').style.transform='translateX(-'+i+'00%)';
-    document.querySelectorAll('.qh-cert-dot').forEach(function(d,j){d.classList.toggle('on',j===i);});
+/* ── CERT SLIDER ─────────────────────────────── */
+var _ci = 0, _ct = document.querySelectorAll('.qh-cert-slide').length;
+function certGo(i) {
+    _ci = i;
+    document.getElementById('certTrack').style.transform = 'translateX(-' + i + '00%)';
+    document.querySelectorAll('.qh-cert-dot').forEach(function(d, j) { d.classList.toggle('on', j === i); });
 }
-if(_ct>1){setInterval(function(){certGo((_ci+1)%_ct);},4500);}
+if (_ct > 1) { setInterval(function() { certGo((_ci + 1) % _ct); }, 4500); }
 
-/* FEATURE SWITCH */
+/* ── FEATURE SWITCH ──────────────────────────── */
 var _totalTools = {{ count($features['utilities']) }};
-function featSwitch(idx,btn){
-    document.querySelectorAll('.qh-util-btn').forEach(function(b){b.classList.remove('on');});
+function featSwitch(idx, btn) {
+    document.querySelectorAll('.qh-util-btn').forEach(function(b) { b.classList.remove('on'); });
     btn.classList.add('on');
-    for(var x=0;x<_totalTools;x++){
-        var el=document.getElementById('qhTool'+x);
-        if(el) el.style.display=(x===idx)?'block':'none';
+    for (var x = 0; x < _totalTools; x++) {
+        var el = document.getElementById('qhTool' + x);
+        if (el) el.style.display = (x === idx) ? 'block' : 'none';
     }
 }
 
-/* LEARN SWITCH */
-function learnSwitch(idx,btn){
-    document.querySelectorAll('.qh-ltab').forEach(function(b){b.classList.remove('on');});
+/* ── LEARN SWITCH ────────────────────────────── */
+function learnSwitch(idx, btn) {
+    document.querySelectorAll('.qh-ltab').forEach(function(b) { b.classList.remove('on'); });
     btn.classList.add('on');
-    document.querySelectorAll('.qh-lpanel').forEach(function(p,i){p.classList.toggle('on',i===idx);});
+    document.querySelectorAll('.qh-lpanel').forEach(function(p, i) { p.classList.toggle('on', i === idx); });
 }
 
-/* YOUTUBE PLAY */
-function ytPlay(vid,idx){
-    var thumb=event.currentTarget;
-    thumb.style.display='none';
-    var fw=document.getElementById('ytframe'+idx);
-    fw.style.display='block';
-    fw.querySelector('iframe').src='https://www.youtube.com/embed/'+vid+'?autoplay=1&rel=0';
+/* ── YOUTUBE PLAY ────────────────────────────── */
+function ytPlay(vid, idx) {
+    var thumb = event.currentTarget;
+    thumb.style.display = 'none';
+    var fw = document.getElementById('ytframe' + idx);
+    fw.style.display = 'block';
+    fw.querySelector('iframe').src = 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0';
 }
 
-/* TESTIMONIALS */
-(function(){
-    var track=document.getElementById('tTrack');
-    if(!track)return;
-    var cards=track.querySelectorAll('.qh-tcard');
-    var dotsEl=document.getElementById('tDots');
-    var total=cards.length, idx=0, timer;
-    var pv=window.innerWidth>880?3:window.innerWidth>560?2:1;
-    var maxIdx=Math.max(0,total-pv);
-    var dots=[];
-    for(var i=0;i<=maxIdx;i++){
-        (function(ii){
-            var d=document.createElement('button');
-            d.className='qh-tdot'+(ii===0?' on':'');
-            d.onclick=function(){tGoTo(ii);};
-            dotsEl.appendChild(d); dots.push(d);
+/* ── TESTIMONIALS SLIDER ─────────────────────── */
+(function () {
+    var track  = document.getElementById('tTrack');
+    if (!track) return;
+    var cards  = track.querySelectorAll('.qh-tcard');
+    var dotsEl = document.getElementById('tDots');
+    var total  = cards.length, idx = 0, timer;
+    var pv     = window.innerWidth > 880 ? 3 : window.innerWidth > 560 ? 2 : 1;
+    var maxIdx = Math.max(0, total - pv);
+    var dots   = [];
+
+    for (var i = 0; i <= maxIdx; i++) {
+        (function (ii) {
+            var d = document.createElement('button');
+            d.className = 'qh-tdot' + (ii === 0 ? ' on' : '');
+            d.onclick = function () { tGoTo(ii); };
+            dotsEl.appendChild(d);
+            dots.push(d);
         })(i);
     }
-    function tGoTo(i){
-        idx=Math.max(0,Math.min(i,maxIdx));
-        var cw=cards[0].offsetWidth+24;
-        track.style.transform='translateX(-'+(idx*cw)+'px)';
-        dots.forEach(function(d,j){d.classList.toggle('on',j===idx);});
+
+    function tGoTo(i) {
+        idx = Math.max(0, Math.min(i, maxIdx));
+        var cw = cards[0].offsetWidth + 24;
+        track.style.transform = 'translateX(-' + (idx * cw) + 'px)';
+        dots.forEach(function (d, j) { d.classList.toggle('on', j === idx); });
     }
-    window.tNext=function(){tGoTo(idx<maxIdx?idx+1:0);};
-    window.tPrev=function(){tGoTo(idx>0?idx-1:maxIdx);};
-    function startT(){timer=setInterval(window.tNext,4200);}
-    function stopT(){clearInterval(timer);}
+
+    window.tNext = function () { tGoTo(idx < maxIdx ? idx + 1 : 0); };
+    window.tPrev = function () { tGoTo(idx > 0 ? idx - 1 : maxIdx); };
+
+    function startT() { timer = setInterval(window.tNext, 4200); }
+    function stopT()  { clearInterval(timer); }
     startT();
-    track.addEventListener('mouseenter',stopT);
-    track.addEventListener('mouseleave',startT);
-    var sx=0;
-    track.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;});
-    track.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40){dx<0?window.tNext():window.tPrev();}});
-    window.addEventListener('resize',function(){
-        var npv=window.innerWidth>880?3:window.innerWidth>560?2:1;
-        if(npv!==pv){pv=npv;maxIdx=Math.max(0,total-pv);tGoTo(0);}
+    track.addEventListener('mouseenter', stopT);
+    track.addEventListener('mouseleave', startT);
+
+    var sx = 0;
+    track.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; });
+    track.addEventListener('touchend',   function (e) {
+        var dx = e.changedTouches[0].clientX - sx;
+        if (Math.abs(dx) > 40) { dx < 0 ? window.tNext() : window.tPrev(); }
+    });
+    window.addEventListener('resize', function () {
+        var npv = window.innerWidth > 880 ? 3 : window.innerWidth > 560 ? 2 : 1;
+        if (npv !== pv) { pv = npv; maxIdx = Math.max(0, total - pv); tGoTo(0); }
     });
 })();
 </script>

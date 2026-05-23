@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseVideoUploadController;
 use App\Http\Controllers\Admin\CoursePaymentGatewayController;
+use App\Http\Controllers\Admin\EventController;
 
 Route::namespace('Auth')->group(function () {
     Route::controller('LoginController')->group(function () {
@@ -680,3 +681,135 @@ Route::controller('RoleController')->name('roles.')->prefix('roles')->group(func
     Route::post('permissions/store',       'storePermission')->name('permissions.store');
     Route::post('permissions/destroy/{id}','destroyPermission')->name('permissions.destroy');
 });
+
+
+
+// ══════════════════════════════════════════════════════
+// ADMIN — Webinars (inside admin middleware group)
+// ══════════════════════════════════════════════════════
+Route::controller(\App\Http\Controllers\Admin\WebinarController::class)
+    ->prefix('webinars')
+    ->name('webinars.')
+    ->group(function () {
+
+        // CRUD
+        Route::get('/',               'index')->name('index');
+        Route::get('/create',         'create')->name('create');
+        Route::post('/',              'store')->name('store');
+        Route::get('/{webinar}/edit', 'edit')->name('edit');
+        Route::put('/{webinar}',      'update')->name('update');
+        Route::delete('/{webinar}',   'destroy')->name('destroy');
+
+        // Status / Featured
+        Route::get('/{webinar}/status',   'statusToggle')->name('status');
+        Route::get('/{webinar}/featured', 'featuredToggle')->name('featured');
+
+        // FAQ AJAX
+        Route::put('/faqs/{faq}',      'faqUpdate')->name('faqs.update');
+        Route::delete('/faqs/{faq}',   'faqDestroy')->name('faqs.destroy');
+        Route::post('/faqs/reorder',   'faqReorder')->name('faqs.reorder');
+
+        // Orders / Enrollments
+        Route::get('/orders',                   'orders')->name('orders');
+        Route::post('/orders/{order}/enroll',   'manualEnroll')->name('orders.enroll');
+        Route::get('/enrollments',              'enrollments')->name('enrollments');
+    });
+
+    
+    // ── ADMIN (inside admin middleware group) ─────────────────────────────────────
+    Route::controller(\App\Http\Controllers\Admin\EventController::class)
+        ->prefix('events')->name('events.')
+        ->group(function () {
+            Route::get('/',                       'index')->name('index');
+            Route::get('/create',                 'create')->name('create');
+            Route::post('/',                      'store')->name('store');
+            Route::get('/{event}/edit',           'edit')->name('edit');
+            Route::put('/{event}',                'update')->name('update');
+            Route::delete('/{event}',             'destroy')->name('destroy');
+            Route::get('/{event}/status',         'statusToggle')->name('status');
+            Route::get('/{event}/featured',       'featuredToggle')->name('featured');
+            Route::get('/{event}/booking-toggle', 'bookingToggle')->name('booking.toggle');
+            Route::get('/bookings',               'bookings')->name('bookings');
+            Route::put('/faqs/{faq}',             'faqUpdate')->name('faqs.update');
+            Route::delete('/faqs/{faq}',          'faqDestroy')->name('faqs.destroy');
+            Route::post('/faqs/reorder',          'faqReorder')->name('faqs.reorder');
+        });
+
+    
+    // ── HOME PAGE CMS ─────────────────────────────────────────────────────────────
+    Route::prefix('cms/home')->name('cms.home.')->controller(\App\Http\Controllers\Admin\HomePageCmsController::class)->group(function () {
+        Route::get('/',                      'index')->name('index');
+        Route::get('/hero',                  'hero')->name('hero');
+        Route::post('/hero',                 'heroUpdate')->name('hero.update');
+        Route::get('/platform',              'platform')->name('platform');
+        Route::post('/platform',             'platformUpdate')->name('platform.update');
+        Route::get('/cert-slides',           'certSlides')->name('cert_slides');
+        Route::post('/cert-slides',          'certSlideStore')->name('cert_slides.store');
+        Route::put('/cert-slides/{slide}',   'certSlideUpdate')->name('cert_slides.update');
+        Route::delete('/cert-slides/{slide}','certSlideDestroy')->name('cert_slides.destroy');
+        Route::get('/about-section',         'aboutSection')->name('about_section');
+        Route::post('/about-section',        'aboutSectionUpdate')->name('about_section.update');
+        Route::get('/features',              'features')->name('features');
+        Route::post('/features/meta',        'featuresMetaUpdate')->name('features.meta');
+        Route::post('/features/utility',     'utilityStore')->name('utility.store');
+        Route::put('/features/utility/{utility}',   'utilityUpdate')->name('utility.update');
+        Route::delete('/features/utility/{utility}','utilityDestroy')->name('utility.destroy');
+        Route::get('/learning',              'learning')->name('learning');
+        Route::post('/learning',             'learningTabStore')->name('learning.store');
+        Route::put('/learning/{tab}',        'learningTabUpdate')->name('learning.update');
+        Route::delete('/learning/{tab}',     'learningTabDestroy')->name('learning.destroy');
+        Route::get('/testimonials',          'testimonials')->name('testimonials');
+        Route::post('/testimonials',         'testimonialStore')->name('testimonials.store');
+        Route::put('/testimonials/{testimonial}',   'testimonialUpdate')->name('testimonials.update');
+        Route::delete('/testimonials/{testimonial}','testimonialDestroy')->name('testimonials.destroy');
+    });
+
+    // ── ABOUT PAGE CMS ────────────────────────────────────────────────────────────
+    Route::prefix('cms/about')->name('cms.about.')->controller(\App\Http\Controllers\Admin\AboutPageCmsController::class)->group(function () {
+        Route::get('/',                             'index')->name('index');
+        Route::get('/hero',                         'hero')->name('hero');
+        Route::post('/hero',                        'heroUpdate')->name('hero.update');
+        Route::get('/who-we-are',                   'whoWeAre')->name('who_we_are');
+        Route::post('/who-we-are',                  'whoWeAreUpdate')->name('who_we_are.update');
+        Route::get('/mission',                      'mission')->name('mission');
+        Route::post('/mission',                     'missionUpdate')->name('mission.update');
+        Route::get('/founders',                     'founders')->name('founders');
+        Route::post('/founders',                    'founderStore')->name('founders.store');
+        Route::put('/founders/{founder}',           'founderUpdate')->name('founders.update');
+        Route::delete('/founders/{founder}',        'founderDestroy')->name('founders.destroy');
+        Route::get('/workspace',                    'workspace')->name('workspace');
+        Route::post('/workspace',                   'workspaceUpdate')->name('workspace.update');
+        Route::post('/workspace/slides',            'workspaceSlideStore')->name('workspace.slides.store');
+        Route::put('/workspace/slides/{slide}',     'workspaceSlideUpdate')->name('workspace.slides.update');
+        Route::delete('/workspace/slides/{slide}',  'workspaceSlideDestroy')->name('workspace.slides.destroy');
+        Route::post('/offices',                     'officeStore')->name('offices.store');
+        Route::put('/offices/{office}',             'officeUpdate')->name('offices.update');
+        Route::delete('/offices/{office}',          'officeDestroy')->name('offices.destroy');
+        Route::get('/founder-vision',               'founderVision')->name('founder_vision');
+        Route::post('/founder-vision',              'founderVisionUpdate')->name('founder_vision.update');
+        Route::get('/cta',                          'cta')->name('cta');
+        Route::post('/cta',                         'ctaUpdate')->name('cta.update');
+    });
+
+    // ══════════════════════════════════════════════════════
+    // ADMIN — Media
+    // ══════════════════════════════════════════════════════
+    Route::controller(\App\Http\Controllers\Admin\MediaController::class)
+        ->prefix('media')
+        ->name('media.')
+        ->group(function () {
+
+            // Items
+            Route::get('/',                          'index')->name('index');
+            Route::post('/upload',                   'store')->name('store');
+            Route::put('/items/{mediaItem}',         'update')->name('items.update');
+            Route::delete('/items/{mediaItem}',      'destroy')->name('items.destroy');
+            Route::post('/items/{mediaItem}/toggle', 'toggleActive')->name('items.toggle');
+
+            // Categories
+            Route::get('/categories',                          'categories')->name('categories');
+            Route::post('/categories',                         'categoryStore')->name('categories.store');
+            Route::put('/categories/{category}',               'categoryUpdate')->name('categories.update');
+            Route::delete('/categories/{category}',            'categoryDestroy')->name('categories.destroy');
+            Route::get('/categories/{category}/toggle',        'categoryToggle')->name('categories.toggle');
+        });

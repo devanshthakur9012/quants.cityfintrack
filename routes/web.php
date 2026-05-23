@@ -117,6 +117,9 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\User\Auth\EmailOtpController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\WebinarController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\UserDashboardController;
 
 // COURSES //
 Route::get('/courses', [CourseController::class, 'index'])->name('courses');
@@ -126,6 +129,15 @@ Route::get('/courses/{slug}', [CourseController::class, 'detail'])->name('course
 Route::middleware('auth:web')->group(function () {
     Route::post('/courses/{course}/pay',      [CourseController::class, 'initiatePayment'])->name('courses.payment.initiate');
     Route::post('/courses/payment/verify',    [CourseController::class, 'verifyPayment'])->name('courses.payment.verify');
+});
+
+Route::middleware('auth:web')->group(function () {
+    Route::get('/my-dashboard',                      [UserDashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/profile',                           [UserDashboardController::class, 'profile'])->name('user.profile');
+    Route::post('/profile',                          [UserDashboardController::class, 'profileUpdate'])->name('user.profile.update');
+    Route::get('/change-password',                   [UserDashboardController::class, 'changePassword'])->name('user.change-password');
+    Route::post('/change-password',                  [UserDashboardController::class, 'changePasswordUpdate'])->name('user.change-password.update');
+    Route::get('/logout', [UserDashboardController::class, 'logout'])->name('user.logout');
 });
  
 // ── ADMIN routes (inside your admin middleware group) ─────────────────────────
@@ -142,6 +154,29 @@ Route::controller(CoursePaymentGatewayController::class)
     Route::get('/orders/{order}',         'orderDetail')->name('orders.detail');
     Route::post('/orders/{order}/enroll', 'manualEnroll')->name('orders.enroll');
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// FRONTEND — Webinars
+// ────────────────────────────────────────────────────────────────────────
+Route::controller(WebinarController::class)
+    ->prefix('webinars')
+    ->name('webinars.')
+    ->group(function () {
+        Route::get('/',                   'index')->name('index');
+        Route::get('/{slug}',             'detail')->name('detail');
+        Route::post('/{webinar}/pay',     'initiatePayment')->name('payment.initiate');
+        Route::post('/payment/verify',    'verifyPayment')->name('payment.verify');
+    });
+
+// ── FRONTEND ──────────────────────────────────────────────────────────────────
+Route::controller(\App\Http\Controllers\EventController::class)
+    ->prefix('events')->name('events.')
+    ->group(function () {
+        Route::get('/',               'index')->name('index');
+        Route::get('/{slug}',         'detail')->name('detail');
+        Route::post('/{event}/book',  'initiateBooking')->name('book');
+        Route::post('/payment/verify','verifyPayment')->name('payment.verify');
+    });
 
 // LOGIN START
 Route::get('/login',                [LoginController::class, 'showLogin'])->name('user.login');
@@ -164,25 +199,19 @@ Route::post('/forgot-password',     [LoginController::class, 'sendResetLink'])->
 // Reset password
 Route::get('/reset-password/{token}', [LoginController::class, 'showResetPassword'])->name('user.reset.password');
 Route::post('/reset-password',        [LoginController::class, 'resetPassword'])->name('user.reset.password.store');
- 
-// Logout
-Route::post('/logout',              [LoginController::class, 'logout'])->name('user.logout');
 // LOGIN END
 
-Route::get('/import-data','SiteController@importExcelData')->name('importExcelData');
-// Route::get('/', 'SiteController@index')->name('home');
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
-Route::get('/webinars', [HomePageController::class, 'webinars'])->name('webinars');
-// Route::get('/courses', [HomePageController::class, 'courses'])->name('courses');
-// Route::get('/login',   [HomePageController::class, 'login'])->name('user.login');
 Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.register');
-Route::get('/events',  [HomePageController::class, 'events'])->name('events');
 Route::get('/option-symposium', [HomePageController::class, 'optionSymposium'])->name('optionsymposium');
 Route::get('/video-library', [HomePageController::class, 'videoLibrary'])->name('video.library');
-Route::get('/events',    [HomePageController::class, 'events'])->name('events');
 Route::get('/book-demo', [HomePageController::class, 'bookDemo'])->name('book.demo');
 Route::get('/media', [HomePageController::class, 'media'])->name('media');
+Route::get('/media/load-more/{category}', [HomePageController::class, 'mediaLoadMore'])->name('media.loadmore');
+
+
+Route::get('/import-data','SiteController@importExcelData')->name('importExcelData');
 
 Route::middleware('guest')->group(function () {
     Route::post('/send-email-otp',   [EmailOtpController::class, 'sendOtp'])->name('send.email.otp');

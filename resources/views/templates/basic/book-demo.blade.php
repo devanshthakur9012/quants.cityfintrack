@@ -574,7 +574,7 @@
                 </div>
                 <div class="qd-app-cta">
                     <a href="#" class="qd-app-btn primary"><i class="fas fa-rocket"></i> Explore Free Tools</a>
-                    <a href="{{ route('webinars') }}" class="qd-app-btn secondary"><i class="fas fa-video"></i> Watch Webinars</a>
+                    <a href="{{ route('webinars.index') }}" class="qd-app-btn secondary"><i class="fas fa-video"></i> Watch Webinars</a>
                 </div>
             </div>
         </div>

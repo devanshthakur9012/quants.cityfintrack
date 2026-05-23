@@ -99,9 +99,52 @@
                         <span class="menu-title">@lang('Payment Gateway')</span>
                     </a>
                 </li>
-                
 
-                <li class="sidebar__menu-header">@lang('Config')</li>
+                <li class="sidebar__menu-header">@lang('Webinars')</li>
+                <li class="sidebar-menu-item {{menuActive('admin.webinars.index')}}">
+                    <a href="{{route('admin.webinars.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Webinars')</span>
+                    </a>
+                </li>
+
+                <li class="sidebar__menu-header">@lang('Events')</li>
+                <li class="sidebar-menu-item {{menuActive('admin.events.index')}}">
+                    <a href="{{route('admin.events.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Events')</span>
+                    </a>
+                </li>
+
+                <li class="sidebar__menu-header">@lang('Media')</li>
+                <li class="sidebar-menu-item {{menuActive('admin.media.categories')}}">
+                    <a href="{{route('admin.media.categories')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Media Categories')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.media.index')}}">
+                    <a href="{{route('admin.media.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Media Library')</span>
+                    </a>
+                </li>
+
+                <li class="sidebar__menu-header">@lang('Manage CMS')</li>
+                <li class="sidebar-menu-item {{menuActive('admin.cms.home.index')}}">
+                    <a href="{{route('admin.cms.home.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Home Page')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cms.about.index')}}">
+                    <a href="{{route('admin.cms.about.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('About Page')</span>
+                    </a>
+                </li>
+
+                {{-- <li class="sidebar__menu-header">@lang('Config')</li>
                 <li class="sidebar-menu-item {{menuActive('admin.zerodha-broker.index')}}">
                     <a href="{{route('admin.zerodha-broker.index')}}" class="nav-link">
                         <i class="menu-icon las la-life-ring"></i>
@@ -119,7 +162,7 @@
                         <i class="menu-icon las la-life-ring"></i>
                         <span class="menu-title">@lang('Analysis Config')</span>
                     </a>
-                </li>
+                </li> --}}
 
                 <li class="sidebar__menu-header">@lang('Settings')</li>
 
@@ -149,6 +192,7 @@
                         <span class="menu-title">@lang('Logo & Favicon')</span>
                     </a>
                 </li>
+                
 
                 {{-- <li class="sidebar-menu-item {{menuActive('admin.extensions.index')}}">
                     <a href="{{route('admin.extensions.index')}}" class="nav-link">
@@ -231,14 +275,14 @@
                     </a>
                 </li> --}}
 
-                <li class="sidebar-menu-item {{menuActive('admin.frontend.manage.*')}}">
+                {{-- <li class="sidebar-menu-item {{menuActive('admin.frontend.manage.*')}}">
                     <a href="{{route('admin.frontend.manage.pages')}}" class="nav-link ">
                         <i class="menu-icon la la-list"></i>
                         <span class="menu-title">@lang('Manage Pages')</span>
                     </a>
-                </li>
+                </li> --}}
 
-                <li class="sidebar-menu-item sidebar-dropdown">
+                {{-- <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{menuActive('admin.frontend.sections*',3)}}">
                         <i class="menu-icon la la-puzzle-piece"></i>
                         <span class="menu-title">@lang('Manage Section')</span>
@@ -260,7 +304,7 @@
                             @endforeach
                         </ul>
                     </div>
-                </li>
+                </li> --}}
 
                 <li class="sidebar__menu-header">@lang('Extra')</li>
 

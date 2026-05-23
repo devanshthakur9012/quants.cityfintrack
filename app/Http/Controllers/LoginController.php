@@ -78,7 +78,7 @@ class LoginController extends Controller
         $this->clearOtp($user);
         Auth::login($user);
 
-        return response()->json(['success' => true, 'redirect' => route('user.home')]);
+        return response()->json(['success' => true, 'redirect' => route('user.dashboard')]);
     }
 
     // ─────────────────────────────────────────────
@@ -107,7 +107,7 @@ class LoginController extends Controller
         }
 
         Auth::login($user, $request->remember);
-        return redirect()->route('user.home');
+        return redirect()->route('user.dashboard');
     }
 
     // ─────────────────────────────────────────────
@@ -205,7 +205,7 @@ class LoginController extends Controller
         $user->save();
 
         Auth::login($user);
-        return redirect()->route('user.home')->with('success', 'Welcome to CityQuants!');
+        return redirect()->route('user.dashboard')->with('success', 'Welcome to CityQuants!');
     }
 
     // ─────────────────────────────────────────────

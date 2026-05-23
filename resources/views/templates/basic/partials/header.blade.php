@@ -15,46 +15,24 @@
 
                 <div class="collapse navbar-collapse mt-lg-0 mt-3" id="navbarSupportedContent">
 
-                    {{-- Pill CTA Buttons (like Quantsapp's DOWNLOAD APP / OPTION APP / WEALTH APP) --}}
                     <div class="qapp-cta-btns ms-auto me-3 d-none d-xl-flex align-items-center gap-2">
-                        <a href="#" class="qapp-pill-btn">@lang('Download APP')</a>
-                        <a href="#" class="qapp-pill-btn">@lang('OPTION APP')</a>
-                        <a href="#" class="qapp-pill-btn">@lang('WEALTH APP')</a>
                     </div>
 
                     {{-- Uppercase Nav Links --}}
                     <ul class="navbar-nav qapp-nav-links">
-                        <li><a href="{{ route('home') }}">@lang('HOME')</a></li>
-                        
-                        <li class="menu_has_children">
-                            <a href="#0">@lang('LEARN')</a>
-                            <ul class="sub-menu">
-                                <li><a href="{{ route('webinars') }}">@lang('Webinars')</a></li>
-                                <li><a href="{{ route('courses') }}">@lang('Courses')</a></li>
-                                <li><a href="{{ route('book.demo') }}">@lang('Book a Demo')</a></li>
-                                <li><a href="{{ route('events') }}">@lang('Event')</a></li>
-                                <li><a href="{{ route('optionsymposium') }}">@lang('Option Symposium 7.0')</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="{{ route('video.library') }}">@lang('VIDEO LIBRARY')</a></li>
-                        <li><a href="{{ route('media') }}">@lang('MEDIA')</a></li>
-                        <li><a href="{{ route('about') }}">@lang('ABOUT')</a></li>
-                        {{-- @php
-                            $pages = App\Models\Page::where('tempname', $activeTemplate)
-                                ->where('is_default', 0)
-                                ->get();
-                        @endphp
-                        @foreach ($pages as $k => $data)
-                            <li>
-                                <a href="{{ route('pages', [$data->slug]) }}">{{ __($data->name) }}</a>
-                            </li>
-                        @endforeach --}}
+                        <li><a href="{{ route('home') }}">@lang('Home')</a></li>
+                        <li><a href="{{ route('webinars.index') }}">@lang('Webinars')</a></li>
+                        <li><a href="{{ route('courses') }}">@lang('Courses')</a></li>
+                        {{-- <li><a href="{{ route('book.demo') }}">@lang('Book a Demo')</a></li> --}}
+                        <li><a href="{{ route('events.index') }}">@lang('Event')</a></li>
+                        <li><a href="{{ route('media') }}">@lang('Media')</a></li>
+                        <li><a href="{{ route('about') }}">@lang('About')</a></li>
                     </ul>
 
                     {{-- Auth + Language --}}
                     <div class="nav-right d-flex align-items-center p-0">
                         @auth
-                            <a href="{{ route('user.home') }}" class="qapp-user-icon" title="Dashboard">
+                            <a href="{{ route('user.dashboard') }}" class="qapp-user-icon" title="Dashboard">
                                 <i class="las la-home"></i>
                             </a>
                         @else
