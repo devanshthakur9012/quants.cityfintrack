@@ -791,6 +791,29 @@ Route::controller(\App\Http\Controllers\Admin\WebinarController::class)
         Route::post('/cta',                         'ctaUpdate')->name('cta.update');
     });
 
+    Route::prefix('cms/pages')
+    ->name('cms.pages.')
+    ->controller(\App\Http\Controllers\Admin\PagesCmsController::class)
+    ->group(function () {
+        Route::get('/',         'index')->name('index');
+ 
+        Route::get('/media',    'mediaIndex')->name('media');
+        Route::post('/media',   'mediaUpdate')->name('media.update');
+ 
+        Route::get('/webinar',  'webinarIndex')->name('webinar');
+        Route::post('/webinar', 'webinarUpdate')->name('webinar.update');
+ 
+        Route::get('/course',   'courseIndex')->name('course');
+        Route::post('/course',  'courseUpdate')->name('course.update');
+ 
+        Route::get('/event',    'eventIndex')->name('event');
+        Route::post('/event',   'eventUpdate')->name('event.update');
+ 
+        Route::get('/auth',     'authIndex')->name('auth');
+        Route::post('/auth',    'authUpdate')->name('auth.update');
+    });
+
+
     // ══════════════════════════════════════════════════════
     // ADMIN — Media
     // ══════════════════════════════════════════════════════
@@ -813,3 +836,51 @@ Route::controller(\App\Http\Controllers\Admin\WebinarController::class)
             Route::delete('/categories/{category}',            'categoryDestroy')->name('categories.destroy');
             Route::get('/categories/{category}/toggle',        'categoryToggle')->name('categories.toggle');
         });
+
+    
+    // ── CP SYSTEM HUB ─────────────────────────────────────────────────────────────
+    Route::get('cp', [\App\Http\Controllers\Admin\CpSubscriptionPlanController::class, 'hub'])
+        ->name('cp.index');
+    // Add this method to CpSubscriptionPlanController:
+    //   public function hub() { return view('cp.index', ['pageTitle'=>'CP Analysis System']); }
+    
+    // ── CP ANALYSES ───────────────────────────────────────────────────────────────
+    Route::prefix('cp/analyses')->name('cp.analyses.')
+        ->controller(\App\Http\Controllers\Admin\CpAnalysisController::class)
+        ->group(function () {
+            Route::get('/',              'index')->name('index');
+            Route::post('/',             'store')->name('store');
+            Route::post('/{analysis}',   'update')->name('update');
+            Route::delete('/{analysis}', 'destroy')->name('destroy');
+            Route::get('/{analysis}/toggle', 'toggleStatus')->name('toggle');
+            Route::get('/{analysis}/data',   'getData')->name('data');  // AJAX for edit modal
+        });
+    
+    // ── CP SUBSCRIPTION PLANS ─────────────────────────────────────────────────────
+    Route::prefix('cp/plans')->name('cp.plans.')
+        ->controller(\App\Http\Controllers\Admin\CpSubscriptionPlanController::class)
+        ->group(function () {
+            Route::get('/',          'index')->name('index');
+            Route::post('/',         'storePlan')->name('store');
+            Route::post('/{plan}',   'updatePlan')->name('update');
+            Route::delete('/{plan}', 'destroyPlan')->name('destroy');
+        });
+    
+    // ── CP USER SUBSCRIPTIONS ─────────────────────────────────────────────────────
+    Route::prefix('cp/subscriptions')->name('cp.subscriptions.')
+        ->controller(\App\Http\Controllers\Admin\CpSubscriptionPlanController::class)
+        ->group(function () {
+            Route::get('/',                       'subscriptions')->name('index');
+            Route::post('/{subscription}/cancel', 'cancelSubscription')->name('cancel');
+            Route::post('/{subscription}/extend', 'extendSubscription')->name('extend');
+        });
+    
+    // ── CP PAYMENTS ───────────────────────────────────────────────────────────────
+    Route::get('cp/payments', [\App\Http\Controllers\Admin\CpSubscriptionPlanController::class, 'payments'])
+        ->name('cp.payments.index');
+    
+    // ── CP PAYMENT GATEWAY ────────────────────────────────────────────────────────
+    Route::get('cp/gateway',  [\App\Http\Controllers\Admin\CpSubscriptionPlanController::class, 'gateway'])
+        ->name('cp.gateway');
+    Route::post('cp/gateway', [\App\Http\Controllers\Admin\CpSubscriptionPlanController::class, 'gatewayUpdate'])
+        ->name('cp.gateway.update');

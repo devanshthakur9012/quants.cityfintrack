@@ -1,9 +1,7 @@
-{{-- FILE: resources/views/themes/{activeTemplate}/courses.blade.php --}}
+{{-- FILE: resources/views/themes/{active_theme}/courses.blade.php --}}
 @extends($activeTemplate.'layouts.frontend')
-
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
 /* ─── BASE ─────────────────────────────────────────────────────────────── */
 .cr-page { font-family:'Exo 2',sans-serif; background:#f4f6fb; min-height:80vh; }
@@ -63,8 +61,6 @@
 /* ─── CARD ────────────────────────────────────────────────────────────────── */
 .cr-card { background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e5e9f2; transition:transform .25s,box-shadow .25s; display:flex; flex-direction:column; position:relative; }
 .cr-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(0,0,0,.1); }
-
-/* thumbnail */
 .cr-thumb { position:relative; aspect-ratio:16/9; overflow:hidden; background:#0f1b2d; flex-shrink:0; }
 .cr-thumb img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s; }
 .cr-card:hover .cr-thumb img { transform:scale(1.05); }
@@ -74,14 +70,10 @@
 .cr-status-badge.upcoming { background:#43a047; color:#fff; }
 .cr-status-badge.recorded { background:#5c6bc0; color:#fff; }
 .cr-cat-chip { position:absolute; bottom:9px; left:10px; font-size:10px; font-weight:600; padding:3px 10px; border-radius:4px; background:rgba(0,0,0,.55); color:#fff; backdrop-filter:blur(4px); max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-/* body */
 .cr-body { padding:14px 16px 10px; flex:1; display:flex; flex-direction:column; }
 .cr-title { font-family:'Rajdhani',sans-serif; font-size:15.5px; font-weight:700; color:#0f1b2d; line-height:1.3; margin-bottom:8px; flex:1; }
 .cr-title a { color:inherit; transition:color .2s; }
 .cr-title a:hover { color:#1a56db; }
-
-/* meta tags row */
 .cr-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
 .cr-tag { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:#5a6678; background:#f4f6fb; padding:3px 9px; border-radius:5px; border:1px solid #eaecf2; white-space:nowrap; }
 .cr-tag i { font-size:10px; color:#f5a623; }
@@ -89,11 +81,7 @@
 .cr-tag.cert i { color:#f57f17; }
 .cr-tag.dur  { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
 .cr-tag.dur i { color:#2e7d32; }
-
-/* short desc */
 .cr-short-desc { font-size:12px; color:#7a8499; line-height:1.6; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-
-/* footer */
 .cr-footer { display:flex; align-items:center; justify-content:space-between; padding:10px 16px 12px; border-top:1px solid #f0f2f7; background:#fafbff; gap:8px; margin-top:auto; }
 .cr-price { font-family:'Rajdhani',sans-serif; line-height:1.2; }
 .cr-price .cr-price-main { font-size:19px; font-weight:700; color:#0f1b2d; }
@@ -102,14 +90,10 @@
 .cr-price .cr-price-disc { font-size:11px; font-weight:700; color:#43a047; background:#e8f5e9; padding:2px 6px; border-radius:4px; margin-left:4px; }
 .cr-enroll-btn { font-size:12.5px; font-weight:700; color:#f5a623; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; transition:gap .2s,color .2s; border:none; background:none; padding:0; cursor:pointer; font-family:'Exo 2',sans-serif; }
 .cr-enroll-btn:hover { gap:9px; color:#d4890e; }
-
-/* curriculum mini-strip on card */
 .cr-curriculum-strip { display:flex; gap:10px; align-items:center; padding:7px 16px 9px; background:#f8f9fd; border-top:1px solid #eef0f8; }
 .cr-cs-item { display:flex; align-items:center; gap:4px; font-size:11.5px; color:#7a8499; }
 .cr-cs-item i { font-size:10px; color:#1a56db; }
 .cr-cs-sep { color:#dde2ee; font-size:11px; }
-
-/* empty */
 .cr-empty { grid-column:1/-1; text-align:center; padding:70px 20px; color:#9aa3b5; }
 .cr-empty i { font-size:52px; opacity:.3; display:block; margin-bottom:14px; }
 .cr-empty h4 { font-family:'Rajdhani',sans-serif; font-size:22px; color:#2d3a4e; margin-bottom:6px; }
@@ -126,7 +110,7 @@
     .cr-search-wrap{margin-left:0;width:100%;}
     .cr-search-input{width:100%;flex:1;}
 }
-@media(max-width:600px)  {
+@media(max-width:600px) {
     .cr-grid{grid-template-columns:1fr;}
     .cr-hero-right{grid-template-columns:1fr 1fr;}
     .cr-tab{padding:12px 14px;font-size:12.5px;}
@@ -135,21 +119,31 @@
 
 <div class="cr-page">
 
-{{-- ── HERO ──────────────────────────────────────────────────────────────── --}}
+{{-- ══════════════════════════════════════════════════════════
+     HERO — fully dynamic from CoursePageCms
+══════════════════════════════════════════════════════════ --}}
 <div class="cr-hero">
     <div class="cr-hero-left cr-anim">
         <h1>{{ $heroBanner['title'] }}</h1>
         <p>{{ $heroBanner['description'] }}</p>
     </div>
     <div class="cr-hero-right cr-anim d2">
-        @foreach($heroBanner['banners'] as $banner)
+        @forelse($heroBanner['banners'] as $banner)
             <img src="{{ $banner }}" alt="Course" loading="lazy"
                  onerror="this.src='https://img.freepik.com/free-vector/stock-market-analysis-concept-illustration_114360-5440.jpg?w=400'">
-        @endforeach
+        @empty
+            {{-- fallback placeholder tiles when no banners saved --}}
+            @for($b = 0; $b < 4; $b++)
+            <img src="https://img.freepik.com/free-vector/stock-market-analysis-concept-illustration_114360-5440.jpg?w=400"
+                 alt="Course" loading="lazy">
+            @endfor
+        @endforelse
     </div>
 </div>
 
-{{-- ── STICKY FILTER BAR ────────────────────────────────────────────────── --}}
+{{-- ══════════════════════════════════════════════════════════
+     STICKY FILTER BAR
+══════════════════════════════════════════════════════════ --}}
 <div class="cr-filter-bar">
     <div class="cr-filter-inner">
 
@@ -169,43 +163,59 @@
             </button>
         </div>
 
-        {{-- Filter dropdowns --}}
+        {{-- Filter dropdowns — all options dynamic from CoursePageCms --}}
         <div class="cr-filters-row">
+
+            {{-- Language --}}
             <div class="cr-fgroup">
                 <span class="cr-flabel">Language</span>
                 <select class="cr-fselect {{ $filterLang ? 'active-filter' : '' }}" id="crLang" onchange="crFilter()">
                     <option value="">All Languages</option>
-                    <option value="hindi"    @selected($filterLang==='hindi')>Hindi</option>
-                    <option value="english"  @selected($filterLang==='english')>English</option>
-                    <option value="gujarati" @selected($filterLang==='gujarati')>Gujarati</option>
+                    @foreach($filterLanguages as $lang)
+                        <option value="{{ strtolower($lang) }}" @selected($filterLang === strtolower($lang))>
+                            {{ $lang }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
+
+            {{-- Level --}}
             <div class="cr-fgroup">
                 <span class="cr-flabel">Level</span>
                 <select class="cr-fselect {{ $filterLevel ? 'active-filter' : '' }}" id="crLevel" onchange="crFilter()">
                     <option value="">All Levels</option>
-                    <option value="beginner"     @selected($filterLevel==='beginner')>Beginner</option>
-                    <option value="intermediate" @selected($filterLevel==='intermediate')>Intermediate</option>
-                    <option value="advanced"     @selected($filterLevel==='advanced')>Advanced</option>
+                    @foreach($filterLevels as $lvl)
+                        <option value="{{ strtolower($lvl) }}" @selected($filterLevel === strtolower($lvl))>
+                            {{ $lvl }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
+
+            {{-- Price --}}
             <div class="cr-fgroup">
                 <span class="cr-flabel">Price</span>
                 <select class="cr-fselect {{ $filterType ? 'active-filter' : '' }}" id="crType" onchange="crFilter()">
                     <option value="">All Prices</option>
-                    <option value="free" @selected($filterType==='free')>Free</option>
-                    <option value="paid" @selected($filterType==='paid')>Paid</option>
+                    <option value="free" @selected($filterType === 'free')>Free</option>
+                    <option value="paid" @selected($filterType === 'paid')>Paid</option>
                 </select>
             </div>
+
+            {{-- Mode --}}
             <div class="cr-fgroup">
                 <span class="cr-flabel">Mode</span>
                 <select class="cr-fselect {{ $filterMode ? 'active-filter' : '' }}" id="crMode" onchange="crFilter()">
                     <option value="">All Modes</option>
-                    <option value="online"  @selected($filterMode==='online')>Online</option>
-                    <option value="offline" @selected($filterMode==='offline')>Offline</option>
-                    <option value="hybrid"  @selected($filterMode==='hybrid')>Hybrid</option>
+                    @foreach($filterModes as $mode)
+                        <option value="{{ strtolower($mode) }}" @selected($filterMode === strtolower($mode))>
+                            {{ $mode }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
+
+            {{-- Certificate --}}
             <div class="cr-fgroup">
                 <span class="cr-flabel">Certificate</span>
                 <select class="cr-fselect" id="crCert" onchange="crFilter()">
@@ -215,16 +225,20 @@
                 </select>
             </div>
 
+            {{-- Reset button — only shown when any filter is active --}}
             @if($filterLang || $filterLevel || $filterType || $filterMode || $filterCategory || $filterSearch)
             <button class="cr-reset-btn" onclick="crResetAll()">
                 <i class="fas fa-times-circle"></i> Reset
             </button>
             @endif
 
+            {{-- Search --}}
             <div class="cr-search-wrap">
                 <input class="cr-search-input" type="text" id="crSearch"
-                       placeholder="Search courses…" value="{{ $filterSearch }}" oninput="crFilter()">
-                <button class="cr-search-btn"><i class="fas fa-search"></i></button>
+                       placeholder="Search courses…"
+                       value="{{ $filterSearch }}"
+                       oninput="crFilter()">
+                <button class="cr-search-btn" type="button"><i class="fas fa-search"></i></button>
             </div>
         </div>
 
@@ -249,9 +263,10 @@
     </div>
 </div>
 
-{{-- ── CONTENT ──────────────────────────────────────────────────────────── --}}
+{{-- ══════════════════════════════════════════════════════════
+     CONTENT
+══════════════════════════════════════════════════════════ --}}
 <div class="cr-content">
-
     <div class="cr-result-bar cr-anim">
         <p class="cr-result-count">
             Showing <strong id="crVisibleCount">{{ $allCourses->count() }}</strong> course(s)
@@ -267,23 +282,21 @@
     </div>
 
     <div class="cr-grid cr-anim d2" id="crGrid">
-
         @forelse($allCourses as $c)
         @php
-            $lessonCount = $c->lessons->count();
+            $lessonCount  = $c->lessons->count();
             $sectionCount = $c->sections ? $c->sections->count() : 0;
-            // Compute total duration from loaded lessons
-            $totalSecs = $c->lessons->sum('duration_seconds');
-            $dH = floor($totalSecs / 3600);
-            $dM = floor(($totalSecs % 3600) / 60);
+            $totalSecs    = $c->lessons->sum('duration_seconds');
+            $dH           = floor($totalSecs / 3600);
+            $dM           = floor(($totalSecs % 3600) / 60);
             $courseDuration = $totalSecs > 0 ? ($dH > 0 ? "{$dH}h {$dM}m" : "{$dM}m") : null;
         @endphp
         <div class="cr-card"
              data-status="{{ $c->status }}"
-             data-lang="{{ $c->language }}"
-             data-level="{{ $c->level }}"
+             data-lang="{{ strtolower($c->language) }}"
+             data-level="{{ strtolower($c->level) }}"
              data-type="{{ $c->type }}"
-             data-mode="{{ $c->mode }}"
+             data-mode="{{ strtolower($c->mode) }}"
              data-cat="{{ $c->course_category_id }}"
              data-title="{{ strtolower($c->title) }}"
              data-price="{{ $c->price }}"
@@ -296,11 +309,9 @@
             <div class="cr-thumb">
                 <img src="{{ $c->thumbnail_url }}" alt="{{ $c->title }}" loading="lazy"
                      onerror="this.src='https://img.freepik.com/free-vector/stock-market-analysis-concept-illustration_114360-5440.jpg?w=600'">
-
                 @if($c->is_featured)
-                <span class="cr-featured-star"><i class="fas fa-star"></i> Featured</span>
+                    <span class="cr-featured-star"><i class="fas fa-star"></i> Featured</span>
                 @endif
-
                 @if($c->status === 'ongoing')
                     <span class="cr-status-badge ongoing">● Live</span>
                 @elseif($c->status === 'upcoming')
@@ -308,60 +319,43 @@
                 @elseif($c->status === 'recorded')
                     <span class="cr-status-badge recorded">Recorded</span>
                 @endif
-
                 @if($c->category)
-                <span class="cr-cat-chip">{{ $c->category->name }}</span>
+                    <span class="cr-cat-chip">{{ $c->category->name }}</span>
                 @endif
             </div>
 
             {{-- Body --}}
             <div class="cr-body">
-
                 <div class="cr-title">
                     <a href="{{ route('courses.detail', $c->slug) }}" onclick="event.stopPropagation()">
                         {{ $c->title }}
                     </a>
                 </div>
-
-                {{-- Tags: level · language · mode · duration · certificate --}}
                 <div class="cr-tags">
-                    <span class="cr-tag">
-                        <i class="fas fa-signal"></i> {{ ucfirst($c->level) }}
-                    </span>
-                    <span class="cr-tag">
-                        <i class="fas fa-language"></i> {{ ucfirst($c->language) }}
-                    </span>
-                    <span class="cr-tag">
-                        <i class="fas fa-globe"></i> {{ ucfirst($c->mode) }}
-                    </span>
+                    <span class="cr-tag"><i class="fas fa-signal"></i> {{ ucfirst($c->level) }}</span>
+                    <span class="cr-tag"><i class="fas fa-language"></i> {{ ucfirst($c->language) }}</span>
+                    <span class="cr-tag"><i class="fas fa-globe"></i> {{ ucfirst($c->mode) }}</span>
                     @if($courseDuration)
-                    <span class="cr-tag dur">
-                        <i class="fas fa-clock"></i> {{ $courseDuration }}
-                    </span>
+                        <span class="cr-tag dur"><i class="fas fa-clock"></i> {{ $courseDuration }}</span>
                     @endif
                     @if($c->has_certificate)
-                    <span class="cr-tag cert">
-                        <i class="fas fa-certificate"></i> Certificate
-                    </span>
+                        <span class="cr-tag cert"><i class="fas fa-certificate"></i> Certificate</span>
                     @endif
                 </div>
-
-                {{-- Short description --}}
                 @if($c->short_description)
-                <div class="cr-short-desc">{{ $c->short_description }}</div>
+                    <div class="cr-short-desc">{{ $c->short_description }}</div>
                 @endif
-
             </div>
 
-            {{-- Curriculum mini-strip: sections + lessons count --}}
+            {{-- Curriculum strip --}}
             @if($sectionCount || $lessonCount)
             <div class="cr-curriculum-strip">
                 @if($sectionCount)
-                <div class="cr-cs-item"><i class="fas fa-layer-group"></i> {{ $sectionCount }} Sections</div>
+                    <div class="cr-cs-item"><i class="fas fa-layer-group"></i> {{ $sectionCount }} Sections</div>
                 @endif
                 @if($sectionCount && $lessonCount)<span class="cr-cs-sep">·</span>@endif
                 @if($lessonCount)
-                <div class="cr-cs-item"><i class="fas fa-play-circle"></i> {{ $lessonCount }} Lessons</div>
+                    <div class="cr-cs-item"><i class="fas fa-play-circle"></i> {{ $lessonCount }} Lessons</div>
                 @endif
             </div>
             @endif
@@ -386,8 +380,8 @@
                     View Details <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
-
         </div>
+
         @empty
         <div class="cr-empty">
             <i class="fas fa-book-open"></i>
@@ -396,11 +390,11 @@
         </div>
         @endforelse
 
+        {{-- JS no-results message --}}
         <div class="cr-no-results-js" id="crNoResults">
             <i class="fas fa-search"></i>
             <p>No courses match your filters. Try adjusting or resetting them.</p>
         </div>
-
     </div>
 </div>
 
@@ -411,6 +405,7 @@
     var activeTab = 'all';
     var activeCat = '{{ $filterCategory }}';
 
+    /* ── TAB SWITCH ── */
     function crSwitchTab(tab, btn) {
         activeTab = tab;
         document.querySelectorAll('.cr-tab').forEach(function(b) { b.classList.remove('active'); });
@@ -419,6 +414,7 @@
     }
     window.crSwitchTab = crSwitchTab;
 
+    /* ── CATEGORY PILL ── */
     function crSetCategory(catId, el) {
         activeCat = catId;
         document.querySelectorAll('.cr-pill').forEach(function(p) { p.classList.remove('active'); });
@@ -427,6 +423,7 @@
     }
     window.crSetCategory = crSetCategory;
 
+    /* ── FILTER ── */
     function crFilter() {
         var lang   = document.getElementById('crLang').value;
         var level  = document.getElementById('crLevel').value;
@@ -447,7 +444,6 @@
             if (cert   && card.dataset.cert  !== cert)  ok = false;
             if (activeCat && card.dataset.cat !== activeCat) ok = false;
             if (search && card.dataset.title.indexOf(search) === -1) ok = false;
-
             card.style.display = ok ? '' : 'none';
             if (ok) visible++;
         });
@@ -458,6 +454,7 @@
         var noRes = document.getElementById('crNoResults');
         if (noRes) noRes.style.display = (visible === 0 && cards.length > 0) ? 'block' : 'none';
 
+        /* highlight active filter selects */
         ['crLang','crLevel','crType','crMode'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el) el.classList.toggle('active-filter', el.value !== '');
@@ -465,11 +462,11 @@
     }
     window.crFilter = crFilter;
 
+    /* ── SORT ── */
     function crSortCards() {
         var sort  = document.getElementById('crSort').value;
         var grid  = document.getElementById('crGrid');
         var cards = Array.from(grid.querySelectorAll('.cr-card'));
-
         cards.sort(function(a, b) {
             if (sort === 'price_asc')  return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
             if (sort === 'price_desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
@@ -481,6 +478,7 @@
     }
     window.crSortCards = crSortCards;
 
+    /* ── RESET ── */
     function crResetAll() {
         ['crLang','crLevel','crType','crMode','crCert'].forEach(function(id) {
             var el = document.getElementById(id);
@@ -496,16 +494,19 @@
     }
     window.crResetAll = crResetAll;
 
-    // Init
+    /* ── INIT — apply any server-side filter that arrived via URL ── */
     (function() {
         @if($filterStatus)
         activeTab = '{{ $filterStatus }}';
         var tab = document.querySelector('[data-tab="{{ $filterStatus }}"]');
-        if (tab) { document.querySelectorAll('.cr-tab').forEach(function(b){b.classList.remove('active');}); tab.classList.add('active'); }
+        if (tab) {
+            document.querySelectorAll('.cr-tab').forEach(function(b) { b.classList.remove('active'); });
+            tab.classList.add('active');
+        }
         @endif
         crFilter();
     })();
+
 })();
 </script>
-
 @endsection

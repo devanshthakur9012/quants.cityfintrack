@@ -1,5 +1,5 @@
 <?php
-
+// FILE: app/Http/Controllers/Admin/AnalysisConfigController.php  — REPLACE EXISTING
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -24,56 +24,46 @@ class AnalysisConfigController extends Controller
             ->where('is_token_valid', true)
             ->get(['id', 'account_user_name']);
 
-        $symbols    = SymbolList::orderBy('underlying')->get(['id', 'underlying', 'symbol']);
-        $timeFrames = ['15min', '30min', '1hr'];
+        $symbols = SymbolList::orderBy('underlying')->get(['id', 'underlying', 'symbol']);
 
-        // Which timeframes are already taken (globally)
-        $usedTimeFrames = AnalysisConfig::pluck('time_frame')->toArray();
-
-        return view('admin.analysis-config.index', compact(
-            'pageTitle', 'configs', 'brokers', 'symbols', 'timeFrames', 'usedTimeFrames'
-        ));
+        // timeframe is always 15min — not passed to view as a dropdown option
+        return view('admin.analysis-config.index',
+            compact('pageTitle', 'configs', 'brokers', 'symbols'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'broker_api_id' => 'required|exists:broker_apis,id',
-            'time_frame'    => 'required|in:15min,30min,1hr',
-            'symbol_ids'    => 'required|array|min:1|max:40',
+            'symbol_ids'    => 'required|array|min:1|max:50',
             'symbol_ids.*'  => 'exists:symbol_lists,id',
         ], [
             'symbol_ids.required' => 'Please select at least 1 symbol.',
-            'symbol_ids.min'      => 'Please select at least 1 symbol.',
-            'symbol_ids.max'      => 'You can select maximum 40 symbols.',
+            'symbol_ids.max'      => 'Maximum 50 symbols allowed.',
         ]);
 
         try {
-            // Timeframe can only be used ONCE globally — across all brokers
-            $timeframeExists = AnalysisConfig::where('time_frame', $request->time_frame)->exists();
-
-            if ($timeframeExists) {
-                $existing   = AnalysisConfig::where('time_frame', $request->time_frame)->with('broker')->first();
-                $brokerName = $existing->broker->account_user_name ?? 'another broker';
-                $notify[]   = ['error', strtoupper($request->time_frame) . ' timeframe is already assigned to broker "' . $brokerName . '". Delete that config first.'];
+            // Only ONE config for 15min — globally
+            if (AnalysisConfig::where('time_frame', '15min')->exists()) {
+                $notify[] = ['error', '15min config already exists. Edit the existing one.'];
                 return back()->withNotify($notify);
             }
 
             DB::transaction(function () use ($request) {
                 $config = AnalysisConfig::create([
                     'broker_api_id' => $request->broker_api_id,
-                    'time_frame'    => $request->time_frame,
+                    // time_frame forced to 15min by model boot — no need to pass it
                     'is_active'     => true,
                 ]);
                 $config->symbols()->sync($request->symbol_ids);
             });
 
-            $notify[] = ['success', 'Analysis config created successfully!'];
+            $notify[] = ['success', 'Config created!'];
             return redirect()->route('admin.analysis-config.index')->withNotify($notify);
 
         } catch (\Exception $e) {
-            Log::error('Analysis Config Store Error: ' . $e->getMessage());
-            $notify[] = ['error', 'Error creating config: ' . $e->getMessage()];
+            Log::error('AnalysisConfig Store: ' . $e->getMessage());
+            $notify[] = ['error', $e->getMessage()];
             return back()->withNotify($notify);
         }
     }
@@ -84,45 +74,20 @@ class AnalysisConfigController extends Controller
 
         $request->validate([
             'broker_api_id' => 'required|exists:broker_apis,id',
-            'time_frame'    => 'required|in:15min,30min,1hr',
-            'symbol_ids'    => 'required|array|min:1|max:40',
+            'symbol_ids'    => 'required|array|min:1|max:50',
             'symbol_ids.*'  => 'exists:symbol_lists,id',
-        ], [
-            'symbol_ids.required' => 'Please select at least 1 symbol.',
-            'symbol_ids.min'      => 'Please select at least 1 symbol.',
-            'symbol_ids.max'      => 'You can select maximum 40 symbols.',
         ]);
 
         try {
-            // Timeframe globally unique — exclude current record
-            $timeframeExists = AnalysisConfig::where('time_frame', $request->time_frame)
-                ->where('id', '!=', $id)
-                ->exists();
-
-            if ($timeframeExists) {
-                $existing   = AnalysisConfig::where('time_frame', $request->time_frame)
-                    ->where('id', '!=', $id)
-                    ->with('broker')
-                    ->first();
-                $brokerName = $existing->broker->account_user_name ?? 'another broker';
-                $notify[]   = ['error', strtoupper($request->time_frame) . ' timeframe is already assigned to broker "' . $brokerName . '". Each timeframe can only be used once globally.'];
-                return back()->withNotify($notify);
-            }
-
             DB::transaction(function () use ($request, $config) {
-                $config->update([
-                    'broker_api_id' => $request->broker_api_id,
-                    'time_frame'    => $request->time_frame,
-                ]);
+                $config->update(['broker_api_id' => $request->broker_api_id]);
                 $config->symbols()->sync($request->symbol_ids);
             });
-
-            $notify[] = ['success', 'Analysis config updated successfully!'];
+            $notify[] = ['success', 'Config updated!'];
             return redirect()->route('admin.analysis-config.index')->withNotify($notify);
-
         } catch (\Exception $e) {
-            Log::error('Analysis Config Update Error: ' . $e->getMessage());
-            $notify[] = ['error', 'Error updating config: ' . $e->getMessage()];
+            Log::error('AnalysisConfig Update: ' . $e->getMessage());
+            $notify[] = ['error', $e->getMessage()];
             return back()->withNotify($notify);
         }
     }
@@ -133,30 +98,20 @@ class AnalysisConfigController extends Controller
             $config = AnalysisConfig::findOrFail($id);
             $config->symbols()->detach();
             $config->delete();
-
-            $notify[] = ['success', 'Config deleted permanently!'];
+            $notify[] = ['success', 'Config deleted.'];
             return redirect()->route('admin.analysis-config.index')->withNotify($notify);
-
         } catch (\Exception $e) {
-            Log::error('Analysis Config Delete Error: ' . $e->getMessage());
-            $notify[] = ['error', 'Error deleting config: ' . $e->getMessage()];
+            $notify[] = ['error', $e->getMessage()];
             return back()->withNotify($notify);
         }
     }
 
     public function toggleStatus($id)
     {
-        try {
-            $config = AnalysisConfig::findOrFail($id);
-            $config->update(['is_active' => !$config->is_active]);
-
-            $status   = $config->is_active ? 'activated' : 'deactivated';
-            $notify[] = ['success', "Config {$status} successfully!"];
-            return redirect()->route('admin.analysis-config.index')->withNotify($notify);
-
-        } catch (\Exception $e) {
-            $notify[] = ['error', 'Error updating status: ' . $e->getMessage()];
-            return back()->withNotify($notify);
-        }
+        $config = AnalysisConfig::findOrFail($id);
+        $config->update(['is_active' => !$config->is_active]);
+        $status   = $config->is_active ? 'activated' : 'deactivated';
+        $notify[] = ['success', "Config {$status}."];
+        return redirect()->route('admin.analysis-config.index')->withNotify($notify);
     }
 }

@@ -1,42 +1,32 @@
 <?php
-
+// FILE: app/Http/Controllers/User/OpenHighLowController.php
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║   Open=High / Open=Low Signal Analysis                          ║
- * ║   Instruments: Stock EQ | FUT | Option (ATM CE/PE)             ║
- * ║   Timeframes : 15min | 30min | 1hr                              ║
- * ║                                                                  ║
- * ║   LOGIC:                                                         ║
- * ║   Fetch the FIRST candle of each trading day (09:15 slot).      ║
- * ║   If |Open − High| ≤ tolerance  → OPEN=HIGH  → BUY PE          ║
- * ║   If |Open − Low|  ≤ tolerance  → OPEN=LOW   → BUY CE          ║
- * ║                                                                  ║
- * ║   WHY TIMEFRAME MATTERS:                                         ║
- * ║   The 09:15 slot is the first bar recorded. Its OHLC range      ║
- * ║   grows with timeframe:                                          ║
- * ║     15min → 09:15–09:30  (narrow)                               ║
- * ║     30min → 09:15–09:45  (medium)                               ║
- * ║     1hr   → 09:15–10:15  (wide)                                 ║
- * ║   Wider bars naturally push High/Low further from Open, so      ║
- * ║   results ARE different per timeframe — all three are shown.    ║
- * ╚══════════════════════════════════════════════════════════════════╝
+ * Open=High / Open=Low Signal Analysis
+ * Instruments : Stock EQ | FUT | Option (ATM CE/PE)
+ * Timeframe   : 15min ONLY
+ *
+ * LOGIC:
+ *   Fetch the FIRST candle of each day (09:15 slot).
+ *   If |Open − High| ≤ tolerance  → OPEN=HIGH  → BUY PE
+ *   If |Open − Low|  ≤ tolerance  → OPEN=LOW   → BUY CE
  */
 class OpenHighLowController extends Controller
 {
-    private const TIMEFRAMES = ['15min', '30min', '1hr'];
+    private const TF = '15min';
 
     private const TABLES = [
-        'stock'  => 'cp_stock_ohlc',
-        'fut'    => 'cp_fut_ohlc',
-        'option' => 'cp_option_ohlc',
+        'stock'  => 'cp_stock_ohlc_15min',
+        'fut'    => 'cp_fut_ohlc_15min',
+        'option' => 'cp_option_ohlc_15min',
     ];
 
     // ── Page ──────────────────────────────────────────────────────────────────
@@ -44,21 +34,17 @@ class OpenHighLowController extends Controller
     public function index()
     {
         $pageTitle = 'Open=High / Open=Low Analysis';
-        return view($this->activeTemplate . 'user.open-high-low.index', compact('pageTitle'));
+        return view(activeTemplate() . 'user.open-high-low.index', compact('pageTitle'));
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // SYMBOLS API
-    // ══════════════════════════════════════════════════════════════════════════
+    // ── Symbols API ───────────────────────────────────────────────────────────
 
-    public function getSymbols(Request $request)
+    public function getSymbols(Request $request): JsonResponse
     {
-        $timeframe  = $this->resolveTimeframe($request);
         $instrument = $this->resolveInstrument($request);
-        $col        = ($instrument === 'stock') ? 'symbol' : 'base_symbol';
-        $table      = self::TABLES[$instrument] . '_' . $timeframe;
+        $symCol     = $instrument === 'stock' ? 'symbol' : 'base_symbol';
 
-        $config = $this->getActiveConfig($timeframe);
+        $config = $this->getActiveConfig();
         if (!$config) {
             return response()->json(['success' => true, 'symbols' => [], 'no_config' => true]);
         }
@@ -66,12 +52,12 @@ class OpenHighLowController extends Controller
         $configSymbols = $this->getConfigSymbols($config->id);
 
         try {
-            $symbols = DB::table($table)
-                ->select($col)
+            $symbols = DB::table(self::TABLES[$instrument])
+                ->select($symCol)
                 ->distinct()
-                ->whereIn($col, $configSymbols)
-                ->orderBy($col)
-                ->pluck($col)
+                ->whereIn($symCol, $configSymbols)
+                ->orderBy($symCol)
+                ->pluck($symCol)
                 ->values()
                 ->toArray();
         } catch (\Exception $e) {
@@ -81,30 +67,27 @@ class OpenHighLowController extends Controller
         return response()->json(['success' => true, 'symbols' => $symbols]);
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // MAIN ANALYZE API
-    // ══════════════════════════════════════════════════════════════════════════
+    // ── Main Analyze API ──────────────────────────────────────────────────────
 
-    public function analyze(Request $request)
+    public function analyze(Request $request): JsonResponse
     {
         try {
-            $timeframe  = $this->resolveTimeframe($request);
             $instrument = $this->resolveInstrument($request);
             $fromDate   = $request->get('from_date');
             $toDate     = $request->get('to_date');
-            $symbolReq  = array_filter((array)$request->get('symbols', []));
-            $tolerance  = max(0, (float)$request->get('tolerance', 1));
+            $symbolReq  = array_filter((array) $request->get('symbols', []));
+            $tolerance  = max(0, (float) $request->get('tolerance', 1));
 
             if (!$fromDate || !$toDate) {
                 return response()->json(['success' => false, 'message' => 'Please select both dates.', 'data' => []]);
             }
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active config for [{$timeframe}]. Go to Admin → Analysis Config.",
+                    'message'   => 'No active 15min config found. Go to Admin → Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -119,9 +102,9 @@ class OpenHighLowController extends Controller
                 : $configSymbols;
 
             $results = match ($instrument) {
-                'stock'  => $this->analyzeStock($config->id, $timeframe, $fromDate, $toDate, $symbols, $tolerance),
-                'fut'    => $this->analyzeFut($config->id, $timeframe, $fromDate, $toDate, $symbols, $tolerance),
-                'option' => $this->analyzeOption($config->id, $timeframe, $fromDate, $toDate, $symbols, $tolerance),
+                'stock'  => $this->analyzeStock($config->id, $fromDate, $toDate, $symbols, $tolerance),
+                'fut'    => $this->analyzeFut($config->id, $fromDate, $toDate, $symbols, $tolerance),
+                'option' => $this->analyzeOption($config->id, $fromDate, $toDate, $symbols, $tolerance),
             };
 
             usort($results, fn($a, $b) =>
@@ -129,31 +112,30 @@ class OpenHighLowController extends Controller
             );
 
             return response()->json([
-                'success'       => true,
-                'data'          => $results,
-                'total_records' => count($results),
-                'open_high'     => count(array_filter($results, fn($r) => $r['signal'] === 'OPEN=HIGH')),
-                'open_low'      => count(array_filter($results, fn($r) => $r['signal'] === 'OPEN=LOW')),
-                'message'       => count($results) . ' signal(s) found',
-                'timeframe'     => $timeframe,
-                'instrument'    => strtoupper($instrument),
-                'tolerance'     => $tolerance,
+                'success'           => true,
+                'data'              => $results,
+                'total_records'     => count($results),
+                'open_high'         => count(array_filter($results, fn($r) => $r['signal'] === 'OPEN=HIGH')),
+                'open_low'          => count(array_filter($results, fn($r) => $r['signal'] === 'OPEN=LOW')),
+                'message'           => count($results) . ' signal(s) found',
+                'instrument'        => strtoupper($instrument),
+                'tolerance'         => $tolerance,
                 'available_symbols' => $configSymbols,
             ]);
 
         } catch (\Exception $e) {
             Log::error('OpenHighLow analyze: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => []], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // STOCK EQ
+    // STOCK
     // ══════════════════════════════════════════════════════════════════════════
 
-    private function analyzeStock(int $configId, string $tf, string $from, string $to, array $symbols, float $tol): array
+    private function analyzeStock(int $configId, string $from, string $to, array $symbols, float $tol): array
     {
-        $table = self::TABLES['stock'] . '_' . $tf;
+        $table = self::TABLES['stock'];
 
         $opens = DB::table($table)
             ->where('analysis_config_id', $configId)
@@ -166,17 +148,17 @@ class OpenHighLowController extends Controller
 
         if (empty($opens)) return [];
 
-        [$stats, $ltp] = $this->dailyStatsGeneric($table, $configId, 'symbol', $symbols, $from, $to);
-        return $this->buildSignals($opens, $stats, $ltp, $tol, 'symbol');
+        [$stats, $ltp] = $this->dailyStats($table, $configId, 'symbol', $symbols, $from, $to);
+        return $this->buildSignals($opens, $stats, $ltp, $tol);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
     // FUT
     // ══════════════════════════════════════════════════════════════════════════
 
-    private function analyzeFut(int $configId, string $tf, string $from, string $to, array $symbols, float $tol): array
+    private function analyzeFut(int $configId, string $from, string $to, array $symbols, float $tol): array
     {
-        $table = self::TABLES['fut'] . '_' . $tf;
+        $table = self::TABLES['fut'];
 
         $opens = DB::table($table)
             ->where('analysis_config_id', $configId)
@@ -190,17 +172,17 @@ class OpenHighLowController extends Controller
 
         if (empty($opens)) return [];
 
-        [$stats, $ltp] = $this->dailyStatsGeneric($table, $configId, 'base_symbol', $symbols, $from, $to);
-        return $this->buildSignals($opens, $stats, $ltp, $tol, 'symbol');
+        [$stats, $ltp] = $this->dailyStats($table, $configId, 'base_symbol', $symbols, $from, $to);
+        return $this->buildSignals($opens, $stats, $ltp, $tol);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // OPTION (ATM CE + PE separate)
+    // OPTION (ATM CE + PE)
     // ══════════════════════════════════════════════════════════════════════════
 
-    private function analyzeOption(int $configId, string $tf, string $from, string $to, array $symbols, float $tol): array
+    private function analyzeOption(int $configId, string $from, string $to, array $symbols, float $tol): array
     {
-        $table = self::TABLES['option'] . '_' . $tf;
+        $table = self::TABLES['option'];
 
         $opens = DB::table($table)
             ->where('analysis_config_id', $configId)
@@ -217,8 +199,8 @@ class OpenHighLowController extends Controller
 
         if (empty($opens)) return [];
 
-        // Stats keyed by symbol|date|type
-        $statsRaw = DB::table($table)
+        // Stats keyed by "symbol|date|type"
+        $stats = DB::table($table)
             ->where('analysis_config_id', $configId)
             ->whereIn('base_symbol', $symbols)
             ->whereBetween('trade_date', [$from, $to])
@@ -236,7 +218,7 @@ class OpenHighLowController extends Controller
             ->keyBy(fn($r) => $r->symbol . '|' . $r->trade_day . '|' . $r->instrument_type)
             ->toArray();
 
-        $ltpRaw = DB::table($table)
+        $ltpMap = DB::table($table)
             ->where('analysis_config_id', $configId)
             ->whereIn('base_symbol', $symbols)
             ->whereBetween('trade_date', [$from, $to])
@@ -255,24 +237,24 @@ class OpenHighLowController extends Controller
 
         $results = [];
         foreach ($opens as $c) {
-            $date = substr(is_string($c->trade_date) ? $c->trade_date : Carbon::parse($c->trade_date)->toDateString(), 0, 10);
+            $date = substr($c->trade_date, 0, 10);
             $type = $c->instrument_type;
             $key  = $c->symbol . '|' . $date . '|' . $type;
 
-            $open = (float)$c->open;
-            $high = (float)$c->high;
-            $low  = (float)$c->low;
+            $open = (float) $c->open;
+            $high = (float) $c->high;
+            $low  = (float) $c->low;
             $dH   = abs($open - $high);
             $dL   = abs($open - $low);
 
             if ($dH > $tol && $dL > $tol) continue;
 
-            $st      = $statsRaw[$key] ?? null;
-            $ltpRow  = $ltpRaw[$key]   ?? null;
-            $dayHigh = $st     ? round((float)$st->day_high,  2) : round($high, 2);
-            $dayLow  = $st     ? round((float)$st->day_low,   2) : round($low,  2);
-            $ltp     = $ltpRow ? round((float)$ltpRow->ltp,   2) : round((float)$c->close, 2);
-            $change  = round($ltp - $open, 2);
+            $st      = $stats[$key]  ?? null;
+            $ltpRow  = $ltpMap[$key] ?? null;
+            $dayHigh = $st     ? round((float) $st->day_high,  2) : round($high, 2);
+            $dayLow  = $st     ? round((float) $st->day_low,   2) : round($low,  2);
+            $ltpVal  = $ltpRow ? round((float) $ltpRow->ltp,   2) : round((float) $c->close, 2);
+            $change  = round($ltpVal - $open, 2);
             $chgPct  = $open > 0 ? round(($change / $open) * 100, 2) : 0;
 
             $base = [
@@ -287,10 +269,10 @@ class OpenHighLowController extends Controller
                 'low_open'    => round($low,  2),
                 'day_high'    => $dayHigh,
                 'day_low'     => $dayLow,
-                'ltp'         => $ltp,
+                'ltp'         => $ltpVal,
                 'change'      => $change,
                 'change_pct'  => $chgPct,
-                'oi'          => (int)($c->oi ?? 0),
+                'oi'          => (int) ($c->oi ?? 0),
             ];
 
             if ($dH <= $tol) {
@@ -314,11 +296,7 @@ class OpenHighLowController extends Controller
     // SHARED HELPERS
     // ══════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Generic day-level stats: MAX(high), MIN(low), last close (LTP)
-     * keyed by "{symbol}|{date}"
-     */
-    private function dailyStatsGeneric(string $table, int $configId, string $symCol, array $symbols, string $from, string $to): array
+    private function dailyStats(string $table, int $configId, string $symCol, array $symbols, string $from, string $to): array
     {
         $stats = DB::table($table)
             ->where('analysis_config_id', $configId)
@@ -354,29 +332,26 @@ class OpenHighLowController extends Controller
         return [$stats, $ltp];
     }
 
-    /**
-     * Build OPEN=HIGH / OPEN=LOW signals from opening candles.
-     */
-    private function buildSignals(array $opens, array $stats, array $ltp, float $tol, string $symKey): array
+    private function buildSignals(array $opens, array $stats, array $ltp, float $tol): array
     {
         $results = [];
 
         foreach ($opens as $c) {
-            $date   = substr(is_string($c->trade_date) ? $c->trade_date : Carbon::parse($c->trade_date)->toDateString(), 0, 10);
-            $open   = (float)$c->open;
-            $high   = (float)$c->high;
-            $low    = (float)$c->low;
-            $dH     = abs($open - $high);
-            $dL     = abs($open - $low);
+            $date  = substr($c->trade_date, 0, 10);
+            $open  = (float) $c->open;
+            $high  = (float) $c->high;
+            $low   = (float) $c->low;
+            $dH    = abs($open - $high);
+            $dL    = abs($open - $low);
 
             if ($dH > $tol && $dL > $tol) continue;
 
             $key     = $c->symbol . '|' . $date;
             $st      = $stats[$key] ?? null;
             $ltpRow  = $ltp[$key]   ?? null;
-            $dayHigh = $st     ? round((float)$st->day_high, 2) : round($high, 2);
-            $dayLow  = $st     ? round((float)$st->day_low,  2) : round($low,  2);
-            $ltpVal  = $ltpRow ? round((float)$ltpRow->ltp,  2) : round((float)$c->close, 2);
+            $dayHigh = $st     ? round((float) $st->day_high, 2) : round($high, 2);
+            $dayLow  = $st     ? round((float) $st->day_low,  2) : round($low,  2);
+            $ltpVal  = $ltpRow ? round((float) $ltpRow->ltp,  2) : round((float) $c->close, 2);
             $change  = round($ltpVal - $open, 2);
             $chgPct  = $open > 0 ? round(($change / $open) * 100, 2) : 0;
 
@@ -394,8 +369,8 @@ class OpenHighLowController extends Controller
                 'ltp'         => $ltpVal,
                 'change'      => $change,
                 'change_pct'  => $chgPct,
-                'volume'      => (int)($c->volume ?? 0),
-                'oi'          => isset($c->oi) ? (int)$c->oi : null,
+                'volume'      => (int) ($c->volume ?? 0),
+                'oi'          => isset($c->oi) ? (int) $c->oi : null,
             ];
 
             if ($dH <= $tol) {
@@ -409,12 +384,12 @@ class OpenHighLowController extends Controller
         return $results;
     }
 
-    // ── Config helpers ────────────────────────────────────────────────────────
+    // ── Config ────────────────────────────────────────────────────────────────
 
-    private function getActiveConfig(string $timeframe): ?object
+    private function getActiveConfig(): ?object
     {
         return DB::table('analysis_configs')
-            ->where('time_frame', $timeframe)
+            ->where('time_frame', self::TF)
             ->where('is_active', 1)
             ->first();
     }
@@ -426,12 +401,6 @@ class OpenHighLowController extends Controller
             ->where('analysis_config_symbols.analysis_config_id', $configId)
             ->pluck('symbol_lists.symbol')
             ->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min')));
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
     }
 
     private function resolveInstrument(Request $request): string

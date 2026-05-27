@@ -143,8 +143,14 @@
                         <span class="menu-title">@lang('About Page')</span>
                     </a>
                 </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cms.pages.index')}}">
+                    <a href="{{route('admin.cms.pages.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Other Pages')</span>
+                    </a>
+                </li>
 
-                {{-- <li class="sidebar__menu-header">@lang('Config')</li>
+                <li class="sidebar__menu-header">@lang('Config')</li>
                 <li class="sidebar-menu-item {{menuActive('admin.zerodha-broker.index')}}">
                     <a href="{{route('admin.zerodha-broker.index')}}" class="nav-link">
                         <i class="menu-icon las la-life-ring"></i>
@@ -162,7 +168,37 @@
                         <i class="menu-icon las la-life-ring"></i>
                         <span class="menu-title">@lang('Analysis Config')</span>
                     </a>
-                </li> --}}
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cp.analyses.index')}}">
+                    <a href="{{route('admin.cp.analyses.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Analysis Tools')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cp.plans.index')}}">
+                    <a href="{{route('admin.cp.plans.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Plans')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cp.subscriptions.index')}}">
+                    <a href="{{route('admin.cp.subscriptions.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Subscriptions')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cp.payments.index')}}">
+                    <a href="{{route('admin.cp.payments.index')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Payments')</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {{menuActive('admin.cp.gateway')}}">
+                    <a href="{{route('admin.cp.gateway')}}" class="nav-link">
+                        <i class="menu-icon las la-life-ring"></i>
+                        <span class="menu-title">@lang('Payment Gateway')</span>
+                    </a>
+                </li>
 
                 <li class="sidebar__menu-header">@lang('Settings')</li>
 

@@ -2,6 +2,7 @@
 
 use App\Models\GeneralSetting;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ZerodhaAutoLoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,13 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::prefix('zerodha')->group(function () {
+
+    Route::post('/save-token', [ZerodhaAutoLoginController::class, 'saveToken']);
+    Route::get('/brokers', [ZerodhaAutoLoginController::class, 'brokers']);
+
+});
 
 Route::namespace('Api')->name('api.')->group(function(){
 

@@ -16,6 +16,7 @@
                 <div class="collapse navbar-collapse mt-lg-0 mt-3" id="navbarSupportedContent">
 
                     <div class="qapp-cta-btns ms-auto me-3 d-none d-xl-flex align-items-center gap-2">
+                        <a href="{{ route('cp.analyses.index') }}" class="btn bg-white py-1 px-2 rounded-pill btn-sm">Option Analysis</a>
                     </div>
 
                     {{-- Uppercase Nav Links --}}
@@ -26,6 +27,7 @@
                         {{-- <li><a href="{{ route('book.demo') }}">@lang('Book a Demo')</a></li> --}}
                         <li><a href="{{ route('events.index') }}">@lang('Event')</a></li>
                         <li><a href="{{ route('media') }}">@lang('Media')</a></li>
+                        <li><a href="{{ route('cp.pricing') }}">@lang('Pricing')</a></li>
                         <li><a href="{{ route('about') }}">@lang('About')</a></li>
                     </ul>
 

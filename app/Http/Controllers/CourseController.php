@@ -1,6 +1,5 @@
 <?php
 // FILE: app/Http/Controllers/CourseController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Course;
@@ -8,6 +7,7 @@ use App\Models\CourseCategory;
 use App\Models\CourseEnrollment;
 use App\Models\CourseOrder;
 use App\Models\CoursePaymentGateway;
+use App\Models\CoursePageCms;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -29,18 +29,30 @@ class CourseController extends Controller
     {
         $pageTitle = 'Option Courses';
 
-        $heroBanner = [
-            'title'       => 'Learn Option',
-            'description' => 'Enhance your options trading skills with our structured courses.
-                              From beginner to advanced, every course is designed to give you
-                              practical, data-driven insights to trade smarter in the derivatives market.',
-            'banners'     => [
-                asset('assets/images/courses/banner1.jpg'),
-                asset('assets/images/courses/banner2.jpg'),
-                asset('assets/images/courses/banner3.jpg'),
-                asset('assets/images/courses/banner4.jpg'),
-            ],
+        // ── CMS data for hero + filter options ──────────────────────────────
+        $cms = CoursePageCms::getData();
+
+        // Build hero banners: DB images first, fall back to assets
+        $dbBanners   = $cms->banners; // already resolved to full URLs
+        $assetBanners = [
+            asset('assets/images/courses/banner1.jpg'),
+            asset('assets/images/courses/banner2.jpg'),
+            asset('assets/images/courses/banner3.jpg'),
+            asset('assets/images/courses/banner4.jpg'),
         ];
+        $heroBanners = !empty($dbBanners) ? $dbBanners : $assetBanners;
+
+        $heroBanner = [
+            'title'       => $cms->hero_title ?? 'Learn Option',
+            'description' => $cms->hero_description
+                ?? 'Enhance your options trading skills with our structured courses. From beginner to advanced, every course is designed to give you practical, data-driven insights.',
+            'banners'     => $heroBanners,
+        ];
+
+        // ── Filter options from CMS ─────────────────────────────────────────
+        $filterLanguages = $cms->languages_list;   // e.g. ['Hindi', 'English', 'Gujarati']
+        $filterLevels    = $cms->levels_list;       // e.g. ['Beginner', 'Intermediate', 'Advanced']
+        $filterModes     = $cms->modes_list;        // e.g. ['Online', 'Offline', 'Hybrid']
 
         $categories = CourseCategory::active()
             ->withCount(['courses' => fn($q) => $q->whereNotIn('status', ['draft'])])
@@ -54,10 +66,6 @@ class CourseController extends Controller
         $filterCategory = $request->input('category', '');
         $filterSearch   = trim($request->input('search', ''));
 
-        // Eager load sections (for count) and lessons (for duration + lesson count).
-        // Sections also need their lessons loaded so section-level duration works
-        // without extra queries — but for the listing we only need flat lessons totals,
-        // so we load lessons directly on the course (flat relation).
         $allCourses = Course::with(['category', 'sections', 'lessons'])
             ->whereNotIn('status', ['draft'])
             ->when($filterLang,     fn($q) => $q->where('language', $filterLang))
@@ -82,12 +90,13 @@ class CourseController extends Controller
         return view($this->activeTemplate . 'courses', compact(
             'pageTitle', 'heroBanner', 'categories', 'allCourses',
             'totalCounts', 'filterLang', 'filterLevel', 'filterType',
-            'filterMode', 'filterStatus', 'filterCategory', 'filterSearch'
+            'filterMode', 'filterStatus', 'filterCategory', 'filterSearch',
+            'filterLanguages', 'filterLevels', 'filterModes'
         ));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // DETAIL  (public — auth only needed to buy/enroll)
+    // DETAIL
     // ─────────────────────────────────────────────────────────────────────────
     public function detail(string $slug)
     {
@@ -95,7 +104,7 @@ class CourseController extends Controller
                 'category',
                 'sections'         => fn($q) => $q->orderBy('sort_order'),
                 'sections.lessons' => fn($q) => $q->orderBy('sort_order'),
-                'lessons',                          // flat — for total duration calc
+                'lessons',
                 'trainers.employeeProfile',
                 'faqs'             => fn($q) => $q->where('status', 1)->orderBy('sort_order'),
             ])
@@ -103,46 +112,31 @@ class CourseController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $pageTitle = $course->title;
-
+        $pageTitle  = $course->title;
         $isEnrolled = false;
         $enrollment = null;
         $user       = Auth::guard('web')->user();
-
         if ($user) {
             $enrollment = CourseEnrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->where('status', 1)
-                ->first();
+                ->where('course_id', $course->id)->where('status', 1)->first();
             $isEnrolled = $enrollment && $enrollment->isActive();
         }
-
         $gateway = CoursePaymentGateway::activeGateway();
-
         $relatedCourses = Course::with(['category', 'lessons'])
             ->where('course_category_id', $course->course_category_id)
             ->where('id', '!=', $course->id)
             ->whereNotIn('status', ['draft'])
-            ->orderBy('sort_order')
-            ->limit(3)
-            ->get();
+            ->orderBy('sort_order')->limit(3)->get();
 
-        // All computed from already-loaded relations — zero extra queries.
         $totalLessons = $course->sections->sum(fn($s) => $s->lessons->count());
-
         $dSecs        = $course->lessons->sum('duration_seconds');
         $dH           = floor($dSecs / 3600);
         $dM           = floor(($dSecs % 3600) / 60);
         $totalDuration = $dH > 0 ? "{$dH}h {$dM}m" : "{$dM}m";
 
-        // $freeLessons removed — free access is now handled via per-section /
-        // per-lesson preview videos (preview_video_type / preview_embed_id),
-        // not the old is_free_preview toggle.
-
         return view($this->activeTemplate . 'course-detail', compact(
             'pageTitle', 'course', 'isEnrolled', 'enrollment',
-            'user', 'gateway', 'relatedCourses',
-            'totalLessons', 'totalDuration'
+            'user', 'gateway', 'relatedCourses', 'totalLessons', 'totalDuration'
         ));
     }
 
@@ -158,22 +152,17 @@ class CourseController extends Controller
             return redirect()->route('user.login')
                 ->with('loginRedirect', route('courses.detail', $course->slug));
         }
-
         $user = Auth::guard('web')->user();
-
         if ($course->isEnrolledBy($user)) {
             return response()->json(['success' => false, 'message' => 'You are already enrolled in this course.'], 422);
         }
-
         if ($course->type === 'free') {
             return $this->enrollFree($user, $course);
         }
-
         $gateway = CoursePaymentGateway::activeGateway();
         if (!$gateway) {
-            return response()->json(['success' => false, 'message' => 'Payment gateway not configured. Please contact support.'], 500);
+            return response()->json(['success' => false, 'message' => 'Payment gateway not configured.'], 500);
         }
-
         try {
             $order = CourseOrder::create([
                 'order_number'   => CourseOrder::generateOrderNumber(),
@@ -185,7 +174,6 @@ class CourseController extends Controller
                 'currency'       => 'INR',
                 'status'         => 'pending',
             ]);
-
             $razorpay = $this->getRazorpayInstance($gateway);
             $rpOrder  = $razorpay->order->create([
                 'receipt'  => $order->order_number,
@@ -193,9 +181,7 @@ class CourseController extends Controller
                 'currency' => 'INR',
                 'notes'    => ['course_id' => $course->id, 'user_id' => $user->id, 'order_id' => $order->id],
             ]);
-
             $order->update(['gateway_order_id' => $rpOrder->id]);
-
             return response()->json([
                 'success'      => true,
                 'key'          => $gateway->getCredential('key_id'),
@@ -209,10 +195,9 @@ class CourseController extends Controller
                 'user_phone'   => $user->mobile ?? '',
                 'callback_url' => route('courses.payment.verify'),
             ]);
-
         } catch (\Exception $e) {
             Log::error('Razorpay order creation failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Could not initiate payment. Please try again.'], 500);
+            return response()->json(['success' => false, 'message' => 'Could not initiate payment.'], 500);
         }
     }
 
@@ -227,20 +212,15 @@ class CourseController extends Controller
             'razorpay_signature'  => 'required|string',
             'our_order_id'        => 'required|integer',
         ]);
-
         $order = CourseOrder::findOrFail($request->our_order_id);
         $user  = Auth::guard('web')->user();
-
         if ($order->user_id !== optional($user)->id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
-
         if ($order->isPaid()) {
             return response()->json(['success' => true, 'message' => 'Already paid.', 'redirect' => route('courses.detail', $order->course->slug)]);
         }
-
         $gateway = CoursePaymentGateway::where('alias', $order->gateway)->first();
-
         try {
             $razorpay = $this->getRazorpayInstance($gateway);
             $razorpay->utility->verifyPaymentSignature([
@@ -248,7 +228,6 @@ class CourseController extends Controller
                 'razorpay_payment_id' => $request->razorpay_payment_id,
                 'razorpay_signature'  => $request->razorpay_signature,
             ]);
-
             $order->update([
                 'status'             => 'paid',
                 'gateway_payment_id' => $request->razorpay_payment_id,
@@ -256,32 +235,21 @@ class CourseController extends Controller
                 'gateway_response'   => json_encode($request->all()),
                 'paid_at'            => now(),
             ]);
-
             CourseEnrollment::updateOrCreate(
                 ['user_id' => $user->id, 'course_id' => $order->course_id],
                 ['course_order_id' => $order->id, 'access_type' => 'paid', 'enrolled_at' => now(), 'expires_at' => null, 'status' => 1]
             );
-
             $order->course->increment('total_enrolled');
-
-            return response()->json([
-                'success'  => true,
-                'message'  => 'Payment successful! You are now enrolled.',
-                'redirect' => route('courses.detail', $order->course->slug),
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Payment successful! You are now enrolled.', 'redirect' => route('courses.detail', $order->course->slug)]);
         } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
             $order->update(['status' => 'failed', 'gateway_response' => json_encode($request->all())]);
             return response()->json(['success' => false, 'message' => 'Verification failed. Contact support with ID: ' . $request->razorpay_payment_id], 422);
         } catch (\Exception $e) {
             Log::error('Payment verify exception: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Something went wrong. Please contact support.'], 500);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 500);
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
     private function enrollFree($user, Course $course)
     {
         CourseEnrollment::updateOrCreate(
@@ -289,20 +257,14 @@ class CourseController extends Controller
             ['access_type' => 'free', 'enrolled_at' => now(), 'expires_at' => null, 'status' => 1]
         );
         $course->increment('total_enrolled');
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Enrolled successfully!',
-            'redirect' => route('courses.detail', $course->slug),
-        ]);
+        return response()->json(['success' => true, 'message' => 'Enrolled successfully!', 'redirect' => route('courses.detail', $course->slug)]);
     }
 
     private function getRazorpayInstance(CoursePaymentGateway $gateway): RazorpayApi
     {
         $keyId     = $gateway->getCredential('key_id');
         $keySecret = $gateway->getCredential('key_secret');
-        if (!$keyId || !$keySecret) {
-            throw new \Exception('Razorpay credentials not configured properly.');
-        }
+        if (!$keyId || !$keySecret) throw new \Exception('Razorpay credentials not configured.');
         return new RazorpayApi($keyId, $keySecret);
     }
 }

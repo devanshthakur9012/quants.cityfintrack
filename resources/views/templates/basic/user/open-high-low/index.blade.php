@@ -1,634 +1,708 @@
-@extends($activeTemplate . 'layouts.master')
-
+{{-- FILE: resources/views/themes/{active_theme}/user/open-high-low/index.blade.php --}}
+@extends($activeTemplate.'layouts.frontend')
 @section('content')
-@push('style')
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+/* ── BASE ── */
+.ohl-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
+.ohl-wrap * { box-sizing:border-box; }
+.ohl-wrap h1,.ohl-wrap h2,.ohl-wrap h3 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
+.ohl-wrap a { text-decoration:none; }
+.mono { font-family:'JetBrains Mono',monospace; }
+@keyframes ohlUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.ohl-anim { animation:ohlUp .5s ease both; }
+@keyframes ohlSpin { to{ transform:rotate(360deg); } }
 
-:root {
-    --navy-900: #0a0f1e;
-    --navy-800: #0d1428;
-    --navy-700: #111b35;
-    --border:   rgba(255,255,255,0.07);
-    --amber:    #f59e0b;
-    --emerald:  #10b981;
-    --rose:     #f43f5e;
-    --sky:      #38bdf8;
-    --purple:   #a78bfa;
-    --text-1:   rgba(255,255,255,0.92);
-    --text-2:   rgba(255,255,255,0.55);
-    --text-3:   rgba(255,255,255,0.25);
-    --mono:     'JetBrains Mono', monospace;
-    --display:  'Rajdhani', sans-serif;
+/* ── HERO ── */
+.ohl-hero {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:32px 48px; display:flex; align-items:center;
+    justify-content:space-between; gap:24px;
+}
+.ohl-hero-left h1 {
+    font-size:clamp(24px,3.5vw,40px); font-weight:700;
+    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
+}
+.ohl-hero-left h1 span { color:#F5A623; }
+.ohl-hero-left p { font-size:13px; color:#666; margin:0 0 10px; line-height:1.7; max-width:600px; }
+.ohl-logic-pills { display:flex; flex-wrap:wrap; gap:6px; }
+.ohl-pill {
+    display:inline-block; padding:3px 10px; border-radius:4px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+}
+.ohl-pill-oh { background:rgba(220,38,38,.08); color:#b91c1c; border:1px solid rgba(220,38,38,.25); }
+.ohl-pill-ol { background:rgba(5,150,105,.08);  color:#047857; border:1px solid rgba(5,150,105,.25); }
+.ohl-hero-icon {
+    width:76px; height:76px; border-radius:16px;
+    background:linear-gradient(135deg,#0f1b2d,#1a3050);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; color:#F5A623; flex-shrink:0;
+}
+@media(max-width:768px){
+    .ohl-hero { flex-direction:column; padding:24px 16px; text-align:center; }
+    .ohl-logic-pills { justify-content:center; }
+    .ohl-hero-icon { display:none; }
 }
 
-body { background: var(--navy-900); }
-
-/* ── Page header ── */
-.ohl-header {
-    background: linear-gradient(135deg,#0d1428 0%,#1a2744 50%,#0d1428 100%);
-    border: 1px solid var(--border);
-    border-bottom: 2px solid #10b981;
-    border-radius: 14px; padding: 20px 28px; margin-bottom: 18px;
-    position: relative; overflow: hidden;
+/* ── FILTER BAR ── */
+.ohl-filter-bar {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:0 48px; position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
-.ohl-header::before {
-    content: 'O=H  O=L';
-    position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
-    font-family: var(--display); font-size: 64px; font-weight: 700;
-    color: rgba(16,185,129,0.05); letter-spacing: 6px;
-    pointer-events: none; user-select: none;
+.ohl-filter-inner {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 0; flex-wrap:wrap;
 }
-.ohl-header-title {
-    font-family: var(--display); font-size: 22px; font-weight: 700;
-    color: var(--text-1); letter-spacing: 1px; margin: 0;
+.ohl-filter-label {
+    font-size:10.5px; color:#999; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; flex-shrink:0;
 }
-.ohl-header-title span {
-    background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
-    color: var(--emerald); font-size: 10px; font-weight: 700; padding: 2px 9px;
-    border-radius: 4px; margin-left: 8px; vertical-align: middle; letter-spacing: 2px;
+.ohl-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
+
+/* Instrument tabs */
+.ohl-inst-tabs { display:flex; gap:4px; }
+.ohl-inst-tab {
+    padding:7px 15px; border-radius:6px; border:1.5px solid #e5e9f2;
+    font-size:12px; font-weight:700; color:#666; cursor:pointer;
+    background:#fff; transition:all .2s; font-family:'Exo 2',sans-serif; white-space:nowrap;
 }
-.ohl-header-sub { font-family: var(--mono); font-size: 11px; color: var(--text-2); margin: 7px 0 0; }
-.logic-pill {
-    display: inline-block; font-family: var(--mono); font-size: 10px; font-weight: 600;
-    padding: 2px 9px; border-radius: 4px; margin: 3px 2px;
+.ohl-inst-tab:hover { border-color:#F5A623; color:#c97f00; }
+.ohl-inst-tab.on-stock  { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
+.ohl-inst-tab.on-fut    { border-color:#F5A623; background:rgba(245,166,35,.08); color:#c97f00; }
+.ohl-inst-tab.on-option { border-color:#7c3aed; background:rgba(124,58,237,.08); color:#6d28d9; }
+
+/* Inputs */
+.ohl-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
 }
-.lp-oh { background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.25); color: var(--rose); }
-.lp-ol { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: var(--emerald); }
-.lp-tf { background: rgba(56,189,248,0.10); border: 1px solid rgba(56,189,248,0.22); color: var(--sky); }
+.ohl-date-input:focus { border-color:#F5A623; }
 
-/* ── Control bar ── */
-.ohl-controls {
-    background: var(--navy-800); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 20px; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+.ohl-sym-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:6px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff; cursor:pointer; outline:none; min-width:120px;
 }
-.ctrl-label { font-family: var(--display); font-size: 10px; font-weight: 700;
-    color: var(--text-3); letter-spacing: 1.5px; text-transform: uppercase; }
-.ctrl-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+.ohl-sym-select:focus { border-color:#F5A623; }
 
-/* timeframe btns */
-.tf-group, .inst-group { display: flex; gap: 4px; }
-.tf-btn {
-    font-family: var(--display); font-size: 12px; font-weight: 700;
-    padding: 6px 15px; border-radius: 7px; border: 1px solid var(--border);
-    background: transparent; color: var(--text-2); cursor: pointer; transition: .15s;
+.ohl-tol-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+    color:#333; outline:none; width:72px;
 }
-.tf-btn:hover { border-color: rgba(245,158,11,0.4); color: var(--amber); }
-.tf-btn.active { background: rgba(245,158,11,0.15); border-color: var(--amber); color: var(--amber); }
+.ohl-tol-input:focus { border-color:#F5A623; }
 
-/* instrument btns */
-.inst-btn {
-    font-family: var(--display); font-size: 11px; font-weight: 700;
-    padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
-    background: transparent; color: var(--text-2); cursor: pointer; transition: .15s;
+/* Buttons */
+.ohl-analyze-btn {
+    background:#059669; color:#fff; border:none; border-radius:8px;
+    padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px;
+    font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap;
 }
-.inst-btn.active[data-inst="stock"]  { background: rgba(16,185,129,0.12);  border-color: var(--emerald); color: var(--emerald); }
-.inst-btn.active[data-inst="fut"]    { background: rgba(245,158,11,0.12);  border-color: var(--amber);   color: var(--amber); }
-.inst-btn.active[data-inst="option"] { background: rgba(167,139,250,0.12); border-color: var(--purple);  color: var(--purple); }
-.inst-btn:not(.active):hover { border-color: rgba(56,189,248,0.35); color: var(--sky); }
+.ohl-analyze-btn:hover { background:#047857; }
+.ohl-reset-btn {
+    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
+    padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s;
+    font-family:'Exo 2',sans-serif;
+}
+.ohl-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
 
-/* inputs */
-.ohl-date { background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text-1); padding: 5px 10px;
-    font-family: var(--mono); font-size: 11px; font-weight: 600; outline: none; }
-.ohl-date::-webkit-calendar-picker-indicator { filter: invert(.55); cursor: pointer; }
+.ohl-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.ohl-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.ohl-upd-text  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
 
-.ohl-select { background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    color: var(--text-1); border-radius: 8px; padding: 6px 10px;
-    font-family: var(--display); font-size: 12px; font-weight: 600;
-    cursor: pointer; outline: none; min-width: 140px; }
-.ohl-select option { background: #0d1428; color: white; }
+@media(max-width:768px){
+    .ohl-filter-bar { padding:0 12px; }
+    .ohl-filter-inner { gap:8px; }
+    .ohl-filter-right { margin-left:0; width:100%; }
+}
 
-.ohl-num { background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text-1); padding: 5px 10px;
-    font-family: var(--mono); font-size: 12px; font-weight: 600; width: 80px; outline: none; }
+/* ── CONTENT ── */
+.ohl-content { padding:28px 48px 64px; }
+@media(max-width:768px){ .ohl-content { padding:16px 12px 48px; } }
 
-.ohl-load-btn { background: var(--emerald); color: #000; border: none; border-radius: 8px;
-    padding: 7px 22px; font-family: var(--display); font-size: 13px; font-weight: 800;
-    cursor: pointer; transition: .15s; }
-.ohl-load-btn:hover { background: #34d399; }
-.ohl-reset-btn { background: rgba(255,255,255,0.07); color: var(--text-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 16px; font-family: var(--display); font-size: 12px;
-    font-weight: 700; cursor: pointer; }
+/* Config warning */
+.ohl-warn {
+    background:#fff3e0; border:1px solid #ffcc80; border-radius:10px;
+    padding:14px 20px; margin-bottom:20px;
+    display:none; align-items:center; gap:12px; font-size:13px; color:#e65100;
+}
+.ohl-warn.show { display:flex; }
+.ohl-warn i { font-size:18px; flex-shrink:0; }
 
-.ml-auto { margin-left: auto; }
-.last-upd { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
-.info-badge { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+/* ── TWO TABLE LAYOUT ── */
+.ohl-tables-row {
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+}
+@media(max-width:900px){ .ohl-tables-row { grid-template-columns:1fr; } }
 
-/* ── Config warn ── */
-.ohl-warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 10px; padding: 14px 18px; margin-bottom: 14px;
-    font-family: var(--display); font-size: 13px; color: var(--amber); display: none; }
+/* Table card */
+.ohl-card {
+    background:#fff; border-radius:12px; overflow:hidden;
+    border:1px solid #e8e8e8;
+    transition:box-shadow .25s;
+}
+.ohl-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08); }
+.ohl-card.oh-card { border-top:3px solid #dc2626; }
+.ohl-card.ol-card { border-top:3px solid #059669; }
 
-/* ── Two-table layout ── */
-.ohl-tables-row { display: flex; gap: 16px; align-items: flex-start; }
-@media (max-width: 900px) { .ohl-tables-row { flex-direction: column; } }
+.ohl-card-header {
+    padding:14px 18px; border-bottom:1px solid #f0f0f0;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    background:#fafafa;
+}
+.oh-card .ohl-card-header { background:linear-gradient(90deg,rgba(220,38,38,.05),#fafafa); }
+.ol-card .ohl-card-header { background:linear-gradient(90deg,rgba(5,150,105,.05),#fafafa); }
+.ohl-card-title {
+    font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
+}
+.oh-card .ohl-card-title { color:#b91c1c; }
+.ol-card .ohl-card-title { color:#047857; }
+.ohl-count-pill {
+    background:#1a1a2e; color:#fff; border-radius:20px;
+    padding:2px 10px; font-size:11px; font-weight:700;
+}
+.ohl-tol-pill {
+    background:rgba(245,166,35,.12); color:#c97f00;
+    border:1px solid rgba(245,166,35,.3); border-radius:4px;
+    padding:2px 8px; font-size:10px; font-weight:700;
+    font-family:'JetBrains Mono',monospace;
+}
 
-.ohl-card { flex: 1; min-width: 0; border-radius: 12px; overflow: hidden; border: 1px solid; }
-.ohl-card.oh-card { border-color: rgba(244,63,94,0.4); }
-.ohl-card.ol-card { border-color: rgba(16,185,129,0.4); }
+/* Table scroll */
+.ohl-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
-.ohl-card-hdr { padding: 12px 18px; font-family: var(--display); font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.oh-card .ohl-card-hdr { background: linear-gradient(135deg,rgba(244,63,94,0.22),rgba(244,63,94,0.08)); color: var(--rose); }
-.ol-card .ohl-card-hdr { background: linear-gradient(135deg,rgba(16,185,129,0.22),rgba(16,185,129,0.08)); color: var(--emerald); }
-
-.count-pill { background: rgba(255,255,255,0.15); color: white;
-    padding: 2px 9px; border-radius: 10px; font-size: 10px; font-weight: 700; }
-.tol-pill { background: rgba(245,158,11,0.2); color: var(--amber);
-    padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
-    font-family: var(--mono); }
-
-/* ── Table ── */
-.ohl-table-scroll { overflow-x: auto; }
-.ohl-table { width: 100%; border-collapse: collapse; min-width: 540px; font-family: var(--mono); }
-
+/* Table */
+.ohl-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:540px; }
 .ohl-table thead th {
-    padding: 9px 10px; text-align: center; font-family: var(--display);
-    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-    background: rgba(0,0,0,0.35); color: var(--text-3);
-    border-bottom: 2px solid var(--border); white-space: nowrap;
+    padding:9px 10px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.05em;
+    background:#f4f6fb; color:#aab;
+    border-bottom:2px solid #e8e8e8; white-space:nowrap;
 }
 .ohl-table tbody td {
-    padding: 8px 10px; text-align: center; font-size: 11px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    vertical-align: middle; white-space: nowrap; color: var(--text-2);
+    padding:8px 10px; text-align:center; font-size:11px;
+    border-bottom:1px solid #f5f5f5; vertical-align:middle;
+    white-space:nowrap; color:#555;
 }
-.ohl-table tbody tr:hover { background: rgba(255,255,255,0.04) !important; }
-.row-even { background: rgba(255,255,255,0.01); }
-.row-odd  { background: rgba(0,0,0,0.1); }
+.ohl-table tbody tr:hover { background:#fafbff !important; }
+.tr-even { background:#fff; }
+.tr-odd  { background:#fbfcff; }
 
-/* cell types */
-.c-num   { font-size: 9px; color: var(--text-3); }
-.c-date  { font-size: 10px; color: var(--amber); font-weight: 700; }
-.c-sym   { font-size: 12px; font-weight: 800; color: var(--sky); }
-.c-sym small { display:block; font-size:8px; color: var(--text-3); font-weight:400; }
-.c-open  { color: var(--text-1); font-weight: 700; }
-.c-h915  { color: #fb7185; font-weight: 700; }
-.c-l915  { color: #6ee7b7; font-weight: 700; }
-.c-dh    { color: var(--sky); font-weight: 700; }
-.c-dl    { color: #fbbf24; font-weight: 700; }
-.c-ltp   { color: white; font-weight: 700; }
-.c-up    { color: #34d399; font-weight: 700; }
-.c-down  { color: #fb7185; font-weight: 700; }
-.c-neu   { color: var(--text-3); font-weight: 600; }
+/* Cell types */
+.c-num   { font-size:9px; color:#ccc; }
+.c-date  { font-size:11px; color:#F5A623; font-weight:700; }
+.c-sym   { font-size:12px; font-weight:800; color:#1a56db; }
+.c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
+.c-opt-ce { background:rgba(5,150,105,.1); color:#047857; border:1px solid rgba(5,150,105,.3); border-radius:4px; padding:1px 6px; font-size:9px; font-weight:800; }
+.c-opt-pe { background:rgba(220,38,38,.08); color:#b91c1c; border:1px solid rgba(220,38,38,.25); border-radius:4px; padding:1px 6px; font-size:9px; font-weight:800; }
+.c-open  { color:#555; font-weight:600; }
+.c-h915  { color:#b91c1c; font-weight:700; }
+.c-l915  { color:#047857; font-weight:700; }
+.c-dh    { color:#1a56db; font-weight:700; }
+.c-dl    { color:#c97f00; font-weight:700; }
+.c-ltp   { color:#1a1a2e; font-weight:700; }
+.c-up    { color:#059669; font-weight:700; }
+.c-down  { color:#dc2626; font-weight:700; }
+.c-neu   { color:#aab; }
 
-/* action badges */
-.act-buy-pe { display:inline-block; background:rgba(244,63,94,0.2); color:#fb7185;
-    border:1px solid rgba(244,63,94,0.45); border-radius:5px; padding:2px 8px;
-    font-family:var(--display); font-size:9px; font-weight:800; }
-.act-buy-ce { display:inline-block; background:rgba(16,185,129,0.2); color:#34d399;
-    border:1px solid rgba(16,185,129,0.45); border-radius:5px; padding:2px 8px;
-    font-family:var(--display); font-size:9px; font-weight:800; }
-.act-sell-ce { display:inline-block; background:rgba(244,63,94,0.15); color:#fda4af;
-    border:1px solid rgba(244,63,94,0.3); border-radius:5px; padding:2px 8px;
-    font-family:var(--display); font-size:9px; font-weight:800; }
-.act-sell-pe { display:inline-block; background:rgba(245,158,11,0.15); color:var(--amber);
-    border:1px solid rgba(245,158,11,0.3); border-radius:5px; padding:2px 8px;
-    font-family:var(--display); font-size:9px; font-weight:800; }
+/* Action badges */
+.act-badge { display:inline-block; border-radius:5px; padding:3px 9px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; letter-spacing:.04em; }
+.act-buy-pe  { background:rgba(220,38,38,.1);  color:#b91c1c; border:1px solid rgba(220,38,38,.3);  }
+.act-buy-ce  { background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  }
+.act-sell-ce { background:rgba(220,38,38,.07); color:#dc2626; border:1px solid rgba(220,38,38,.2);  }
+.act-sell-pe { background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
 
-/* opt-type badge */
-.opt-ce { background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3);
-    padding:1px 6px; border-radius:4px; font-size:9px; font-weight:700; }
-.opt-pe { background:rgba(244,63,94,0.15); color:#fb7185; border:1px solid rgba(244,63,94,0.3);
-    padding:1px 6px; border-radius:4px; font-size:9px; font-weight:700; }
+/* Empty / Loading */
+.ohl-empty {
+    text-align:center; padding:48px 20px; color:#ccc;
+}
+.ohl-empty i { font-size:2.5rem; display:block; margin-bottom:12px; color:#e5e9f2; }
+.ohl-empty p { font-size:13px; }
 
-/* no data */
-.ohl-no-data { text-align:center; padding:48px 20px; color:var(--text-3);
-    font-family:var(--display); font-size:12px; }
-.ohl-no-data i { font-size:2rem; opacity:.3; display:block; margin-bottom:10px; }
-
-/* loading */
-.ohl-loading-wrap { position:relative; min-height:280px; }
-.ohl-overlay { position:absolute; top:0; left:0; right:0; bottom:0;
-    background:rgba(10,15,30,0.92); display:flex; flex-direction:column;
-    align-items:center; justify-content:center; z-index:20; border-radius:12px;
-    display:none; }
-.ohl-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.1);
-    border-top:3px solid var(--emerald); border-radius:50%; animation:ohlspin 1s linear infinite; }
-@keyframes ohlspin { to { transform:rotate(360deg); } }
-.ohl-spin-txt { color:var(--text-2); margin-top:12px; font-family:var(--display); font-size:13px; }
+.ohl-spinner-row {
+    display:flex; align-items:center; justify-content:center;
+    gap:12px; padding:40px; color:#aab; font-size:13px;
+}
+.ohl-spinner {
+    width:28px; height:28px; border:3px solid #f0f0f0;
+    border-top:3px solid #059669; border-radius:50%;
+    animation:ohlSpin 1s linear infinite; flex-shrink:0;
+}
 </style>
-@endpush
 
-<section class="pt-40 pb-50">
-<div class="container-fluid content-container">
+<div class="ohl-wrap">
 
-    {{-- ── HEADER ── --}}
-    <div class="ohl-header">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-            <div>
-                <h4 class="ohl-header-title">
-                    Open=High &nbsp;/&nbsp; Open=Low
-                    <span>9:15 SIGNAL</span>
-                </h4>
-                <div class="ohl-header-sub" style="margin-top:8px;">
-                    <span class="logic-pill lp-oh">Open ≈ High → BUY PE (bearish open)</span>
-                    <span class="logic-pill lp-ol">Open ≈ Low  → BUY CE (bullish open)</span>
-                </div>
-                <div class="ohl-header-sub" style="margin-top:5px;">
-                    <span class="logic-pill lp-tf">15min: 09:15–09:30</span>
-                    <span class="logic-pill lp-tf">30min: 09:15–09:45</span>
-                    <span class="logic-pill lp-tf">1hr: 09:15–10:15</span>
-                    &nbsp;—&nbsp; wider bars = different H/L hits per timeframe
-                </div>
-            </div>
+{{-- ══ HERO ══ --}}
+<div class="ohl-hero ohl-anim">
+    <div class="ohl-hero-left">
+        <h1>Open=High / <span>Open=Low</span></h1>
+        <p>
+            Identify stocks where the opening candle (09:15) has Open equal (or near equal)
+            to its High or Low — a classic reversal signal in intraday trading.
+        </p>
+        <div class="ohl-logic-pills">
+            <span class="ohl-pill ohl-pill-oh">Open ≈ High → Bearish → BUY PE</span>
+            <span class="ohl-pill ohl-pill-ol">Open ≈ Low  → Bullish → BUY CE</span>
         </div>
     </div>
+    <div class="ohl-hero-icon">
+        <i class="las la-exchange-alt"></i>
+    </div>
+</div>
 
-    {{-- ── CONTROLS ── --}}
-    <div class="ohl-controls">
-
-        {{-- Timeframe --}}
-        <span class="ctrl-label">TF</span>
-        <div class="tf-group">
-            <button class="tf-btn active" data-tf="15min" onclick="setTf('15min',this)">15 Min</button>
-            <button class="tf-btn"        data-tf="30min" onclick="setTf('30min',this)">30 Min</button>
-            <button class="tf-btn"        data-tf="1hr"   onclick="setTf('1hr',this)">1 Hour</button>
-        </div>
-
-        <div class="ctrl-sep"></div>
+{{-- ══ FILTER BAR ══ --}}
+<div class="ohl-filter-bar">
+    <div class="ohl-filter-inner">
 
         {{-- Instrument --}}
-        <span class="ctrl-label">TYPE</span>
-        <div class="inst-group">
-            <button class="inst-btn active" data-inst="stock"  onclick="setInst('stock',this)">&#9679; Stock EQ</button>
-            <button class="inst-btn"        data-inst="fut"    onclick="setInst('fut',this)">&#9651; Futures</button>
-            <button class="inst-btn"        data-inst="option" onclick="setInst('option',this)">&#9670; Options</button>
+        <span class="ohl-filter-label">Type</span>
+        <div class="ohl-inst-tabs">
+            <button class="ohl-inst-tab on-stock" data-inst="stock"
+                    onclick="ohlSetInst('stock',this)">
+                <i class="las la-chart-line"></i> Stock EQ
+            </button>
+            <button class="ohl-inst-tab" data-inst="fut"
+                    onclick="ohlSetInst('fut',this)">
+                <i class="las la-fire"></i> Futures
+            </button>
+            <button class="ohl-inst-tab" data-inst="option"
+                    onclick="ohlSetInst('option',this)">
+                <i class="las la-layer-group"></i> Options
+            </button>
         </div>
 
-        <div class="ctrl-sep"></div>
+        <div class="ohl-sep"></div>
 
-        {{-- From Date --}}
-        <span class="ctrl-label">FROM</span>
-        <input type="date" id="ohl-from" class="ohl-date" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+        {{-- Dates --}}
+        <span class="ohl-filter-label">From</span>
+        <input type="date" id="ohl-from" class="ohl-date-input"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
 
-        <span class="ctrl-label">TO</span>
-        <input type="date" id="ohl-to" class="ohl-date" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+        <span class="ohl-filter-label">To</span>
+        <input type="date" id="ohl-to" class="ohl-date-input"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
 
-        <div class="ctrl-sep"></div>
+        <div class="ohl-sep"></div>
 
         {{-- Symbol --}}
-        <span class="ctrl-label">SYMBOL</span>
-        <select id="ohl-sym" class="ohl-select" multiple size="1">
-            <option value="">Loading...</option>
+        <span class="ohl-filter-label">Symbol</span>
+        <select id="ohl-sym" class="ohl-sym-select" multiple size="1">
+            <option value="">Loading…</option>
         </select>
 
         {{-- Tolerance --}}
-        <span class="ctrl-label">TOL</span>
-        <input type="number" id="ohl-tol" class="ohl-num" value="1" min="0" max="100" step="0.5" title="Tolerance in points">
-        <span style="font-size:10px;color:var(--text-3);font-family:var(--mono);">pts</span>
+        <span class="ohl-filter-label">Tol.</span>
+        <input type="number" id="ohl-tol" class="ohl-tol-input"
+               value="1" min="0" max="100" step="0.5"
+               title="Tolerance in points (how close Open must be to High/Low)">
+        <span style="font-size:11px;color:#aab;">pts</span>
 
-        <button class="ohl-load-btn" onclick="runAnalysis()">&#8635; Analyze</button>
-        <button class="ohl-reset-btn" onclick="resetAll()">&#8630; Reset</button>
+        <button class="ohl-analyze-btn" onclick="ohlAnalyze()">
+            <i class="las la-search"></i> Analyze
+        </button>
+        <button class="ohl-reset-btn" onclick="ohlReset()">
+            ↺ Reset
+        </button>
 
-        <div class="ml-auto d-flex align-items-center gap-3">
-            <span class="info-badge" id="ohl-info"></span>
-            <span class="last-upd" id="ohl-upd"></span>
+        <div class="ohl-filter-right">
+            <span class="ohl-info-text" id="ohl-info"></span>
+            <span class="ohl-upd-text"  id="ohl-upd"></span>
         </div>
     </div>
-
-    {{-- ── CONFIG WARNING ── --}}
-    <div class="ohl-warn" id="ohl-warn">
-        &#9888; No active Analysis Config found for this timeframe.
-        <span id="ohl-warn-msg" style="font-size:11px;color:var(--text-2);margin-left:8px;font-family:var(--mono);"></span>
-    </div>
-
-    {{-- ── TABLES ── --}}
-    <div class="ohl-loading-wrap">
-        <div class="ohl-overlay" id="ohl-overlay">
-            <div class="ohl-spinner"></div>
-            <div class="ohl-spin-txt">Analysing 09:15 candles&hellip;</div>
-        </div>
-
-        <div class="ohl-tables-row">
-
-            {{-- OPEN=HIGH → BUY PE (bearish) --}}
-            <div class="ohl-card oh-card">
-                <div class="ohl-card-hdr">
-                    &#128308; Open = High
-                    <span style="font-size:11px;opacity:.7;">→</span>
-                    <span class="act-buy-pe">BUY PE</span>
-                    <span class="count-pill" id="oh-count">0</span>
-                    <span class="tol-pill" id="oh-tol" style="display:none;"></span>
-                </div>
-                <div class="ohl-table-scroll">
-                    <table class="ohl-table">
-                        <thead id="oh-thead">
-                            <tr>
-                                <th>#</th>
-                                <th>Date</th>
-                                <th>Symbol</th>
-                                <th>Open</th>
-                                <th>High (09:15)</th>
-                                <th>Day High</th>
-                                <th>LTP</th>
-                                <th>Change</th>
-                                <th>Chg %</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="oh-tbody">
-                            <tr><td colspan="10"><div class="ohl-no-data"><i class="fas fa-chart-area"></i>Select dates and click Analyze</div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {{-- OPEN=LOW → BUY CE (bullish) --}}
-            <div class="ohl-card ol-card">
-                <div class="ohl-card-hdr">
-                    &#128994; Open = Low
-                    <span style="font-size:11px;opacity:.7;">→</span>
-                    <span class="act-buy-ce">BUY CE</span>
-                    <span class="count-pill" id="ol-count">0</span>
-                    <span class="tol-pill" id="ol-tol" style="display:none;"></span>
-                </div>
-                <div class="ohl-table-scroll">
-                    <table class="ohl-table">
-                        <thead id="ol-thead">
-                            <tr>
-                                <th>#</th>
-                                <th>Date</th>
-                                <th>Symbol</th>
-                                <th>Open</th>
-                                <th>Low (09:15)</th>
-                                <th>Day Low</th>
-                                <th>LTP</th>
-                                <th>Change</th>
-                                <th>Chg %</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ol-tbody">
-                            <tr><td colspan="10"><div class="ohl-no-data"><i class="fas fa-chart-area"></i>Select dates and click Analyze</div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>{{-- /.ohl-tables-row --}}
-    </div>
-
 </div>
-</section>
+
+{{-- ══ CONTENT ══ --}}
+<div class="ohl-content">
+
+    {{-- Config warning --}}
+    <div class="ohl-warn" id="ohl-warn">
+        <i class="las la-exclamation-triangle"></i>
+        <div>
+            <strong>No Analysis Config Found</strong>
+            <div style="font-size:12px;margin-top:3px;" id="ohl-warn-msg">
+                Go to Admin → Analysis Config and create a 15min config.
+            </div>
+        </div>
+    </div>
+
+    {{-- Two table layout --}}
+    <div class="ohl-tables-row">
+
+        {{-- ── OPEN=HIGH card ── --}}
+        <div class="ohl-card oh-card ohl-anim">
+            <div class="ohl-card-header">
+                <span class="ohl-card-title">🔴 Open = High</span>
+                <span style="font-size:13px;color:#888;">→</span>
+                <span class="act-badge act-buy-pe">BUY PE</span>
+                <span class="ohl-count-pill" id="oh-count">0</span>
+                <span class="ohl-tol-pill"   id="oh-tol"   style="display:none;"></span>
+            </div>
+            <div class="ohl-table-scroll">
+                <table class="ohl-table">
+                    <thead>
+                        <tr id="oh-thead-row">
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Symbol</th>
+                            <th>Open</th>
+                            <th>High (09:15)</th>
+                            <th>Day High</th>
+                            <th>LTP</th>
+                            <th>Change</th>
+                            <th>Chg %</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="oh-tbody">
+                        <tr><td colspan="10">
+                            <div class="ohl-empty">
+                                <i class="las la-chart-area"></i>
+                                <p>Select dates and click Analyze</p>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ── OPEN=LOW card ── --}}
+        <div class="ohl-card ol-card ohl-anim">
+            <div class="ohl-card-header">
+                <span class="ohl-card-title">🟢 Open = Low</span>
+                <span style="font-size:13px;color:#888;">→</span>
+                <span class="act-badge act-buy-ce">BUY CE</span>
+                <span class="ohl-count-pill" id="ol-count">0</span>
+                <span class="ohl-tol-pill"   id="ol-tol"   style="display:none;"></span>
+            </div>
+            <div class="ohl-table-scroll">
+                <table class="ohl-table">
+                    <thead>
+                        <tr id="ol-thead-row">
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Symbol</th>
+                            <th>Open</th>
+                            <th>Low (09:15)</th>
+                            <th>Day Low</th>
+                            <th>LTP</th>
+                            <th>Change</th>
+                            <th>Chg %</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ol-tbody">
+                        <tr><td colspan="10">
+                            <div class="ohl-empty">
+                                <i class="las la-chart-area"></i>
+                                <p>Select dates and click Analyze</p>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>{{-- /.ohl-tables-row --}}
+</div>{{-- /.ohl-content --}}
+</div>{{-- /.ohl-wrap --}}
+
 @endsection
 
 @push('script')
 <script>
-// ═══════════════════════════════════════════════════════════════════
-//  Open=High / Open=Low  — UI Logic
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  Open=High / Open=Low — JS (no jQuery)
+// ═══════════════════════════════════════════════════════════════
 
-const ANALYZE_URL  = '{{ route("open-hl.analyze") }}';
-const SYMBOLS_URL  = '{{ route("open-hl.symbols") }}';
-const todayStr     = '{{ now()->toDateString() }}';
+var OHL_ANALYZE = '{{ route("open-hl.analyze") }}';
+var OHL_SYMBOLS = '{{ route("open-hl.symbols") }}';
+var OHL_TODAY   = '{{ now()->toDateString() }}';
 
-let curTf   = '15min';
-let curInst = 'stock';
-let symCache = {}; // { 'stock-15min': [...] }
+var ohlInst     = 'stock';
+var ohlSymCache = {};
 
-$(document).ready(function () { loadSymbols(); });
+// helpers
+function el(id)          { return document.getElementById(id); }
+function html(id, h)     { var e = el(id); if (e) e.innerHTML = h; }
+function txt(id, t)      { var e = el(id); if (e) e.textContent = t; }
+function show(id)        { var e = el(id); if (e) e.style.display = ''; }
+function hide(id)        { var e = el(id); if (e) e.style.display = 'none'; }
 
-// ── State setters ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() { ohlLoadSymbols(); });
 
-function setTf(tf, btn) {
-    curTf = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    loadSymbols();
-}
+// ── Instrument switcher ───────────────────────────────────────
 
-function setInst(inst, btn) {
-    curInst = inst;
-    document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    // Update table header for option (adds opt-type column)
-    updateTableHeaders(inst);
-    loadSymbols();
-}
-
-function updateTableHeaders(inst) {
-    const isOpt = (inst === 'option');
-    const ohExtra = isOpt ? '<th>Type</th>' : '';
-    const olExtra = isOpt ? '<th>Type</th>' : '';
-    const ohCols = 10 + (isOpt ? 1 : 0);
-    const olCols = 10 + (isOpt ? 1 : 0);
-
-    $('#oh-thead tr').html(`
-        <th>#</th><th>Date</th><th>Symbol</th>
-        ${ohExtra}
-        <th>Open</th><th>High (09:15)</th><th>Day High</th>
-        <th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>
-    `);
-    $('#ol-thead tr').html(`
-        <th>#</th><th>Date</th><th>Symbol</th>
-        ${olExtra}
-        <th>Open</th><th>Low (09:15)</th><th>Day Low</th>
-        <th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>
-    `);
-}
-
-// ── Load symbols ──────────────────────────────────────────────────
-
-function loadSymbols() {
-    const key = curInst + '-' + curTf;
-    if (symCache[key]) { rebuildSymSelect(symCache[key]); return; }
-
-    $.get(SYMBOLS_URL, { timeframe: curTf, instrument: curInst }, function (res) {
-        if (res.no_config) {
-            showWarn('No active config for [' + curTf + '].');
-            rebuildSymSelect([]);
-            return;
-        }
-        hideWarn();
-        symCache[key] = res.symbols || [];
-        rebuildSymSelect(symCache[key]);
+function ohlSetInst(inst, btn) {
+    ohlInst = inst;
+    document.querySelectorAll('.ohl-inst-tab').forEach(function(b) {
+        b.className = 'ohl-inst-tab';
     });
+    btn.classList.add('on-' + inst);
+
+    // Add/remove opt-type column in headers
+    var isOpt   = inst === 'option';
+    var optTh   = isOpt ? '<th>Type</th>' : '';
+    var cols    = isOpt ? 11 : 10;
+
+    el('oh-thead-row').innerHTML =
+        '<th>#</th><th>Date</th><th>Symbol</th>' + optTh
+        + '<th>Open</th><th>High (09:15)</th><th>Day High</th>'
+        + '<th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>';
+    el('ol-thead-row').innerHTML =
+        '<th>#</th><th>Date</th><th>Symbol</th>' + optTh
+        + '<th>Open</th><th>Low (09:15)</th><th>Day Low</th>'
+        + '<th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>';
+
+    ohlLoadSymbols();
 }
 
-function rebuildSymSelect(symbols) {
-    const sel = document.getElementById('ohl-sym');
-    const prev = Array.from(sel.selectedOptions).map(o => o.value);
-    sel.innerHTML = symbols.length
-        ? symbols.map(s => `<option value="${s}"${prev.includes(s) ? ' selected' : ''}>${s}</option>`).join('')
-        : '<option value="" disabled>No symbols available</option>';
+// ── Load symbols ──────────────────────────────────────────────
+
+function ohlLoadSymbols() {
+    var key = ohlInst;
+    if (ohlSymCache[key] && ohlSymCache[key].length) {
+        ohlRebuildSym(ohlSymCache[key]); return;
+    }
+
+    fetch(OHL_SYMBOLS + '?instrument=' + ohlInst)
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.no_config) {
+                ohlShowWarn('No active 15min config found.');
+                ohlRebuildSym([]); return;
+            }
+            ohlHideWarn();
+            ohlSymCache[key] = res.symbols || [];
+            ohlRebuildSym(ohlSymCache[key]);
+        });
+}
+
+function ohlRebuildSym(symbols) {
+    var sel  = el('ohl-sym');
+    var prev = Array.from(sel.selectedOptions || []).map(function(o) { return o.value; });
+    if (!symbols.length) {
+        sel.innerHTML = '<option value="" disabled>No symbols</option>';
+        sel.size = 1; return;
+    }
+    sel.innerHTML = symbols.map(function(s) {
+        return '<option value="' + s + '"' + (prev.indexOf(s) > -1 ? ' selected' : '') + '>' + s + '</option>';
+    }).join('');
     sel.size = Math.min(3, Math.max(1, symbols.length));
 }
 
-// ── Run analysis ──────────────────────────────────────────────────
+// ── Analyze ───────────────────────────────────────────────────
 
-function runAnalysis() {
-    const from     = $('#ohl-from').val();
-    const to       = $('#ohl-to').val();
-    const symbols  = Array.from(document.getElementById('ohl-sym').selectedOptions).map(o => o.value).filter(Boolean);
-    const tol      = parseFloat($('#ohl-tol').val()) || 1;
+function ohlAnalyze() {
+    var from    = el('ohl-from').value;
+    var to      = el('ohl-to').value;
+    var tol     = parseFloat(el('ohl-tol').value) || 1;
+    var symSel  = el('ohl-sym');
+    var symbols = Array.from(symSel.selectedOptions || [])
+        .map(function(o) { return o.value; })
+        .filter(Boolean);
 
-    if (!from || !to) { alert('Select both dates'); return; }
+    if (!from || !to) { alert('Please select both dates.'); return; }
 
-    hideWarn();
-    $('#ohl-overlay').css('display','flex');
-    emptyRows('Loading…');
+    ohlHideWarn();
+    ohlShowLoading();
 
-    $.ajax({
-        url : ANALYZE_URL,
-        type: 'GET',
-        data: { timeframe: curTf, instrument: curInst, from_date: from, to_date: to,
-                symbols: symbols, tolerance: tol },
-        success(res) {
-            $('#ohl-overlay').css('display','none');
+    var params = new URLSearchParams({
+        instrument : ohlInst,
+        from_date  : from,
+        to_date    : to,
+        tolerance  : tol,
+    });
+    symbols.forEach(function(s) { params.append('symbols[]', s); });
 
-            if (res.no_config) { showWarn(res.message); emptyRows('—'); return; }
-
-            if (!res.success || !res.data || !res.data.length) {
-                emptyRows(res.message || 'No signals found');
-                updateCounts(0, 0, tol);
-                $('#ohl-info').text('');
-                return;
-            }
-
-            const ohRows = res.data.filter(r => r.signal === 'OPEN=HIGH');
-            const olRows = res.data.filter(r => r.signal === 'OPEN=LOW');
-
-            updateCounts(ohRows.length, olRows.length, res.tolerance);
-            $('#ohl-info').html(
-                '<span style="color:var(--rose);">O=H: ' + ohRows.length + '</span>'
-                + ' &nbsp;·&nbsp; '
-                + '<span style="color:var(--emerald);">O=L: ' + olRows.length + '</span>'
-                + ' &nbsp;·&nbsp; TF: <span style="color:var(--amber);">' + res.timeframe + '</span>'
-                + ' · ' + res.instrument
-            );
-            $('#ohl-upd').text('Updated ' + new Date().toLocaleTimeString());
-
-            renderOH(ohRows);
-            renderOL(olRows);
-        },
-        error(xhr) {
-            $('#ohl-overlay').css('display','none');
-            const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Server error';
-            emptyRows('⚠ ' + msg);
+    fetch(OHL_ANALYZE + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function(res) {
+        if (res.no_config) {
+            ohlShowWarn(res.message);
+            ohlEmptyBoth('—', 10);
+            return;
         }
+
+        if (!res.success || !res.data || !res.data.length) {
+            ohlEmptyBoth(res.message || 'No signals found.', 10);
+            txt('ohl-info', '');
+            ohlUpdateCounts(0, 0, tol);
+            return;
+        }
+
+        var ohRows = res.data.filter(function(r) { return r.signal === 'OPEN=HIGH'; });
+        var olRows = res.data.filter(function(r) { return r.signal === 'OPEN=LOW';  });
+
+        ohlUpdateCounts(ohRows.length, olRows.length, res.tolerance);
+        el('ohl-info').innerHTML =
+            '<span style="color:#b91c1c;">O=H: ' + ohRows.length + '</span>'
+            + ' &nbsp;·&nbsp; '
+            + '<span style="color:#047857;">O=L: ' + olRows.length + '</span>'
+            + ' &nbsp;·&nbsp; '
+            + '<span style="color:#c97f00;">Tol: ±' + parseFloat(res.tolerance).toFixed(1) + ' pts</span>'
+            + ' · ' + res.instrument;
+        txt('ohl-upd', 'Updated ' + new Date().toLocaleTimeString());
+
+        ohlRenderOH(ohRows);
+        ohlRenderOL(olRows);
+    })
+    .catch(function(err) {
+        ohlEmptyBoth('⚠ ' + err.message, 10);
     });
 }
 
-// ── Render tables ─────────────────────────────────────────────────
+// ── Renderers ─────────────────────────────────────────────────
 
-function renderOH(rows) {
+function ohlRenderOH(rows) {
+    var isOpt = ohlInst === 'option';
+    var cols  = isOpt ? 11 : 10;
     if (!rows.length) {
-        $('#oh-tbody').html('<tr><td colspan="11"><div class="ohl-no-data"><i class="fas fa-check-circle"></i>No Open=High signals</div></td></tr>');
+        html('oh-tbody', ohlEmptyHtml(cols, 'No Open=High signals found.'));
         return;
     }
-    const isOpt = (curInst === 'option');
-    let html = '';
-    rows.forEach((r, i) => {
-        html += `<tr class="${i%2===0?'row-even':'row-odd'}">
-            <td class="c-num">${i+1}</td>
-            <td class="c-date">${r.date}</td>
-            <td class="c-sym">${esc(r.symbol)}${r.expiry ? `<small>${r.expiry}</small>` : ''}</td>
-            ${isOpt ? `<td>${optTypeBadge(r.opt_type)}</td>` : ''}
-            <td class="c-open">₹${f(r.open)}</td>
-            <td class="c-h915">₹${f(r.high_open)}</td>
-            <td class="c-dh">₹${f(r.day_high)}</td>
-            <td class="c-ltp">₹${f(r.ltp)}</td>
-            <td>${changeTd(r.change)}</td>
-            <td>${pctTd(r.change_pct)}</td>
-            <td>${actionBadge(r.trade_action)}</td>
-        </tr>`;
+    var h = '';
+    rows.forEach(function(r, i) {
+        h += '<tr class="' + (i%2===0?'tr-even':'tr-odd') + '">'
+            + '<td class="c-num">' + (i+1) + '</td>'
+            + '<td class="c-date">' + r.date + '</td>'
+            + '<td class="c-sym">' + esc(r.symbol)
+                + (r.expiry ? '<small>' + r.expiry + '</small>' : '') + '</td>'
+            + (isOpt ? '<td>' + ohlOptBadge(r.opt_type) + '</td>' : '')
+            + '<td class="c-open">₹' + f(r.open)      + '</td>'
+            + '<td class="c-h915">₹' + f(r.high_open)  + '</td>'
+            + '<td class="c-dh">₹'   + f(r.day_high)   + '</td>'
+            + '<td class="c-ltp">₹'  + f(r.ltp)        + '</td>'
+            + '<td>'                  + ohlChangeTd(r.change)      + '</td>'
+            + '<td>'                  + ohlPctTd(r.change_pct)     + '</td>'
+            + '<td>'                  + ohlActionBadge(r.trade_action) + '</td>'
+            + '</tr>';
     });
-    $('#oh-tbody').html(html);
+    html('oh-tbody', h);
 }
 
-function renderOL(rows) {
+function ohlRenderOL(rows) {
+    var isOpt = ohlInst === 'option';
+    var cols  = isOpt ? 11 : 10;
     if (!rows.length) {
-        $('#ol-tbody').html('<tr><td colspan="11"><div class="ohl-no-data"><i class="fas fa-check-circle"></i>No Open=Low signals</div></td></tr>');
+        html('ol-tbody', ohlEmptyHtml(cols, 'No Open=Low signals found.'));
         return;
     }
-    const isOpt = (curInst === 'option');
-    let html = '';
-    rows.forEach((r, i) => {
-        html += `<tr class="${i%2===0?'row-even':'row-odd'}">
-            <td class="c-num">${i+1}</td>
-            <td class="c-date">${r.date}</td>
-            <td class="c-sym">${esc(r.symbol)}${r.expiry ? `<small>${r.expiry}</small>` : ''}</td>
-            ${isOpt ? `<td>${optTypeBadge(r.opt_type)}</td>` : ''}
-            <td class="c-open">₹${f(r.open)}</td>
-            <td class="c-l915">₹${f(r.low_open)}</td>
-            <td class="c-dl">₹${f(r.day_low)}</td>
-            <td class="c-ltp">₹${f(r.ltp)}</td>
-            <td>${changeTd(r.change)}</td>
-            <td>${pctTd(r.change_pct)}</td>
-            <td>${actionBadge(r.trade_action)}</td>
-        </tr>`;
+    var h = '';
+    rows.forEach(function(r, i) {
+        h += '<tr class="' + (i%2===0?'tr-even':'tr-odd') + '">'
+            + '<td class="c-num">' + (i+1) + '</td>'
+            + '<td class="c-date">' + r.date + '</td>'
+            + '<td class="c-sym">' + esc(r.symbol)
+                + (r.expiry ? '<small>' + r.expiry + '</small>' : '') + '</td>'
+            + (isOpt ? '<td>' + ohlOptBadge(r.opt_type) + '</td>' : '')
+            + '<td class="c-open">₹' + f(r.open)    + '</td>'
+            + '<td class="c-l915">₹' + f(r.low_open)+ '</td>'
+            + '<td class="c-dl">₹'   + f(r.day_low) + '</td>'
+            + '<td class="c-ltp">₹'  + f(r.ltp)     + '</td>'
+            + '<td>'                  + ohlChangeTd(r.change)      + '</td>'
+            + '<td>'                  + ohlPctTd(r.change_pct)     + '</td>'
+            + '<td>'                  + ohlActionBadge(r.trade_action) + '</td>'
+            + '</tr>';
     });
-    $('#ol-tbody').html(html);
+    html('ol-tbody', h);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
+// ── UI helpers ────────────────────────────────────────────────
 
-function actionBadge(action) {
-    const map = {
-        'BUY PE':  '<span class="act-buy-pe">BUY PE</span>',
-        'BUY CE':  '<span class="act-buy-ce">BUY CE</span>',
-        'SELL CE': '<span class="act-sell-ce">SELL CE</span>',
-        'SELL PE': '<span class="act-sell-pe">SELL PE</span>',
+function ohlShowLoading() {
+    var spinHtml = '<tr><td colspan="11"><div class="ohl-spinner-row">'
+        + '<div class="ohl-spinner"></div>Analysing 09:15 candles…</div></td></tr>';
+    html('oh-tbody', spinHtml);
+    html('ol-tbody', spinHtml);
+}
+
+function ohlEmptyBoth(msg, cols) {
+    var h = ohlEmptyHtml(cols || 10, msg);
+    html('oh-tbody', h);
+    html('ol-tbody', h);
+    ohlUpdateCounts(0, 0, null);
+}
+
+function ohlEmptyHtml(cols, msg) {
+    return '<tr><td colspan="' + cols + '">'
+        + '<div class="ohl-empty">'
+        + '<i class="las la-chart-area"></i>'
+        + '<p>' + (msg || 'No data found.') + '</p>'
+        + '</div></td></tr>';
+}
+
+function ohlUpdateCounts(oh, ol, tol) {
+    txt('oh-count', oh);
+    txt('ol-count', ol);
+    if (tol !== null && tol !== undefined) {
+        var tolTxt = '±' + parseFloat(tol).toFixed(1) + ' pts';
+        txt('oh-tol', tolTxt); el('oh-tol').style.display = '';
+        txt('ol-tol', tolTxt); el('ol-tol').style.display = '';
+    } else {
+        el('oh-tol').style.display = 'none';
+        el('ol-tol').style.display = 'none';
+    }
+}
+
+function ohlShowWarn(msg) {
+    el('ohl-warn').classList.add('show');
+    txt('ohl-warn-msg', msg || '');
+}
+function ohlHideWarn() { el('ohl-warn').classList.remove('show'); }
+
+function ohlReset() {
+    el('ohl-from').value = OHL_TODAY;
+    el('ohl-to').value   = OHL_TODAY;
+    el('ohl-tol').value  = '1';
+    Array.from(el('ohl-sym').options).forEach(function(o) { o.selected = false; });
+    ohlEmptyBoth('Reset — select dates and click Analyze.', 10);
+    txt('ohl-info', ''); txt('ohl-upd', '');
+    ohlHideWarn();
+}
+
+// ── Badge helpers ─────────────────────────────────────────────
+
+function ohlActionBadge(action) {
+    var map = {
+        'BUY PE':  '<span class="act-badge act-buy-pe">BUY PE</span>',
+        'BUY CE':  '<span class="act-badge act-buy-ce">BUY CE</span>',
+        'SELL CE': '<span class="act-badge act-sell-ce">SELL CE</span>',
+        'SELL PE': '<span class="act-badge act-sell-pe">SELL PE</span>',
     };
-    return map[action] || `<span style="color:var(--text-3);font-size:9px;">${action||'—'}</span>`;
+    return map[action] || '<span style="color:#aab;font-size:9px;">' + (action||'—') + '</span>';
 }
 
-function optTypeBadge(type) {
-    if (type === 'CE') return '<span class="opt-ce">CE</span>';
-    if (type === 'PE') return '<span class="opt-pe">PE</span>';
-    return '<span style="color:var(--text-3);">—</span>';
+function ohlOptBadge(type) {
+    if (type === 'CE') return '<span class="c-opt-ce">CE</span>';
+    if (type === 'PE') return '<span class="c-opt-pe">PE</span>';
+    return '<span style="color:#aab;">—</span>';
 }
 
-function changeTd(v) {
-    const n = parseFloat(v) || 0;
-    if (n > 0) return `<span class="c-up">▲ ₹${f(n)}</span>`;
-    if (n < 0) return `<span class="c-down">▼ ₹${f(Math.abs(n))}</span>`;
-    return `<span class="c-neu">₹${f(n)}</span>`;
+function ohlChangeTd(v) {
+    var n = parseFloat(v) || 0;
+    if (n > 0) return '<span class="c-up">▲ ₹' + f(n) + '</span>';
+    if (n < 0) return '<span class="c-down">▼ ₹' + f(Math.abs(n)) + '</span>';
+    return '<span class="c-neu">₹' + f(n) + '</span>';
 }
 
-function pctTd(v) {
-    const n = parseFloat(v) || 0;
-    if (n > 0) return `<span class="c-up">+${f(n)}%</span>`;
-    if (n < 0) return `<span class="c-down">${f(n)}%</span>`;
-    return `<span class="c-neu">${f(n)}%</span>`;
+function ohlPctTd(v) {
+    var n = parseFloat(v) || 0;
+    if (n > 0) return '<span class="c-up">+' + f(n) + '%</span>';
+    if (n < 0) return '<span class="c-down">' + f(n) + '%</span>';
+    return '<span class="c-neu">' + f(n) + '%</span>';
 }
 
-function f(v)   { return parseFloat(v||0).toFixed(2); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function updateCounts(oh, ol, tol) {
-    $('#oh-count').text(oh); $('#ol-count').text(ol);
-    const tolTxt = '±' + parseFloat(tol).toFixed(1) + ' pt';
-    if (tol !== undefined) {
-        $('#oh-tol').text(tolTxt).show();
-        $('#ol-tol').text(tolTxt).show();
-    }
-}
-
-function emptyRows(msg) {
-    const html = `<tr><td colspan="11"><div class="ohl-no-data"><i class="fas fa-chart-area"></i>${msg}</div></td></tr>`;
-    $('#oh-tbody,#ol-tbody').html(html);
-    $('#oh-count,#ol-count').text('0');
-    $('#oh-tol,#ol-tol').hide();
-}
-
-function showWarn(msg) {
-    $('#ohl-warn').show();
-    $('#ohl-warn-msg').text(msg || '');
-}
-function hideWarn() { $('#ohl-warn').hide(); }
-
-function resetAll() {
-    $('#ohl-from,#ohl-to').val(todayStr);
-    $('#ohl-tol').val('1');
-    $('#ohl-sym option').prop('selected', false);
-    emptyRows('Reset — select dates and click Analyze');
-    $('#ohl-info').text('');
-    hideWarn();
+function f(v)   { return parseFloat(v || 0).toFixed(2); }
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 </script>
 @endpush

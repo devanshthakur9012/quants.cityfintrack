@@ -120,6 +120,19 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\CpAnalysisController;
+
+// NEWWW
+Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
+Route::get('/analysis/{slug}',   [CpAnalysisController::class, 'detail'])  ->name('cp.analyses.detail');
+Route::get('/pricing',           [CpAnalysisController::class, 'pricing']) ->name('cp.pricing');
+
+// Auth required
+Route::middleware(['auth'])->group(function () {
+    Route::post('/cp/subscribe/{plan}/pay',  [CpAnalysisController::class, 'initiatePayment'])->name('cp.subscribe.pay');
+    Route::post('/cp/subscribe/verify',      [CpAnalysisController::class, 'verifyPayment'])  ->name('cp.subscribe.verify');
+    Route::get('/my-subscription',           [CpAnalysisController::class, 'mySubscription']) ->name('cp.my-subscription');
+});
 
 // COURSES //
 Route::get('/courses', [CourseController::class, 'index'])->name('courses');
@@ -203,7 +216,7 @@ Route::post('/reset-password',        [LoginController::class, 'resetPassword'])
 
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::get('/about', [HomePageController::class, 'about'])->name('about');
-Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.register');
+// Route::get('/sign-up', [HomePageController::class, 'login'])->name('user.register');
 Route::get('/option-symposium', [HomePageController::class, 'optionSymposium'])->name('optionsymposium');
 Route::get('/video-library', [HomePageController::class, 'videoLibrary'])->name('video.library');
 Route::get('/book-demo', [HomePageController::class, 'bookDemo'])->name('book.demo');

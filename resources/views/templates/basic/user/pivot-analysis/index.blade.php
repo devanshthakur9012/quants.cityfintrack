@@ -1,709 +1,571 @@
-@extends($activeTemplate . 'layouts.master')
-
+{{-- FILE: resources/views/themes/{active_theme}/user/pivot-analysis/index.blade.php --}}
+@extends($activeTemplate.'layouts.frontend')
 @section('content')
-@push('style')
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* ════════════════════════════════════════════════════════════════
-   PIVOT POINT ANALYSIS — Professional Dark Trading Dashboard
-   Font: Rajdhani (display) + JetBrains Mono (numbers)
-   Theme: Deep navy + amber + emerald accents
-════════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+/* ── BASE ── */
+.pv-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
+.pv-wrap * { box-sizing:border-box; }
+.pv-wrap h1,.pv-wrap h2,.pv-wrap h3,.pv-wrap h4 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
+.pv-wrap a { text-decoration:none; }
+.mono { font-family:'JetBrains Mono',monospace; }
+@keyframes pvFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.pv-anim { animation:pvFadeUp .5s ease both; }
+@keyframes pvSpin  { to{ transform:rotate(360deg); } }
 
-:root {
-    --navy-900: #0a0f1e;
-    --navy-800: #0d1428;
-    --navy-700: #111b35;
-    --navy-600: #162040;
-    --navy-500: #1e2d52;
-    --border:   rgba(255,255,255,0.07);
-    --amber:    #f59e0b;
-    --amber-dim:#b45309;
-    --emerald:  #10b981;
-    --rose:     #f43f5e;
-    --sky:      #38bdf8;
-    --purple:   #a78bfa;
-    --text-1:   rgba(255,255,255,0.92);
-    --text-2:   rgba(255,255,255,0.55);
-    --text-3:   rgba(255,255,255,0.25);
-    --mono:     'JetBrains Mono', monospace;
-    --display:  'Rajdhani', sans-serif;
+/* ── HERO ── */
+.pv-hero {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:32px 48px; display:flex; align-items:center;
+    justify-content:space-between; gap:24px;
 }
-
-* { box-sizing: border-box; }
-body { background: var(--navy-900); }
-
-/* ── Page header ────────────────────────────────────────────── */
-.pa-header {
-    background: linear-gradient(135deg, #0d1428 0%, #1a2744 50%, #0d1428 100%);
-    border: 1px solid var(--border);
-    border-bottom: 2px solid var(--amber);
-    border-radius: 14px;
-    padding: 20px 28px;
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
+.pv-hero-left h1 {
+    font-size:clamp(26px,3.5vw,42px); font-weight:700;
+    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.pa-header::before {
-    content: 'PIVOT';
-    position: absolute; right: 28px; top: 50%;
-    transform: translateY(-50%);
-    font-family: var(--display);
-    font-size: 88px; font-weight: 700;
-    color: rgba(245,158,11,0.05);
-    letter-spacing: 8px;
-    pointer-events: none;
-    user-select: none;
+.pv-hero-left h1 span { color:#F5A623; }
+.pv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:560px; }
+.pv-hero-formulas { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.pv-pill {
+    display:inline-block; padding:3px 10px; border-radius:4px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
 }
-.pa-header-title {
-    font-family: var(--display);
-    font-size: 22px; font-weight: 700;
-    color: var(--text-1);
-    letter-spacing: 1px;
-    margin: 0;
+.pv-pill-pp  { background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
+.pv-pill-s   { background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  }
+.pv-pill-r   { background:rgba(220,38,38,.08); color:#b91c1c; border:1px solid rgba(220,38,38,.25); }
+.pv-hero-icon {
+    width:80px; height:80px; border-radius:16px;
+    background:linear-gradient(135deg,#0f1b2d,#1a3050);
+    display:flex; align-items:center; justify-content:center;
+    font-size:36px; color:#F5A623; flex-shrink:0;
 }
-.pa-header-title span {
-    color: var(--amber);
-    background: rgba(245,158,11,0.12);
-    border: 1px solid rgba(245,158,11,0.25);
-    padding: 2px 10px; border-radius: 5px;
-    font-size: 11px; font-weight: 700;
-    margin-left: 8px; vertical-align: middle;
-    letter-spacing: 2px;
-}
-.pa-header-sub {
-    font-size: 11px; color: var(--text-2);
-    margin: 6px 0 0;
-    font-family: var(--mono);
-    letter-spacing: 0.5px;
-}
-.pa-formula-pill {
-    display: inline-block;
-    background: rgba(245,158,11,0.10);
-    border: 1px solid rgba(245,158,11,0.2);
-    color: var(--amber);
-    font-family: var(--mono);
-    font-size: 10px; font-weight: 600;
-    padding: 2px 8px; border-radius: 4px;
-    margin: 3px 2px;
-}
-.pa-formula-pill.s1 { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); color: var(--emerald); }
-.pa-formula-pill.r1 { background: rgba(244,63,94,0.1);  border-color: rgba(244,63,94,0.25);  color: var(--rose); }
-
-/* ── Control bar ────────────────────────────────────────────── */
-.pa-controls {
-    background: var(--navy-800);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 20px;
-    margin-bottom: 18px;
-    display: flex; align-items: center;
-    gap: 12px; flex-wrap: wrap;
-}
-.ctrl-label {
-    font-family: var(--display);
-    font-size: 10px; font-weight: 700;
-    color: var(--text-3);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-}
-.ctrl-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
-
-/* ── Timeframe switcher ─────────────────────────────────────── */
-.tf-group { display: flex; gap: 4px; }
-.tf-btn {
-    font-family: var(--display);
-    font-size: 12px; font-weight: 700;
-    padding: 6px 16px; border-radius: 7px;
-    border: 1px solid var(--border);
-    background: transparent; color: var(--text-2);
-    cursor: pointer; transition: all .15s;
-    letter-spacing: .5px;
-}
-.tf-btn:hover  { border-color: rgba(245,158,11,0.4); color: var(--amber); }
-.tf-btn.active {
-    background: rgba(245,158,11,0.15);
-    border-color: var(--amber);
-    color: var(--amber);
+@media(max-width:768px){
+    .pv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
+    .pv-hero-formulas { justify-content:center; }
 }
 
-/* ── Instrument tab ─────────────────────────────────────────── */
-.inst-group { display: flex; gap: 4px; }
-.inst-btn {
-    font-family: var(--display);
-    font-size: 11px; font-weight: 700;
-    padding: 6px 14px; border-radius: 7px;
-    border: 1px solid var(--border);
-    background: transparent; color: var(--text-2);
-    cursor: pointer; transition: all .15s;
-    letter-spacing: .5px;
+/* ── FILTER BAR ── */
+.pv-filter-bar {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:0 48px; position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
-.inst-btn:hover { border-color: rgba(56,189,248,0.4); color: var(--sky); }
-.inst-btn.active { background: rgba(56,189,248,0.12); border-color: var(--sky); color: var(--sky); }
-.inst-btn.active[data-inst="stock"]  { background: rgba(16,185,129,0.12); border-color: var(--emerald); color: var(--emerald); }
-.inst-btn.active[data-inst="fut"]    { background: rgba(245,158,11,0.12); border-color: var(--amber);   color: var(--amber);   }
-.inst-btn.active[data-inst="option"] { background: rgba(167,139,250,0.12); border-color: var(--purple); color: var(--purple);  }
-
-/* ── Symbol select ──────────────────────────────────────────── */
-.pa-sym-select {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    color: var(--text-1);
-    border-radius: 8px; padding: 6px 12px;
-    font-family: var(--display); font-size: 12px; font-weight: 700;
-    cursor: pointer; outline: none; min-width: 160px;
+.pv-filter-inner {
+    display:flex; align-items:center; gap:14px;
+    padding:13px 0; flex-wrap:wrap;
 }
-.pa-sym-select option { background: #0d1428; color: white; }
-
-/* ── Date controls ──────────────────────────────────────────── */
-.date-input {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text-1);
-    padding: 5px 10px;
-    font-family: var(--mono); font-size: 11px; font-weight: 600;
-    cursor: pointer; outline: none;
-}
-.date-input::-webkit-calendar-picker-indicator { filter: invert(.6); cursor: pointer; }
-.date-nav { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: 700; transition: .15s; }
-.date-nav:hover { background: rgba(245,158,11,0.15); color: var(--amber); }
-.today-btn { width: auto; padding: 0 10px; font-size: 10px; font-family: var(--display); font-weight: 700; letter-spacing: 1px; }
-
-/* ── Load btn ───────────────────────────────────────────────── */
-.pa-load-btn {
-    background: var(--amber);
-    color: #000; border: none; border-radius: 8px;
-    padding: 7px 20px;
-    font-family: var(--display); font-size: 13px; font-weight: 800;
-    cursor: pointer; letter-spacing: .5px; transition: .15s;
-}
-.pa-load-btn:hover { background: #fbbf24; }
-
-/* ── Auto refresh ───────────────────────────────────────────── */
-.auto-btn { background: rgba(255,255,255,0.06); color: var(--text-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-family: var(--display); font-size: 11px; font-weight: 700; cursor: pointer; transition: .15s; }
-.auto-btn.active { background: rgba(16,185,129,0.15); border-color: var(--emerald); color: var(--emerald); }
-
-/* ── Status badges ──────────────────────────────────────────── */
-.badge-live { background: rgba(16,185,129,0.15); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; font-size: 9px; font-weight: 700; padding: 2px 8px; }
-.badge-hist { background: rgba(245,158,11,0.12);  color: var(--amber);   border: 1px solid rgba(245,158,11,0.25);  border-radius: 10px; font-size: 9px; font-weight: 700; padding: 2px 8px; }
-.ml-auto { margin-left: auto; }
-.last-upd { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
-
-/* ── Main card ──────────────────────────────────────────────── */
-.pa-card {
-    background: var(--navy-800);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-.pa-card-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px;
-    background: var(--navy-700);
-}
-.pa-card-title {
-    font-family: var(--display);
-    font-size: 14px; font-weight: 700;
-    color: var(--text-1); letter-spacing: .5px;
-}
-.pa-card-title .inst-tag {
-    font-size: 10px; padding: 2px 8px; border-radius: 4px;
-    font-weight: 700; letter-spacing: 1px; margin-left: 6px;
-}
-.inst-tag-stock  { background: rgba(16,185,129,0.15); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
-.inst-tag-fut    { background: rgba(245,158,11,0.15);  color: var(--amber);   border: 1px solid rgba(245,158,11,0.3);  }
-.inst-tag-option { background: rgba(167,139,250,0.15); color: var(--purple);  border: 1px solid rgba(167,139,250,0.3); }
-
-/* ── Table scroll ───────────────────────────────────────────── */
-.pa-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-/* ════════════════════════════════════════════════════════════
-   STOCK / FUT TABLE
-════════════════════════════════════════════════════════════ */
-.pa-table {
-    width: 100%; border-collapse: collapse;
-    font-family: var(--mono);
+.pv-filter-label {
+    font-size:10.5px; color:#999; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em;
 }
 
-/* Stock/FUT min-width */
-.pa-table.stock-table,
-.pa-table.fut-table { min-width: 1200px; }
-
-/* Option table */
-.pa-table.option-table { min-width: 2000px; }
-
-/* ── Header rows ────────────────────────────────────────────── */
-.pa-table thead tr.hdr-group th {
-    padding: 10px 10px 6px;
-    text-align: center;
-    font-family: var(--display);
-    font-size: 10px; font-weight: 800;
-    letter-spacing: 1px; text-transform: uppercase;
-    background: rgba(0,0,0,0.4);
-    border-bottom: none;
-    white-space: nowrap;
+/* Instrument tabs */
+.pv-inst-tabs { display:flex; gap:4px; }
+.pv-inst-tab {
+    padding:7px 16px; border-radius:6px; border:1.5px solid #e5e9f2;
+    font-size:12px; font-weight:700; color:#666; cursor:pointer;
+    background:#fff; transition:all .2s; font-family:'Exo 2',sans-serif;
 }
-.pa-table thead tr.hdr-cols th {
-    padding: 6px 10px 9px;
-    text-align: center;
-    font-family: var(--display);
-    font-size: 9px; font-weight: 700;
-    letter-spacing: .3px; text-transform: uppercase;
-    background: rgba(0,0,0,0.3);
-    color: var(--text-3);
-    border-bottom: 2px solid var(--border);
-    white-space: nowrap;
-}
+.pv-inst-tab:hover { border-color:#F5A623; color:#c97f00; }
+.pv-inst-tab.on-stock  { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
+.pv-inst-tab.on-fut    { border-color:#F5A623; background:rgba(245,166,35,.08); color:#c97f00; }
+.pv-inst-tab.on-option { border-color:#7c3aed; background:rgba(124,58,237,.08); color:#6d28d9; }
 
-/* ── Column group colors ────────────────────────────────────── */
-.hdr-meta   { color: var(--text-2) !important; }
-.hdr-ohlc   { color: var(--sky)    !important; }
-.hdr-pivot  { color: var(--amber)  !important; }
-.hdr-signal { color: var(--emerald)!important; }
-.hdr-ce     { color: var(--emerald)!important; }
-.hdr-pe     { color: var(--rose)   !important; }
+/* Symbol select */
+.pv-sym-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; cursor:pointer; outline:none; min-width:140px;
+}
+.pv-sym-select:focus { border-color:#F5A623; }
 
-/* ── Separators ─────────────────────────────────────────────── */
-.sep-ohlc   { border-left: 2px solid rgba(56,189,248,0.3)  !important; }
-.sep-pivot  { border-left: 2px solid rgba(245,158,11,0.35) !important; }
-.sep-signal { border-left: 2px solid rgba(16,185,129,0.35) !important; }
-.sep-ce     { border-left: 2px solid rgba(16,185,129,0.3)  !important; }
-.sep-pe     { border-left: 2px solid rgba(244,63,94,0.3)   !important; }
+/* Date input */
+.pv-date-wrap { display:flex; align-items:center; gap:4px; }
+.pv-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
+}
+.pv-date-input:focus { border-color:#F5A623; }
+.pv-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.pv-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.pv-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
-/* ── Body cells ─────────────────────────────────────────────── */
-.pa-table tbody td {
-    padding: 7px 10px;
-    text-align: center;
-    font-size: 11px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    vertical-align: middle;
-    white-space: nowrap;
-    color: var(--text-2);
-}
-.pa-table tbody tr:hover { background: rgba(255,255,255,0.04) !important; }
-.row-even { background: rgba(255,255,255,0.01); }
-.row-odd  { background: rgba(0,0,0,0.12); }
+/* Status badge */
+.pv-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.pv-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
 
-/* ── Cell types ─────────────────────────────────────────────── */
-.c-num    { font-size: 9px; color: var(--text-3); }
-.c-time   { font-size: 12px; font-weight: 700; color: var(--amber); font-family: var(--mono); }
-.c-sym    { font-size: 10px; font-weight: 700; color: var(--sky); }
-.c-sym small { display: block; font-size: 8px; color: var(--text-3); font-weight: 400; margin-top: 1px; }
-.c-o      { color: rgba(255,255,255,.45); font-size: 10px; }
-.c-h      { color: #ff9f7f; font-weight: 600; }
-.c-l      { color: #7fc9a0; font-weight: 600; }
-.c-c      { color: var(--sky); font-weight: 700; }
-.c-vol    { font-size: 9px; color: var(--text-3); }
+/* Buttons */
+.pv-load-btn {
+    background:#F5A623; color:#000; border:none; border-radius:8px;
+    padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
+    font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
+}
+.pv-load-btn:hover { background:#d4890e; }
+.pv-auto-btn {
+    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
+    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:'Exo 2',sans-serif; transition:.2s;
+}
+.pv-auto-btn.on { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
 
-.c-pp     { color: var(--amber); font-weight: 800; font-family: var(--mono); }
-.c-r1     { color: #fb7185; font-weight: 800; font-family: var(--mono); }
-.c-r2     { color: #f87171; font-size: 9px; font-family: var(--mono); }
-.c-s1     { color: #6ee7b7; font-weight: 800; font-family: var(--mono); }
-.c-s2     { color: #34d399; font-size: 9px; font-family: var(--mono); }
-.c-range  { font-size: 9px; color: var(--text-3); font-family: var(--mono); }
+.pv-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.pv-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.pv-last-upd  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
 
-.c-oi { font-size: 9px; color: var(--text-3); font-family: var(--mono); }
-.c-fut-price { font-size: 10px; color: var(--amber); font-family: var(--mono); }
-
-/* ── Signal badges ──────────────────────────────────────────── */
-.sig-bullish-strong {
-    display: inline-block;
-    background: rgba(16,185,129,0.22); color: #34d399;
-    border: 1px solid rgba(16,185,129,0.45);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 800;
-    letter-spacing: .3px;
-}
-.sig-bullish-mod {
-    display: inline-block;
-    background: rgba(16,185,129,0.12); color: #6ee7b7;
-    border: 1px solid rgba(16,185,129,0.3);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 700;
-}
-.sig-bullish-weak {
-    display: inline-block;
-    background: rgba(16,185,129,0.07); color: #a7f3d0;
-    border: 1px solid rgba(16,185,129,0.15);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 600;
-}
-.sig-bearish-strong {
-    display: inline-block;
-    background: rgba(244,63,94,0.22); color: #fb7185;
-    border: 1px solid rgba(244,63,94,0.45);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 800;
-    letter-spacing: .3px;
-}
-.sig-bearish-mod {
-    display: inline-block;
-    background: rgba(244,63,94,0.12); color: #fda4af;
-    border: 1px solid rgba(244,63,94,0.3);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 700;
-}
-.sig-bearish-weak {
-    display: inline-block;
-    background: rgba(244,63,94,0.07); color: #fecdd3;
-    border: 1px solid rgba(244,63,94,0.15);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 600;
-}
-.sig-neutral {
-    display: inline-block;
-    background: rgba(100,116,139,0.15); color: rgba(255,255,255,0.38);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px; padding: 3px 9px;
-    font-family: var(--display); font-size: 10px; font-weight: 600;
+@media(max-width:768px){
+    .pv-filter-bar { padding:0 16px; }
+    .pv-filter-inner { gap:8px; }
+    .pv-filter-right { margin-left:0; width:100%; }
 }
 
-/* ── Match pills ─────────────────────────────────────────────── */
-.match-yes { display: inline-block; background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.4); border-radius: 5px; padding: 2px 7px; font-size: 9px; font-weight: 800; }
-.match-no  { display: inline-block; background: rgba(255,255,255,0.04); color: var(--text-3); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 2px 7px; font-size: 9px; }
-.pp-cross  { display: inline-block; background: rgba(245,158,11,0.18); color: var(--amber); border: 1px solid rgba(245,158,11,0.35); border-radius: 5px; padding: 2px 7px; font-size: 9px; font-weight: 800; }
+/* ── CONTENT AREA ── */
+.pv-content { padding:28px 48px 64px; }
+@media(max-width:768px){ .pv-content { padding:16px 12px 48px; } }
 
-/* ── Strike / ATM badges ─────────────────────────────────────── */
-.atm-badge { display: inline-block; background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; padding: 1px 6px; font-size: 9px; font-weight: 700; }
-.strike-ce { font-size: 10px; color: var(--emerald); font-weight: 700; }
-.strike-pe { font-size: 10px; color: var(--rose);    font-weight: 700; }
-
-/* ── Row highlight (significant signal) ─────────────────────── */
-.row-breakout  { background: rgba(16,185,129,0.06) !important; }
-.row-breakdown { background: rgba(244,63,94,0.06)  !important; }
-.row-neutral   { background: transparent !important; }
-
-/* ── Loading / empty ─────────────────────────────────────────── */
-.pa-loading {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 70px 20px;
+/* Config warning */
+.pv-warn {
+    background:#fff3e0; border:1px solid #ffcc80; border-radius:10px;
+    padding:16px 20px; margin-bottom:20px;
+    display:none; align-items:center; gap:14px; font-size:13px; color:#e65100;
 }
-.pa-spinner {
-    width: 38px; height: 38px;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-top: 3px solid var(--amber);
-    border-radius: 50%;
-    animation: paspin 1s linear infinite;
-}
-@keyframes paspin { to { transform: rotate(360deg); } }
-.pa-loading-text { color: var(--text-2); margin-top: 14px; font-family: var(--display); font-size: 13px; }
-.pa-no-data { text-align: center; padding: 60px; color: var(--text-3); font-family: var(--display); font-size: 13px; }
-.pa-no-data i { font-size: 2.5rem; opacity: .35; margin-bottom: 12px; display: block; }
+.pv-warn.show { display:flex; }
+.pv-warn i { font-size:20px; flex-shrink:0; }
 
-/* ── Config warning ──────────────────────────────────────────── */
-.pa-config-warn {
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 10px;
-    padding: 18px 22px;
-    display: flex; align-items: flex-start; gap: 14px;
-    margin-bottom: 16px;
+/* ── TABLE CARD ── */
+.pv-card {
+    background:#fff; border-radius:12px; border:1px solid #e8e8e8;
+    overflow:hidden; margin-bottom:24px;
 }
-.pa-config-warn-icon { font-size: 1.6rem; flex-shrink: 0; }
-.pa-config-warn-text { font-family: var(--display); font-size: 13px; color: var(--amber); }
-.pa-config-warn-text p { margin: 4px 0 0; font-size: 11px; color: var(--text-2); font-family: var(--mono); }
+.pv-card-header {
+    padding:14px 20px; border-bottom:1px solid #f0f0f0;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:8px; background:#fafafa;
+}
+.pv-card-title {
+    font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
+    color:#1a1a2e; display:flex; align-items:center; gap:8px;
+}
+.pv-card-subtitle { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.pv-inst-label {
+    display:inline-block; padding:3px 10px; border-radius:4px;
+    font-size:11px; font-weight:700; letter-spacing:.06em;
+}
+.pv-il-stock  { background:rgba(5,150,105,.1); color:#047857; border:1px solid rgba(5,150,105,.3); }
+.pv-il-fut    { background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
+.pv-il-option { background:rgba(124,58,237,.1); color:#6d28d9; border:1px solid rgba(124,58,237,.3); }
+
+/* Table scroll */
+.pv-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* ── TABLE BASE ── */
+.pv-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; }
+.pv-table.sf-table { min-width:1100px; }
+.pv-table.opt-table { min-width:1800px; }
+
+/* Header group row */
+.pv-table thead tr.th-group th {
+    padding:9px 10px 5px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800;
+    letter-spacing:.1em; text-transform:uppercase;
+    background:#f7f8fc; border-bottom:none; white-space:nowrap;
+}
+/* Header col row */
+.pv-table thead tr.th-cols th {
+    padding:5px 10px 9px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
+    letter-spacing:.03em; text-transform:uppercase;
+    background:#f4f6fb; color:#aab;
+    border-bottom:2px solid #e8e8e8; white-space:nowrap;
+}
+
+/* Column group colors */
+.g-meta   { color:#888 !important; }
+.g-ohlc   { color:#1a56db !important; }
+.g-pivot  { color:#c97f00 !important; }
+.g-signal { color:#047857 !important; }
+.g-ce     { color:#047857 !important; }
+.g-pe     { color:#b91c1c !important; }
+
+/* Column separators */
+.sep-ohlc   { border-left:2px solid rgba(26,86,219,.15) !important; }
+.sep-pivot  { border-left:2px solid rgba(245,166,35,.2) !important; }
+.sep-signal { border-left:2px solid rgba(5,150,105,.2)  !important; }
+.sep-ce     { border-left:2px solid rgba(5,150,105,.2)  !important; }
+.sep-pe     { border-left:2px solid rgba(220,38,38,.2)  !important; }
+
+/* Body cells */
+.pv-table tbody td {
+    padding:8px 10px; text-align:center; font-size:11px;
+    border-bottom:1px solid #f5f5f5; vertical-align:middle;
+    white-space:nowrap; color:#555;
+}
+.pv-table tbody tr:hover { background:#fafbff !important; }
+.tr-even { background:#fff; }
+.tr-odd  { background:#fbfcff; }
+.tr-breakout  { background:rgba(5,150,105,.04) !important; }
+.tr-breakdown { background:rgba(220,38,38,.04) !important; }
+
+/* Cell styles */
+.c-num   { font-size:9px; color:#ccc; }
+.c-time  { font-size:12px; font-weight:700; color:#F5A623; }
+.c-sym   { font-size:11px; font-weight:700; color:#1a56db; }
+.c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
+.c-o     { color:#aab; font-size:10px; }
+.c-h     { color:#c0392b; font-weight:700; }
+.c-l     { color:#27ae60; font-weight:700; }
+.c-c     { color:#1a56db; font-weight:700; }
+.c-vol   { font-size:9px; color:#ccc; }
+.c-pp    { color:#c97f00; font-weight:800; }
+.c-r1    { color:#c0392b; font-weight:700; }
+.c-r2    { color:#e74c3c; font-size:9px; }
+.c-s1    { color:#27ae60; font-weight:700; }
+.c-s2    { color:#2ecc71; font-size:9px; }
+.c-oi    { font-size:9px; color:#aab; }
+.c-atm   { font-size:10px; color:#c97f00; font-weight:700; }
+
+/* Signal badges */
+.sig { display:inline-block; border-radius:5px; padding:3px 8px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; letter-spacing:.04em; white-space:nowrap; }
+.sig-bull-strong { background:rgba(5,150,105,.15); color:#047857; border:1px solid rgba(5,150,105,.35); }
+.sig-bull-mod    { background:rgba(5,150,105,.08); color:#059669; border:1px solid rgba(5,150,105,.2);  }
+.sig-bull-weak   { background:rgba(5,150,105,.05); color:#34d399; border:1px solid rgba(5,150,105,.12); }
+.sig-bear-strong { background:rgba(220,38,38,.12);  color:#b91c1c; border:1px solid rgba(220,38,38,.3);  }
+.sig-bear-mod    { background:rgba(220,38,38,.07);  color:#dc2626; border:1px solid rgba(220,38,38,.18); }
+.sig-bear-weak   { background:rgba(220,38,38,.04);  color:#ef4444; border:1px solid rgba(220,38,38,.1);  }
+.sig-neutral     { background:#f4f6fb; color:#aab;   border:1px solid #e5e9f2; }
+
+/* Match pills */
+.mp-yes { display:inline-block; background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  border-radius:4px; padding:2px 7px; font-size:9px; font-weight:800; }
+.mp-no  { display:inline-block; background:#f7f8fc; color:#ccc; border:1px solid #e8e8e8; border-radius:4px; padding:2px 7px; font-size:9px; }
+.mp-pp  { display:inline-block; background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:800; }
+
+/* Loading / empty */
+.pv-loading {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; padding:60px 20px;
+}
+.pv-spinner {
+    width:36px; height:36px; border:3px solid #f0f0f0;
+    border-top:3px solid #F5A623; border-radius:50%;
+    animation:pvSpin 1s linear infinite;
+}
+.pv-loading-text { color:#aab; margin-top:12px; font-size:13px; }
+.pv-empty { text-align:center; padding:56px 20px; color:#ccc; }
+.pv-empty i { font-size:2.5rem; display:block; margin-bottom:12px; }
 </style>
-@endpush
 
-<section class="pt-40 pb-50">
-<div class="container-fluid content-container">
+<div class="pv-wrap">
 
-    {{-- ── PAGE HEADER ─────────────────────────────────────────────────────── --}}
-    <div class="pa-header">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-            <div>
-                <h4 class="pa-header-title">
-                    &#9651; Pivot Point Analysis
-                    <span>PROFESSIONAL</span>
-                </h4>
-                <div class="pa-header-sub" style="margin-top:8px;">
-                    <span class="pa-formula-pill">PP = (H+L+C) ÷ 3</span>
-                    <span class="pa-formula-pill s1">S1 = 2×PP − H &nbsp;↑ BUY</span>
-                    <span class="pa-formula-pill r1">R1 = 2×PP − L &nbsp;↓ SELL</span>
-                    <span class="pa-formula-pill s1">S2 = PP − Range</span>
-                    <span class="pa-formula-pill r1">R2 = PP + Range</span>
-                </div>
-                <div class="pa-header-sub" style="margin-top:6px;">
-                    Candle-by-candle pivot levels for&nbsp;
-                    <strong style="color:var(--emerald);">Stock EQ</strong> &nbsp;|&nbsp;
-                    <strong style="color:var(--amber);">Futures</strong> &nbsp;|&nbsp;
-                    <strong style="color:var(--purple);">Options (ATM CE/PE)</strong>
-                    &nbsp;&nbsp;·&nbsp;&nbsp; Only configured symbols shown per timeframe
-                </div>
-            </div>
+{{-- ══ HERO ══ --}}
+<div class="pv-hero pv-anim">
+    <div class="pv-hero-left">
+        <h1>Pivot Point <span>Analysis</span></h1>
+        <p>
+            Real-time pivot levels for Stock EQ, Futures, and ATM Options —
+            calculated on live 15min candle data during market hours.
+        </p>
+        <div class="pv-hero-formulas">
+            <span class="pv-pill pv-pill-pp">PP = (H+L+C) ÷ 3</span>
+            <span class="pv-pill pv-pill-s">S1 = 2×PP − H</span>
+            <span class="pv-pill pv-pill-s">S2 = PP − Range</span>
+            <span class="pv-pill pv-pill-r">R1 = 2×PP − L</span>
+            <span class="pv-pill pv-pill-r">R2 = PP + Range</span>
         </div>
     </div>
+    <div class="pv-hero-icon">
+        <i class="las la-chart-bar"></i>
+    </div>
+</div>
 
-    {{-- ── CONTROL BAR ─────────────────────────────────────────────────────── --}}
-    <div class="pa-controls">
+{{-- ══ FILTER BAR ══ --}}
+<div class="pv-filter-bar">
+    <div class="pv-filter-inner">
 
-        {{-- Timeframe --}}
-        <span class="ctrl-label">TF</span>
-        <div class="tf-group">
-            <button class="tf-btn active" data-tf="15min" onclick="setTimeframe('15min',this)">15 Min</button>
-            <button class="tf-btn"        data-tf="30min" onclick="setTimeframe('30min',this)">30 Min</button>
-            <button class="tf-btn"        data-tf="1hr"   onclick="setTimeframe('1hr',this)">1 Hour</button>
+        {{-- Instrument --}}
+        <span class="pv-filter-label">Type</span>
+        <div class="pv-inst-tabs">
+            <button class="pv-inst-tab on-stock" data-inst="stock"
+                    onclick="pvSetInst('stock',this)">
+                <i class="las la-chart-line"></i> Stock EQ
+            </button>
+            <button class="pv-inst-tab" data-inst="fut"
+                    onclick="pvSetInst('fut',this)">
+                <i class="las la-fire"></i> Futures
+            </button>
+            <button class="pv-inst-tab" data-inst="option"
+                    onclick="pvSetInst('option',this)">
+                <i class="las la-layer-group"></i> Options (ATM)
+            </button>
         </div>
 
-        <div class="ctrl-sep"></div>
-
-        {{-- Instrument type --}}
-        <span class="ctrl-label">TYPE</span>
-        <div class="inst-group">
-            <button class="inst-btn active" data-inst="stock"  onclick="setInstrument('stock',this)">&#9679; Stock EQ</button>
-            <button class="inst-btn"        data-inst="fut"    onclick="setInstrument('fut',this)">&#9651; Futures</button>
-            <button class="inst-btn"        data-inst="option" onclick="setInstrument('option',this)">&#9670; Options</button>
-        </div>
-
-        <div class="ctrl-sep"></div>
-
-        {{-- Date --}}
-        <span class="ctrl-label">DATE</span>
-        <div style="display:flex;align-items:center;gap:5px;">
-            <button class="date-nav" onclick="shiftDate(-1)">&#8249;</button>
-            <input type="date" id="pa-date" class="date-input" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" onchange="loadData()">
-            <button class="date-nav" onclick="shiftDate(1)">&#8250;</button>
-            <button class="date-nav today-btn" onclick="goToday()">TODAY</button>
-            <span id="pa-date-badge"></span>
-        </div>
-
-        <div class="ctrl-sep"></div>
+        <div style="width:1px;height:28px;background:#e8e8e8;flex-shrink:0;"></div>
 
         {{-- Symbol --}}
-        <span class="ctrl-label">SYMBOL</span>
-        <select id="pa-sym-select" class="pa-sym-select" onchange="loadData()">
-            <option value="ALL">— All Symbols —</option>
+        <span class="pv-filter-label">Symbol</span>
+        <select id="pv-sym" class="pv-sym-select" onchange="pvLoad()">
+            <option value="ALL">— All —</option>
         </select>
 
-        <button class="pa-load-btn" onclick="loadData()">&#8635; Load</button>
+        <div style="width:1px;height:28px;background:#e8e8e8;flex-shrink:0;"></div>
 
-        <button class="auto-btn" id="pa-auto-btn" onclick="toggleAuto()">&#9654; Auto</button>
-        <span id="pa-auto-tag" style="font-size:10px;color:var(--text-3);font-family:var(--mono);"></span>
+        {{-- Date --}}
+        <span class="pv-filter-label">Date</span>
+        <div class="pv-date-wrap">
+            <button class="pv-date-nav" onclick="pvShiftDate(-1)">‹</button>
+            <input type="date" id="pv-date" class="pv-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="pvLoad()">
+            <button class="pv-date-nav" onclick="pvShiftDate(1)">›</button>
+            <button class="pv-date-nav pv-today-btn" onclick="pvToday()">TODAY</button>
+            <span id="pv-date-badge"></span>
+        </div>
 
-        <div class="ml-auto d-flex align-items-center gap-3">
-            <span id="pa-info-text" style="font-size:10px;color:var(--text-3);font-family:var(--mono);"></span>
-            <span class="last-upd" id="pa-last-upd"></span>
+        <button class="pv-load-btn" onclick="pvLoad()">
+            <i class="las la-sync-alt"></i> Load
+        </button>
+        <button class="pv-auto-btn" id="pv-auto-btn" onclick="pvToggleAuto()">
+            ▶ Auto
+        </button>
+
+        <div class="pv-filter-right">
+            <span class="pv-info-text" id="pv-info"></span>
+            <span class="pv-last-upd"  id="pv-upd"></span>
         </div>
     </div>
-
-    {{-- ── CONFIG WARNING (shown if no config found) ──────────────────────── --}}
-    <div class="pa-config-warn" id="pa-config-warn" style="display:none;">
-        <span class="pa-config-warn-icon">&#9888;</span>
-        <div class="pa-config-warn-text">
-            No active Analysis Config found for this timeframe.
-            <p id="pa-config-warn-msg">Go to Admin → Analysis Config to create one and assign symbols.</p>
-        </div>
-    </div>
-
-    {{-- ── TABLE CONTAINER ────────────────────────────────────────────────── --}}
-    <div class="pa-card" id="pa-main-card">
-        <div class="pa-card-header">
-            <span class="pa-card-title" id="pa-card-title">
-                &#9651; Pivot Points
-                <span class="inst-tag inst-tag-stock" id="pa-inst-tag">STOCK EQ</span>
-            </span>
-            <span style="font-size:10px;color:var(--text-3);margin-left:auto;font-family:var(--mono);" id="pa-candle-info"></span>
-        </div>
-
-        {{-- STOCK & FUT TABLE --}}
-        <div id="pa-sf-wrap">
-            <div class="pa-table-scroll">
-                <table class="pa-table stock-table" id="pa-sf-table">
-                    <thead>
-                        <tr class="hdr-group" id="pa-sf-hdr-group">
-                            <th colspan="3" class="hdr-meta">Info</th>
-                            <th colspan="5" class="hdr-ohlc  sep-ohlc">OHLC + Volume</th>
-                            <th colspan="5" class="hdr-pivot sep-pivot">&#9651; Pivot Levels</th>
-                            <th colspan="5" class="hdr-signal sep-signal">&#9680; Signal</th>
-                        </tr>
-                        <tr class="hdr-cols">
-                            <th class="hdr-meta">#</th>
-                            <th class="hdr-meta">Time</th>
-                            <th class="hdr-meta">Symbol</th>
-
-                            <th class="hdr-ohlc sep-ohlc">Open</th>
-                            <th class="hdr-ohlc">High</th>
-                            <th class="hdr-ohlc">Low</th>
-                            <th class="hdr-ohlc">Close</th>
-                            <th class="hdr-ohlc">Volume</th>
-
-                            <th class="hdr-pivot sep-pivot">PP<br><span style="font-size:7px;opacity:.5;font-weight:400;">(H+L+C)/3</span></th>
-                            <th class="hdr-pivot" style="color:#6ee7b7 !important;">S1<br><span style="font-size:7px;opacity:.5;font-weight:400;">2PP−H</span></th>
-                            <th class="hdr-pivot" style="color:#34d399 !important;">S2<br><span style="font-size:7px;opacity:.5;font-weight:400;">PP−Range</span></th>
-                            <th class="hdr-pivot" style="color:#fb7185 !important;">R1<br><span style="font-size:7px;opacity:.5;font-weight:400;">2PP−L</span></th>
-                            <th class="hdr-pivot" style="color:#f87171 !important;">R2<br><span style="font-size:7px;opacity:.5;font-weight:400;">PP+Range</span></th>
-
-                            <th class="hdr-signal sep-signal">Signal</th>
-                            <th class="hdr-signal">S1 Touch<br><span style="font-size:7px;opacity:.5;font-weight:400;">Low ≤ S1</span></th>
-                            <th class="hdr-signal">R1 Touch<br><span style="font-size:7px;opacity:.5;font-weight:400;">High ≥ R1</span></th>
-                            <th class="hdr-signal">PP Cross<br><span style="font-size:7px;opacity:.5;font-weight:400;">Open↔Close</span></th>
-                            <th class="hdr-signal" id="pa-oi-col-hdr" style="display:none;">OI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pa-sf-tbody">
-                        <tr><td colspan="18">
-                            <div class="pa-loading">
-                                <div class="pa-spinner"></div>
-                                <div class="pa-loading-text">Loading pivot data&hellip;</div>
-                            </div>
-                        </td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- OPTION TABLE (CE + PE side by side) --}}
-        <div id="pa-opt-wrap" style="display:none;">
-            <div class="pa-table-scroll">
-                <table class="pa-table option-table" id="pa-opt-table">
-                    <thead>
-                        <tr class="hdr-group">
-                            <th colspan="4" class="hdr-meta">Info</th>
-                            <th colspan="8" class="hdr-ce sep-ce">&#128200; CE — ATM Call Option</th>
-                            <th colspan="8" class="hdr-pe sep-pe">&#128201; PE — ATM Put Option</th>
-                        </tr>
-                        <tr class="hdr-cols">
-                            <th class="hdr-meta">#</th>
-                            <th class="hdr-meta">Time</th>
-                            <th class="hdr-meta">Symbol</th>
-                            <th class="hdr-meta">ATM<br><span style="font-size:7px;opacity:.5;font-weight:400;">Strike</span></th>
-
-                            {{-- CE --}}
-                            <th class="hdr-ce sep-ce">Open</th>
-                            <th class="hdr-ce">High</th>
-                            <th class="hdr-ce">Low</th>
-                            <th class="hdr-ce">Close</th>
-                            <th class="hdr-ce" style="color:var(--amber) !important;">PP</th>
-                            <th class="hdr-ce" style="color:#6ee7b7 !important;">S1 &#129001;</th>
-                            <th class="hdr-ce" style="color:#fb7185 !important;">R1 &#128997;</th>
-                            <th class="hdr-ce">Signal</th>
-
-                            {{-- PE --}}
-                            <th class="hdr-pe sep-pe">Open</th>
-                            <th class="hdr-pe">High</th>
-                            <th class="hdr-pe">Low</th>
-                            <th class="hdr-pe">Close</th>
-                            <th class="hdr-pe" style="color:var(--amber) !important;">PP</th>
-                            <th class="hdr-pe" style="color:#6ee7b7 !important;">S1 &#129001;</th>
-                            <th class="hdr-pe" style="color:#fb7185 !important;">R1 &#128997;</th>
-                            <th class="hdr-pe">Signal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pa-opt-tbody">
-                        <tr><td colspan="20">
-                            <div class="pa-loading">
-                                <div class="pa-spinner"></div>
-                                <div class="pa-loading-text">Loading option pivot data&hellip;</div>
-                            </div>
-                        </td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>{{-- /pa-card --}}
-
 </div>
-</section>
+
+{{-- ══ CONTENT ══ --}}
+<div class="pv-content">
+
+    {{-- Config warning --}}
+    <div class="pv-warn" id="pv-warn">
+        <i class="las la-exclamation-triangle"></i>
+        <div>
+            <strong>No Analysis Config Found</strong>
+            <div style="font-size:12px;margin-top:3px;" id="pv-warn-msg">
+                Go to Admin → Analysis Config and create a 15min config with symbols.
+            </div>
+        </div>
+    </div>
+
+    {{-- ── STOCK / FUT TABLE ── --}}
+    <div id="pv-sf-wrap">
+        <div class="pv-card">
+            <div class="pv-card-header">
+                <div class="pv-card-title">
+                    <span class="pv-inst-label pv-il-stock" id="pv-il">STOCK EQ</span>
+                    Pivot Point Signals
+                </div>
+                <span class="pv-card-subtitle" id="pv-subtitle">15min · Today</span>
+            </div>
+            <div class="pv-table-scroll">
+                <table class="pv-table sf-table" id="pv-sf-table">
+                    <thead>
+                        <tr class="th-group">
+                            <th colspan="3" class="g-meta">Info</th>
+                            <th colspan="5" class="g-ohlc  sep-ohlc">OHLC + Volume</th>
+                            <th colspan="5" class="g-pivot sep-pivot">▲ Pivot Levels</th>
+                            <th colspan="4" class="g-signal sep-signal">Signal</th>
+                        </tr>
+                        <tr class="th-cols">
+                            <th class="g-meta">#</th>
+                            <th class="g-meta">Time</th>
+                            <th class="g-meta">Symbol</th>
+
+                            <th class="g-ohlc sep-ohlc">Open</th>
+                            <th class="g-ohlc">High</th>
+                            <th class="g-ohlc">Low</th>
+                            <th class="g-ohlc">Close</th>
+                            <th class="g-ohlc">Volume</th>
+
+                            <th class="g-pivot sep-pivot">PP</th>
+                            <th class="g-pivot" style="color:#27ae60!important;">S1</th>
+                            <th class="g-pivot" style="color:#2ecc71!important;">S2</th>
+                            <th class="g-pivot" style="color:#c0392b!important;">R1</th>
+                            <th class="g-pivot" style="color:#e74c3c!important;">R2</th>
+
+                            <th class="g-signal sep-signal">Signal</th>
+                            <th class="g-signal">S1 Touch</th>
+                            <th class="g-signal">R1 Touch</th>
+                            <th class="g-signal" id="pv-oi-hdr" style="display:none;">OI</th>
+                            <th class="g-signal">PP Cross</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pv-sf-body">
+                        <tr><td colspan="17">
+                            <div class="pv-loading">
+                                <div class="pv-spinner"></div>
+                                <div class="pv-loading-text">Loading pivot data…</div>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── OPTION TABLE ── --}}
+    <div id="pv-opt-wrap" style="display:none;">
+        <div class="pv-card">
+            <div class="pv-card-header">
+                <div class="pv-card-title">
+                    <span class="pv-inst-label pv-il-option">OPTIONS</span>
+                    ATM CE / PE Pivot Signals
+                </div>
+                <span class="pv-card-subtitle" id="pv-opt-subtitle">15min · ATM Strike</span>
+            </div>
+            <div class="pv-table-scroll">
+                <table class="pv-table opt-table">
+                    <thead>
+                        <tr class="th-group">
+                            <th colspan="4" class="g-meta">Info</th>
+                            <th colspan="8" class="g-ce sep-ce">▲ CE — ATM Call</th>
+                            <th colspan="8" class="g-pe sep-pe">▼ PE — ATM Put</th>
+                        </tr>
+                        <tr class="th-cols">
+                            <th class="g-meta">#</th>
+                            <th class="g-meta">Time</th>
+                            <th class="g-meta">Symbol</th>
+                            <th class="g-meta">ATM Strike</th>
+
+                            <th class="g-ce sep-ce">Open</th>
+                            <th class="g-ce">High</th>
+                            <th class="g-ce">Low</th>
+                            <th class="g-ce">Close</th>
+                            <th class="g-ce" style="color:#c97f00!important;">PP</th>
+                            <th class="g-ce" style="color:#27ae60!important;">S1</th>
+                            <th class="g-ce" style="color:#c0392b!important;">R1</th>
+                            <th class="g-ce">Signal</th>
+
+                            <th class="g-pe sep-pe">Open</th>
+                            <th class="g-pe">High</th>
+                            <th class="g-pe">Low</th>
+                            <th class="g-pe">Close</th>
+                            <th class="g-pe" style="color:#c97f00!important;">PP</th>
+                            <th class="g-pe" style="color:#27ae60!important;">S1</th>
+                            <th class="g-pe" style="color:#c0392b!important;">R1</th>
+                            <th class="g-pe">Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pv-opt-body">
+                        <tr><td colspan="20">
+                            <div class="pv-loading">
+                                <div class="pv-spinner"></div>
+                                <div class="pv-loading-text">Loading option pivot data…</div>
+                            </div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>{{-- /.pv-content --}}
+</div>{{-- /.pv-wrap --}}
+
 @endsection
 
 @push('script')
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  PIVOT ANALYSIS — UI LOGIC
+//  PIVOT ANALYSIS — JS  (no jQuery dependency)
 // ═══════════════════════════════════════════════════════════════
 
-const todayStr    = '{{ now()->toDateString() }}';
-let curTimeframe  = '15min';
-let curInstrument = 'stock';
-let autoTimer     = null;
-let cachedSymbols = {}; // { 'stock-15min': [...], ... }
-
-const ROUTES = {
-    stock  : '{{ route("pivot-analysis.stock.signals") }}',
-    fut    : '{{ route("pivot-analysis.fut.signals") }}',
-    option : '{{ route("pivot-analysis.option.signals") }}',
+var PV_TODAY   = '{{ now()->toDateString() }}';
+var PV_ROUTES  = {
+    stock : '{{ route("pivot-analysis.stock.signals") }}',
+    fut   : '{{ route("pivot-analysis.fut.signals") }}',
+    option: '{{ route("pivot-analysis.option.signals") }}'
 };
+var pvInst     = 'stock';
+var pvTimer    = null;
+var pvSymCache = {};
 
-const INST_LABELS = { stock: 'STOCK EQ', fut: 'FUTURES', option: 'OPTIONS' };
-const INST_TAG_CLS = { stock: 'inst-tag-stock', fut: 'inst-tag-fut', option: 'inst-tag-option' };
-
-$(document).ready(function () { loadData(); });
-
-// ── State setters ─────────────────────────────────────────────
-
-function setTimeframe(tf, btn) {
-    curTimeframe = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    rebuildSymDropdown([]);
-    loadData();
+// Helper: set innerHTML of element by id
+function pvHtml(id, html) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+}
+function pvText(id, txt) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = txt;
 }
 
-function setInstrument(inst, btn) {
-    curInstrument = inst;
-    document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+document.addEventListener('DOMContentLoaded', function(){ pvLoad(); });
 
-    // Toggle table visibility
-    const isOption = (inst === 'option');
-    document.getElementById('pa-sf-wrap').style.display  = isOption ? 'none'  : '';
-    document.getElementById('pa-opt-wrap').style.display = isOption ? ''      : 'none';
+// ── Instrument switcher ───────────────────────────────────────
 
-    // OI column only for FUT
-    const oiHdr = document.getElementById('pa-oi-col-hdr');
-    if (oiHdr) oiHdr.style.display = (inst === 'fut') ? '' : 'none';
+function pvSetInst(inst, btn) {
+    pvInst = inst;
+    document.querySelectorAll('.pv-inst-tab').forEach(function(b){
+        b.className = 'pv-inst-tab';
+    });
+    btn.classList.add('on-' + inst);
 
-    // Update card title tag
-    const tag = document.getElementById('pa-inst-tag');
-    tag.textContent = INST_LABELS[inst];
-    tag.className = 'inst-tag ' + INST_TAG_CLS[inst];
+    var isOpt = inst === 'option';
+    document.getElementById('pv-sf-wrap').style.display  = isOpt ? 'none' : '';
+    document.getElementById('pv-opt-wrap').style.display = isOpt ? ''     : 'none';
 
-    // Reload symbols for this combo
-    const cacheKey = inst + '-' + curTimeframe;
-    if (cachedSymbols[cacheKey] && cachedSymbols[cacheKey].length) {
-        rebuildSymDropdown(cachedSymbols[cacheKey]);
-    } else {
-        rebuildSymDropdown([]);
+    var oiHdr = document.getElementById('pv-oi-hdr');
+    if (oiHdr) oiHdr.style.display = inst === 'fut' ? '' : 'none';
+
+    var il = document.getElementById('pv-il');
+    if (il) {
+        il.className   = 'pv-inst-label pv-il-' + inst;
+        il.textContent = { stock:'STOCK EQ', fut:'FUTURES', option:'OPTIONS' }[inst];
     }
 
-    loadData();
+    var cacheKey = inst;
+    if (pvSymCache[cacheKey] && pvSymCache[cacheKey].length) {
+        pvRebuildSym(pvSymCache[cacheKey]);
+    } else {
+        pvRebuildSym([]);
+    }
+
+    pvLoad();
 }
 
-// ── Date controls ─────────────────────────────────────────────
+// ── Date ─────────────────────────────────────────────────────
 
-function getDate() { return document.getElementById('pa-date').value; }
-function getSym()  { return document.getElementById('pa-sym-select').value; }
+function pvGetDate() { return document.getElementById('pv-date').value; }
+function pvGetSym()  { return document.getElementById('pv-sym').value; }
 
-function shiftDate(days) {
-    const picker = document.getElementById('pa-date');
-    const d = new Date(picker.value);
-    d.setDate(d.getDate() + days);
-    const s = d.toISOString().split('T')[0];
-    if (s > todayStr) return;
+function pvShiftDate(d) {
+    var picker = document.getElementById('pv-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
+    var s = dt.toISOString().split('T')[0];
+    if (s > PV_TODAY) return;
     picker.value = s;
-    loadData();
+    pvLoad();
 }
-function goToday() { document.getElementById('pa-date').value = todayStr; loadData(); }
 
-function updateDateBadge(isToday) {
-    const el = document.getElementById('pa-date-badge');
+function pvToday() {
+    document.getElementById('pv-date').value = PV_TODAY;
+    pvLoad();
+}
+
+function pvUpdateDateBadge(isToday) {
+    var el = document.getElementById('pv-date-badge');
     el.innerHTML = isToday
-        ? '<span class="badge-live">&#9679; Live</span>'
-        : '<span class="badge-hist">&#128197; Hist</span>';
+        ? '<span class="pv-live-badge">● Live</span>'
+        : '<span class="pv-hist-badge">📅 Historical</span>';
 }
 
 // ── Symbol dropdown ───────────────────────────────────────────
 
-function rebuildSymDropdown(symbols) {
-    const sel  = document.getElementById('pa-sym-select');
-    const prev = sel.value;
+function pvRebuildSym(symbols) {
+    var sel  = document.getElementById('pv-sym');
+    var prev = sel.value;
     sel.innerHTML = '<option value="ALL">— All Symbols —</option>';
-    symbols.forEach(s => {
-        const opt = document.createElement('option');
+    symbols.forEach(function(s) {
+        var opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
         if (s === prev) opt.selected = true;
         sel.appendChild(opt);
@@ -712,277 +574,237 @@ function rebuildSymDropdown(symbols) {
 
 // ── Auto refresh ──────────────────────────────────────────────
 
-function toggleAuto() {
-    const btn = document.getElementById('pa-auto-btn');
-    const tag = document.getElementById('pa-auto-tag');
-    if (autoTimer) {
-        clearInterval(autoTimer); autoTimer = null;
+function pvToggleAuto() {
+    var btn = document.getElementById('pv-auto-btn');
+    if (pvTimer) {
+        clearInterval(pvTimer); pvTimer = null;
         btn.textContent = '▶ Auto';
-        btn.classList.remove('active');
-        tag.textContent = '';
+        btn.classList.remove('on');
     } else {
-        autoTimer = setInterval(loadData, 15000);
+        pvTimer = setInterval(pvLoad, 15000);
         btn.textContent = '■ Stop';
-        btn.classList.add('active');
-        tag.style.color = 'var(--emerald)';
-        tag.textContent = '● live';
-        loadData();
+        btn.classList.add('on');
+        pvLoad();
     }
 }
 
 // ── Main loader ───────────────────────────────────────────────
 
-function loadData() {
-    const date = getDate();
-    const sym  = getSym();
+function pvLoad() {
+    var date = pvGetDate();
+    var sym  = pvGetSym();
 
-    // Stop auto on historical date
-    if (date !== todayStr && autoTimer) {
-        clearInterval(autoTimer); autoTimer = null;
-        document.getElementById('pa-auto-btn').textContent = '▶ Auto';
-        document.getElementById('pa-auto-btn').classList.remove('active');
-        document.getElementById('pa-auto-tag').textContent = '';
+    if (date !== PV_TODAY && pvTimer) {
+        clearInterval(pvTimer); pvTimer = null;
+        document.getElementById('pv-auto-btn').textContent = '▶ Auto';
+        document.getElementById('pv-auto-btn').classList.remove('on');
     }
 
-    // Hide config warning
-    document.getElementById('pa-config-warn').style.display = 'none';
+    document.getElementById('pv-warn').classList.remove('show');
 
-    // Show loading state
-    const isOption = (curInstrument === 'option');
-    if (!isOption) {
-        $('#pa-sf-tbody').html(loadingHtml(18, 'Fetching pivot data for ' + date + '&hellip;'));
-    } else {
-        $('#pa-opt-tbody').html(loadingHtml(20, 'Fetching option pivot data for ' + date + '&hellip;'));
-    }
+    var isOpt  = pvInst === 'option';
+    var colsNm = isOpt ? 20 : 17;
+    var loadTr = '<tr><td colspan="' + colsNm + '">'
+        + '<div class="pv-loading"><div class="pv-spinner"></div>'
+        + '<div class="pv-loading-text">Fetching pivot data for ' + date + '…</div></div>'
+        + '</td></tr>';
 
-    $.ajax({
-        url : ROUTES[curInstrument],
-        data: { timeframe: curTimeframe, symbol: sym, date: date },
-        success(res) {
-            updateDateBadge(res.is_today);
+    pvHtml(isOpt ? 'pv-opt-body' : 'pv-sf-body', loadTr);
 
-            if (res.no_config) {
-                document.getElementById('pa-config-warn').style.display = 'flex';
-                document.getElementById('pa-config-warn-msg').textContent = res.message || '';
-                if (!isOption) $('#pa-sf-tbody').html(noDataHtml(18));
-                else           $('#pa-opt-tbody').html(noDataHtml(20));
-                return;
-            }
+    var params = new URLSearchParams({ symbol: sym, date: date });
+    fetch(PV_ROUTES[pvInst] + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function(res) {
+        pvUpdateDateBadge(res.is_today);
 
-            if (res.available_symbols && res.available_symbols.length) {
-                const cacheKey = curInstrument + '-' + curTimeframe;
-                cachedSymbols[cacheKey] = res.available_symbols;
-                rebuildSymDropdown(res.available_symbols);
-            }
-
-            if (!res.success || !res.data || !res.data.length) {
-                if (!isOption) $('#pa-sf-tbody').html(noDataHtml(18, res.message));
-                else           $('#pa-opt-tbody').html(noDataHtml(20, res.message));
-                $('#pa-info-text').text('');
-                return;
-            }
-
-            const mode         = res.data[0] ? (res.data[0].mode || 'summary') : 'summary';
-            const isDetail     = (mode === 'detail');
-            const totalCandles = res.data.reduce((a,d) => a + (d.total_candles || 0), 0);
-            const modeLabel    = isDetail
-                ? '<span style="color:var(--sky);font-family:var(--mono);">&#9776; DETAIL — all candles</span>'
-                : '<span style="color:var(--amber);font-family:var(--mono);">&#9641; SUMMARY — latest only</span>';
-            $('#pa-info-text').html(totalCandles + ' candles · ' + res.data.length + ' symbol(s) &nbsp;' + modeLabel);
-            $('#pa-candle-info').html(totalCandles + ' candles · ' + res.data.length + ' symbol(s)');
-
-            if (!isOption) renderSFTable(res.data);
-            else           renderOptionTable(res.data);
-
-            $('#pa-last-upd').text('Updated ' + new Date().toLocaleTimeString());
-        },
-        error(xhr) {
-            const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Server error';
-            if (!isOption) $('#pa-sf-tbody').html(noDataHtml(18, '⚠ ' + msg));
-            else           $('#pa-opt-tbody').html(noDataHtml(20, '⚠ ' + msg));
+        if (res.no_config) {
+            document.getElementById('pv-warn').classList.add('show');
+            pvText('pv-warn-msg', res.message || '');
+            pvHtml(isOpt ? 'pv-opt-body' : 'pv-sf-body', pvEmptyHtml(colsNm));
+            return;
         }
+
+        if (res.available_symbols && res.available_symbols.length) {
+            pvSymCache[pvInst] = res.available_symbols;
+            pvRebuildSym(res.available_symbols);
+        }
+
+        if (!res.success || !res.data || !res.data.length) {
+            pvHtml(isOpt ? 'pv-opt-body' : 'pv-sf-body', pvEmptyHtml(colsNm, res.message));
+            pvText('pv-info', '');
+            return;
+        }
+
+        var total = res.data.reduce(function(a,d){ return a + (d.total_candles||0); }, 0);
+        pvText('pv-info',     total + ' candles · ' + res.data.length + ' symbol(s)');
+        pvText('pv-subtitle', '15min · ' + date + ' · ' + (res.data[0].mode === 'detail' ? 'Full Day' : 'Latest'));
+        pvText('pv-upd',      'Updated ' + new Date().toLocaleTimeString());
+
+        if (isOpt) pvRenderOption(res.data);
+        else       pvRenderSF(res.data);
+    })
+    .catch(function(err) {
+        pvHtml(isOpt ? 'pv-opt-body' : 'pv-sf-body', pvEmptyHtml(colsNm, '⚠ ' + err.message));
     });
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TABLE RENDERERS
+//  RENDERERS
 // ═══════════════════════════════════════════════════════════════
 
-// ── Stock / FUT table ─────────────────────────────────────────
+function pvRenderSF(data) {
+    var isFut = pvInst === 'fut';
+    var html  = '';
+    var n     = 1;
 
-function renderSFTable(dataArr) {
-    const isFut = (curInstrument === 'fut');
-    let rows = '';
-    let rowNum = 1;
+    data.forEach(function(d) {
+        (d.signals || []).forEach(function(s, i) {
+            var rowCls = pvRowCls(s.bias, s.signal);
+            var zebra  = i % 2 === 0 ? 'tr-even' : 'tr-odd';
 
-    dataArr.forEach(function(d, si) {
-        const signals = d.signals || [];
-        const zebraBase = si % 2 === 0;
-
-        signals.forEach(function(s, idx) {
-            const rowCls = signalRowClass(s.bias, s.signal);
-            const zebra  = (idx % 2 === 0) ? 'row-even' : 'row-odd';
-
-            rows += '<tr class="' + rowCls + ' ' + zebra + '">'
-                + '<td class="c-num">' + (rowNum++) + '</td>'
+            html += '<tr class="' + rowCls + ' ' + zebra + '">'
+                + '<td class="c-num">'  + n++ + '</td>'
                 + '<td class="c-time">' + s.time + '</td>'
-                + '<td class="c-sym">'
-                    + escHtml(d.symbol)
+                + '<td class="c-sym">'  + esc(d.symbol)
                     + (d.expiry ? '<small>' + d.expiry + '</small>' : '')
                 + '</td>'
-                + '<td class="c-o sep-ohlc">₹' + n(s.open)  + '</td>'
-                + '<td class="c-h">₹'          + n(s.high)  + '</td>'
-                + '<td class="c-l">₹'          + n(s.low)   + '</td>'
-                + '<td class="c-c">₹'          + n(s.close) + '</td>'
-                + '<td class="c-vol">'          + nInt(s.volume) + '</td>'
-                + '<td class="c-pp sep-pivot">₹' + n(s.PP) + '</td>'
-                + '<td class="c-s1">₹'           + n(s.S1) + '</td>'
-                + '<td class="c-s2">₹'           + n(s.S2) + '</td>'
-                + '<td class="c-r1">₹'           + n(s.R1) + '</td>'
-                + '<td class="c-r2">₹'           + n(s.R2) + '</td>'
-                + '<td class="sep-signal">' + signalBadge(s.bias, s.signal, s.strength) + '</td>'
-                + '<td>' + matchPill(s.s1_match) + '</td>'
-                + '<td>' + matchPill(s.r1_match) + '</td>'
-                + '<td>' + ppCrossPill(s.pp_cross) + '</td>'
-                + (isFut
-                    ? '<td class="c-oi">' + nInt(s.oi) + '</td>'
-                    : '')
+                + '<td class="c-o sep-ohlc">₹' + fmt(s.open)  + '</td>'
+                + '<td class="c-h">₹'           + fmt(s.high)  + '</td>'
+                + '<td class="c-l">₹'           + fmt(s.low)   + '</td>'
+                + '<td class="c-c">₹'           + fmt(s.close) + '</td>'
+                + '<td class="c-vol">'           + fmtInt(s.volume) + '</td>'
+                + '<td class="c-pp  sep-pivot">₹' + fmt(s.PP) + '</td>'
+                + '<td class="c-s1">₹'            + fmt(s.S1) + '</td>'
+                + '<td class="c-s2">₹'            + fmt(s.S2) + '</td>'
+                + '<td class="c-r1">₹'            + fmt(s.R1) + '</td>'
+                + '<td class="c-r2">₹'            + fmt(s.R2) + '</td>'
+                + '<td class="sep-signal">'  + pvSigBadge(s.bias, s.signal, s.strength) + '</td>'
+                + '<td>'                     + pvMatchPill(s.s1_match) + '</td>'
+                + '<td>'                     + pvMatchPill(s.r1_match) + '</td>'
+                + (isFut ? '<td class="c-oi">' + fmtInt(s.oi) + '</td>' : '')
+                + '<td>'                     + pvPPCross(s.pp_cross) + '</td>'
                 + '</tr>';
         });
     });
 
-    if (!rows) rows = noDataHtml(isFut ? 18 : 17);
-    $('#pa-sf-tbody').html(rows);
+    pvHtml('pv-sf-body', html || pvEmptyHtml(17));
 }
 
-// ── Option table ──────────────────────────────────────────────
+function pvRenderOption(data) {
+    var html = '';
+    var n    = 1;
 
-function renderOptionTable(dataArr) {
-    let rows = '';
-    let rowNum = 1;
+    data.forEach(function(d) {
+        var ceMap = {};
+        var peMap = {};
+        (d.ce_signals || []).forEach(function(s){ ceMap[s.time] = s; });
+        (d.pe_signals || []).forEach(function(s){ peMap[s.time] = s; });
 
-    dataArr.forEach(function(d, si) {
-        const ceSignals = d.ce_signals || [];
-        const peSignals = d.pe_signals || [];
-        const atmStrike = d.atm_strike ? '₹' + nInt(d.atm_strike) : '—';
+        var times = Object.keys(Object.assign({}, ceMap, peMap)).sort();
+        times.forEach(function(t, i) {
+            var ce     = ceMap[t] || null;
+            var pe     = peMap[t] || null;
+            var zebra  = i % 2 === 0 ? 'tr-even' : 'tr-odd';
 
-        // Build a time-keyed map
-        const times = {};
-        ceSignals.forEach(s => { times[s.time] = times[s.time] || {}; times[s.time].ce = s; });
-        peSignals.forEach(s => { times[s.time] = times[s.time] || {}; times[s.time].pe = s; });
+            var ceCells = ce
+                ? '<td class="c-o sep-ce">₹' + fmt(ce.open)  + '</td>'
+                + '<td class="c-h">₹'          + fmt(ce.high)  + '</td>'
+                + '<td class="c-l">₹'          + fmt(ce.low)   + '</td>'
+                + '<td class="c-c">₹'          + fmt(ce.close) + '</td>'
+                + '<td class="c-pp">₹'         + fmt(ce.PP)    + '</td>'
+                + '<td class="c-s1">₹'         + fmt(ce.S1)    + '</td>'
+                + '<td class="c-r1">₹'         + fmt(ce.R1)    + '</td>'
+                + '<td>'                        + pvSigBadge(ce.bias, ce.signal, ce.strength) + '</td>'
+                : '<td colspan="8" class="sep-ce" style="color:#ccc;font-size:9px;">— no CE data —</td>';
 
-        Object.entries(times).forEach(function([time, row], idx) {
-            const ce = row.ce || null;
-            const pe = row.pe || null;
-            const zebra = idx % 2 === 0 ? 'row-even' : 'row-odd';
+            var peCells = pe
+                ? '<td class="c-o sep-pe">₹' + fmt(pe.open)  + '</td>'
+                + '<td class="c-h">₹'          + fmt(pe.high)  + '</td>'
+                + '<td class="c-l">₹'          + fmt(pe.low)   + '</td>'
+                + '<td class="c-c">₹'          + fmt(pe.close) + '</td>'
+                + '<td class="c-pp">₹'         + fmt(pe.PP)    + '</td>'
+                + '<td class="c-s1">₹'         + fmt(pe.S1)    + '</td>'
+                + '<td class="c-r1">₹'         + fmt(pe.R1)    + '</td>'
+                + '<td>'                        + pvSigBadge(pe.bias, pe.signal, pe.strength) + '</td>'
+                : '<td colspan="8" class="sep-pe" style="color:#ccc;font-size:9px;">— no PE data —</td>';
 
-            const ceCells = ce
-                ? '<td class="sep-ce c-o">₹'  + n(ce.open)  + '</td>'
-                + '<td class="c-h">₹'          + n(ce.high)  + '</td>'
-                + '<td class="c-l">₹'          + n(ce.low)   + '</td>'
-                + '<td class="c-c">₹'          + n(ce.close) + '</td>'
-                + '<td class="c-pp">₹'         + n(ce.PP)    + '</td>'
-                + '<td class="c-s1">₹'         + n(ce.S1)    + '</td>'
-                + '<td class="c-r1">₹'         + n(ce.R1)    + '</td>'
-                + '<td>' + signalBadge(ce.bias, ce.signal, ce.strength) + '</td>'
-                : '<td colspan="8" class="sep-ce" style="color:var(--text-3);font-size:9px;">— no CE data —</td>';
-
-            const peCells = pe
-                ? '<td class="sep-pe c-o">₹'  + n(pe.open)  + '</td>'
-                + '<td class="c-h">₹'          + n(pe.high)  + '</td>'
-                + '<td class="c-l">₹'          + n(pe.low)   + '</td>'
-                + '<td class="c-c">₹'          + n(pe.close) + '</td>'
-                + '<td class="c-pp">₹'         + n(pe.PP)    + '</td>'
-                + '<td class="c-s1">₹'         + n(pe.S1)    + '</td>'
-                + '<td class="c-r1">₹'         + n(pe.R1)    + '</td>'
-                + '<td>' + signalBadge(pe.bias, pe.signal, pe.strength) + '</td>'
-                : '<td colspan="8" class="sep-pe" style="color:var(--text-3);font-size:9px;">— no PE data —</td>';
-
-            rows += '<tr class="' + zebra + '">'
-                + '<td class="c-num">' + (rowNum++) + '</td>'
-                + '<td class="c-time">' + time + '</td>'
-                + '<td class="c-sym">' + escHtml(d.symbol)
-                    + (d.expiry ? '<small>' + d.expiry + '</small>' : '')
-                + '</td>'
-                + '<td><span class="atm-badge">₹' + nInt(d.atm_strike) + '</span></td>'
-                + ceCells
-                + peCells
+            html += '<tr class="' + zebra + '">'
+                + '<td class="c-num">'  + n++ + '</td>'
+                + '<td class="c-time">' + t + '</td>'
+                + '<td class="c-sym">'  + esc(d.symbol)
+                    + (d.expiry ? '<small>' + d.expiry + '</small>' : '') + '</td>'
+                + '<td class="c-atm">₹' + fmtInt(d.atm_strike) + '</td>'
+                + ceCells + peCells
                 + '</tr>';
         });
     });
 
-    if (!rows) rows = noDataHtml(20);
-    $('#pa-opt-tbody').html(rows);
+    pvHtml('pv-opt-body', html || pvEmptyHtml(20));
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  BADGE / CELL HELPERS
+//  BADGE HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-function signalBadge(bias, label, strength) {
-    if (!bias || bias === 'NEUTRAL') return '<span class="sig-neutral">&#9135; ' + (label || 'At Pivot') + '</span>';
+function pvSigBadge(bias, label, strength) {
+    if (!bias || bias === 'NEUTRAL')
+        return '<span class="sig sig-neutral">— ' + (label || 'At Pivot') + '</span>';
 
     if (bias === 'BULLISH') {
-        if (strength === 'STRONG')   return '<span class="sig-bullish-strong">&#129033; ' + label + '</span>';
-        if (strength === 'MODERATE') return '<span class="sig-bullish-mod">&#8679; '      + label + '</span>';
-        return                              '<span class="sig-bullish-weak">&#8593; '      + label + '</span>';
+        if (strength === 'STRONG')   return '<span class="sig sig-bull-strong">▲ ' + label + '</span>';
+        if (strength === 'MODERATE') return '<span class="sig sig-bull-mod">↑ '    + label + '</span>';
+        return                              '<span class="sig sig-bull-weak">↑ '    + label + '</span>';
     }
     if (bias === 'BEARISH') {
-        if (strength === 'STRONG')   return '<span class="sig-bearish-strong">&#129035; ' + label + '</span>';
-        if (strength === 'MODERATE') return '<span class="sig-bearish-mod">&#8681; '      + label + '</span>';
-        return                              '<span class="sig-bearish-weak">&#8595; '      + label + '</span>';
+        if (strength === 'STRONG')   return '<span class="sig sig-bear-strong">▼ ' + label + '</span>';
+        if (strength === 'MODERATE') return '<span class="sig sig-bear-mod">↓ '    + label + '</span>';
+        return                              '<span class="sig sig-bear-weak">↓ '    + label + '</span>';
     }
-    return '<span class="sig-neutral">—</span>';
+    return '<span class="sig sig-neutral">—</span>';
 }
 
-function signalRowClass(bias, label) {
+function pvRowCls(bias, label) {
     if (!label) return '';
-    if (label === 'Above R1' || label === 'Above R2') return 'row-breakout';
-    if (label === 'Below S1' || label === 'Below S2') return 'row-breakdown';
+    if (label === 'Above R1' || label === 'Above R2') return 'tr-breakout';
+    if (label === 'Below S1' || label === 'Below S2') return 'tr-breakdown';
     return '';
 }
 
-function matchPill(matched) {
-    if (matched === null || matched === undefined)
-        return '<span style="color:var(--text-3);font-size:9px;">—</span>';
-    return matched
-        ? '<span class="match-yes">&#10003; YES</span>'
-        : '<span class="match-no">&#215; NO</span>';
+function pvMatchPill(v) {
+    if (v === null || v === undefined) return '<span style="color:#ccc;font-size:9px;">—</span>';
+    return v ? '<span class="mp-yes">✓ YES</span>' : '<span class="mp-no">✗ NO</span>';
 }
 
-function ppCrossPill(cross) {
-    if (!cross) return '<span style="color:var(--text-3);font-size:9px;">—</span>';
-    return '<span class="pp-cross">&#9651; CROSS</span>';
+function pvPPCross(v) {
+    return v ? '<span class="mp-pp">⟷ CROSS</span>' : '<span style="color:#ccc;font-size:9px;">—</span>';
 }
 
 // ── Number formatters ─────────────────────────────────────────
 
-function n(v) {
+function fmt(v) {
     if (v == null || v === '') return '—';
-    return Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(v).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
 }
-function nInt(v) {
+function fmtInt(v) {
     if (v == null) return '—';
-    return Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    return Number(v).toLocaleString('en-IN', { maximumFractionDigits:0 });
 }
-function escHtml(s) {
-    if (!s) return '—';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Loading / empty HTML ──────────────────────────────────────
+// ── Empty HTML ────────────────────────────────────────────────
 
-function loadingHtml(cols, msg) {
+function pvEmptyHtml(cols, msg) {
     return '<tr><td colspan="' + cols + '">'
-        + '<div class="pa-loading"><div class="pa-spinner"></div>'
-        + '<div class="pa-loading-text">' + (msg || 'Loading&hellip;') + '</div>'
-        + '</div></td></tr>';
-}
-function noDataHtml(cols, msg) {
-    return '<tr><td colspan="' + cols + '">'
-        + '<div class="pa-no-data">'
-        + '<i class="fas fa-chart-area"></i>'
-        + (msg || 'No pivot data found for the selected date / symbol.')
+        + '<div class="pv-empty">'
+        + '<i class="las la-chart-area"></i>'
+        + (msg || 'No pivot data found for this date / symbol.')
         + '</div></td></tr>';
 }
 </script>

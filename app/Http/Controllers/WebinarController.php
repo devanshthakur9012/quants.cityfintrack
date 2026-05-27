@@ -1,12 +1,12 @@
 <?php
 // FILE: app/Http/Controllers/WebinarController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\CoursePaymentGateway;
 use App\Models\Webinar;
 use App\Models\WebinarEnrollment;
 use App\Models\WebinarOrder;
+use App\Models\WebinarPageCms;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -28,34 +28,36 @@ class WebinarController extends Controller
     {
         $pageTitle = 'Webinars';
 
+        // ── CMS data for hero + filter options ──────────────────────────────
+        $cms = WebinarPageCms::getData();
+
         $heroBanner = [
-            'title'        => 'Webinar',
-            'description'  => 'Our webinar series is designed to bring you cutting-edge insights, expert perspectives, and actionable tips on a wide range of Futures & Options related topics. Whether you\'re a seasoned professional looking to stay ahead of industry trends or a curious learner eager to explore new subjects, our webinars offer something for everyone.',
-            'illustration' => 'https://img.freepik.com/free-vector/webinar-concept-illustration_114360-4798.jpg?w=400',
+            'title'            => $cms->hero_title ?? 'Webinar',
+            'description'      => $cms->hero_description
+                ?? "Our webinar series is designed to bring you cutting-edge insights, expert perspectives, and actionable tips on a wide range of Futures & Options related topics.",
+            'illustration'     => $cms->hero_illustration_url
+                ?? 'https://img.freepik.com/free-vector/webinar-concept-illustration_114360-4798.jpg?w=400',
         ];
 
-        $languages   = ['Hindi', 'English', 'Gujarati'];
-        $proficiency = ['Beginner', 'Intermediate', 'Advanced'];
+        $languages   = $cms->languages_list;
+        $proficiency = $cms->proficiency_list;
 
-        // Filters
+        // ── Filters ─────────────────────────────────────────────────────────
         $filterLang   = $request->input('language') ?: null;
         $filterType   = $request->input('type')     ?: null;
         $filterLevel  = $request->input('level')    ?: null;
         $filterSearch = trim($request->input('search', '')) ?: null;
 
-        // ── Build enrolled webinar ID set for current user (ONE query) ────────
-        // We pass this set to the blade so it can check enrollment
-        // without calling any model method inside the loop.
+        // ── Enrolled IDs for current user (one query) ───────────────────────
         $enrolledWebinarIds = collect();
         $authUser           = Auth::guard('web')->user();
-
         if ($authUser) {
             $enrolledWebinarIds = WebinarEnrollment::where('user_id', $authUser->id)
                 ->where('status', 1)
                 ->pluck('webinar_id');
         }
 
-        // ── UPCOMING & LIVE ───────────────────────────────────────────────────
+        // ── UPCOMING & LIVE ─────────────────────────────────────────────────
         $upcomingWebinars = Webinar::whereIn('status', ['upcoming', 'live'])
             ->when($filterLang,   fn($q) => $q->where('language', $filterLang))
             ->when($filterType,   fn($q) => $q->where('type', $filterType))
@@ -66,7 +68,7 @@ class WebinarController extends Controller
             ->orderBy('webinar_date')
             ->get();
 
-        // ── PAST ──────────────────────────────────────────────────────────────
+        // ── PAST ────────────────────────────────────────────────────────────
         $pastWebinars = Webinar::where('status', 'past')
             ->when($filterLang,   fn($q) => $q->where('language', $filterLang))
             ->when($filterType,   fn($q) => $q->where('type', $filterType))
@@ -77,14 +79,8 @@ class WebinarController extends Controller
             ->get();
 
         return view($this->activeTemplate . 'webinars', compact(
-            'pageTitle',
-            'heroBanner',
-            'languages',
-            'proficiency',
-            'upcomingWebinars',
-            'pastWebinars',
-            'enrolledWebinarIds',  // ← pass to blade for zero-query enrollment checks
-            'authUser'
+            'pageTitle', 'heroBanner', 'languages', 'proficiency',
+            'upcomingWebinars', 'pastWebinars', 'enrolledWebinarIds', 'authUser'
         ));
     }
 
@@ -106,7 +102,6 @@ class WebinarController extends Controller
         $user       = Auth::guard('web')->user();
 
         if ($user) {
-            // Single DB query — no loop, safe here
             $isEnrolled = WebinarEnrollment::where('user_id', $user->id)
                 ->where('webinar_id', $webinar->id)
                 ->where('status', 1)
@@ -138,45 +133,22 @@ class WebinarController extends Controller
         if (!Auth::guard('web')->check()) {
             return response()->json(['redirect' => route('user.login')], 401);
         }
-
         $user = Auth::guard('web')->user();
-
-        // Check enrollment via direct query (safe — single call)
         $alreadyEnrolled = WebinarEnrollment::where('user_id', $user->id)
-            ->where('webinar_id', $webinar->id)
-            ->where('status', 1)
-            ->exists();
-
+            ->where('webinar_id', $webinar->id)->where('status', 1)->exists();
         if ($alreadyEnrolled) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are already registered for this webinar.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'You are already registered for this webinar.'], 422);
         }
-
-        // Check seats
         if ($webinar->total_seats !== null && $webinar->seats_left <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, this webinar is full.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Sorry, this webinar is full.'], 422);
         }
-
-        // Free — enroll directly
         if ($webinar->type === 'free') {
             return $this->enrollFree($user, $webinar);
         }
-
-        // Paid — Razorpay
         $gateway = CoursePaymentGateway::where('status', 1)->first();
-
         if (!$gateway) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment gateway not configured. Please contact support.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Payment gateway not configured.'], 500);
         }
-
         try {
             $order = WebinarOrder::create([
                 'order_number' => 'WEB-' . strtoupper(substr(uniqid(), -6)) . '-' . time(),
@@ -187,22 +159,14 @@ class WebinarController extends Controller
                 'currency'     => 'INR',
                 'status'       => 'pending',
             ]);
-
             $razorpay = $this->getRazorpayInstance($gateway);
-
-            $rpOrder = $razorpay->order->create([
+            $rpOrder  = $razorpay->order->create([
                 'receipt'  => $order->order_number,
                 'amount'   => (int) ($webinar->price * 100),
                 'currency' => 'INR',
-                'notes'    => [
-                    'webinar_id' => $webinar->id,
-                    'user_id'    => $user->id,
-                    'order_id'   => $order->id,
-                ],
+                'notes'    => ['webinar_id' => $webinar->id, 'user_id' => $user->id, 'order_id' => $order->id],
             ]);
-
             $order->update(['gateway_order_id' => $rpOrder->id]);
-
             return response()->json([
                 'success'      => true,
                 'key'          => $gateway->getCredential('key_id'),
@@ -216,13 +180,9 @@ class WebinarController extends Controller
                 'user_phone'   => $user->mobile ?? '',
                 'callback_url' => route('webinars.payment.verify'),
             ]);
-
         } catch (\Exception $e) {
             Log::error('Webinar Razorpay order failed: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not initiate payment. Please try again.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Could not initiate payment.'], 500);
         }
     }
 
@@ -237,33 +197,22 @@ class WebinarController extends Controller
             'razorpay_signature'  => 'required|string',
             'our_order_id'        => 'required|integer',
         ]);
-
         $order = WebinarOrder::with('webinar')->findOrFail($request->our_order_id);
         $user  = Auth::guard('web')->user();
-
         if ($order->user_id !== optional($user)->id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
-
         if ($order->status === 'paid') {
-            return response()->json([
-                'success'  => true,
-                'message'  => 'Already paid.',
-                'redirect' => route('webinars.detail', $order->webinar->slug),
-            ]);
+            return response()->json(['success' => true, 'message' => 'Already paid.', 'redirect' => route('webinars.detail', $order->webinar->slug)]);
         }
-
-        $gateway = CoursePaymentGateway::where('alias', $order->gateway)->first();
-
+        $gateway  = CoursePaymentGateway::where('alias', $order->gateway)->first();
         try {
             $razorpay = $this->getRazorpayInstance($gateway);
-
             $razorpay->utility->verifyPaymentSignature([
                 'razorpay_order_id'   => $request->razorpay_order_id,
                 'razorpay_payment_id' => $request->razorpay_payment_id,
                 'razorpay_signature'  => $request->razorpay_signature,
             ]);
-
             $order->update([
                 'status'             => 'paid',
                 'gateway_payment_id' => $request->razorpay_payment_id,
@@ -271,83 +220,43 @@ class WebinarController extends Controller
                 'gateway_response'   => json_encode($request->all()),
                 'paid_at'            => now(),
             ]);
-
             WebinarEnrollment::updateOrCreate(
                 ['user_id' => $user->id, 'webinar_id' => $order->webinar_id],
-                [
-                    'webinar_order_id' => $order->id,
-                    'access_type'      => 'paid',
-                    'enrolled_at'      => now(),
-                    'status'           => 1,
-                ]
+                ['webinar_order_id' => $order->id, 'access_type' => 'paid', 'enrolled_at' => now(), 'status' => 1]
             );
-
             $order->webinar->increment('total_enrolled');
-
             return response()->json([
                 'success'  => true,
                 'message'  => 'Registration successful! You are now enrolled.',
                 'redirect' => route('webinars.detail', $order->webinar->slug),
             ]);
-
         } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
-            $order->update([
-                'status'           => 'failed',
-                'gateway_response' => json_encode($request->all()),
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment verification failed. Contact support with payment ID: ' . $request->razorpay_payment_id,
-            ], 422);
-
+            $order->update(['status' => 'failed', 'gateway_response' => json_encode($request->all())]);
+            return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 422);
         } catch (\Exception $e) {
-            Log::error('Webinar payment verify exception: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong. Please contact support.',
-            ], 500);
+            Log::error('Webinar payment verify: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 500);
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
     private function enrollFree($user, Webinar $webinar)
     {
         if ($webinar->total_seats !== null && $webinar->seats_left <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, this webinar is full.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Sorry, this webinar is full.'], 422);
         }
-
         WebinarEnrollment::updateOrCreate(
             ['user_id' => $user->id, 'webinar_id' => $webinar->id],
-            [
-                'access_type' => 'free',
-                'enrolled_at' => now(),
-                'status'      => 1,
-            ]
+            ['access_type' => 'free', 'enrolled_at' => now(), 'status' => 1]
         );
-
         $webinar->increment('total_enrolled');
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Registered successfully!',
-            'redirect' => route('webinars.detail', $webinar->slug),
-        ]);
+        return response()->json(['success' => true, 'message' => 'Registered successfully!', 'redirect' => route('webinars.detail', $webinar->slug)]);
     }
 
     private function getRazorpayInstance(CoursePaymentGateway $gateway): RazorpayApi
     {
         $keyId     = $gateway->getCredential('key_id');
         $keySecret = $gateway->getCredential('key_secret');
-
-        if (!$keyId || !$keySecret) {
-            throw new \Exception('Razorpay credentials not configured properly.');
-        }
-
+        if (!$keyId || !$keySecret) throw new \Exception('Razorpay credentials not configured.');
         return new RazorpayApi($keyId, $keySecret);
     }
 }
