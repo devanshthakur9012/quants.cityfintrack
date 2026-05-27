@@ -34,8 +34,6 @@ class BrokerApi extends Model
     ];
 
     protected $hidden = [
-        'account_password',
-        'api_secret_key',
         'access_token'
     ];
 
