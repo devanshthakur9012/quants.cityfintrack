@@ -86,7 +86,7 @@ return new class extends Migration
         });
  
         // ── ABOUT PAGE — WHO WE ARE ───────────────────────────────────────
-        // (already handled by AboutWhoweare model, but add pillars JSON column if missing)
+        // (already handled by AboutWhoWeAre model, but add pillars JSON column if missing)
         // This table may already exist; migration is idempotent via hasColumn checks.
  
         // ── GLOBAL SITE SETTINGS ─────────────────────────────────────────

@@ -10,7 +10,7 @@ use App\Models\AboutFounderVision;
 use App\Models\AboutHero;
 use App\Models\AboutMission;
 use App\Models\AboutOffice;
-use App\Models\AboutWhoweare;
+use App\Models\AboutWhoWeAre;
 use App\Models\AboutWorkspace;
 use App\Models\AboutWorkspaceSlide;
 use Illuminate\Http\Request;
@@ -54,7 +54,7 @@ class AboutPageCmsController extends Controller
     public function whoWeAre()
     {
         $pageTitle = 'Who We Are';
-        $data = AboutWhoweare::first() ?? new AboutWhoweare();
+        $data = AboutWhoWeAre::first() ?? new AboutWhoWeAre();
         return view('admin.cms.about.who_we_are', compact('pageTitle', 'data'));
     }
 
@@ -68,7 +68,7 @@ class AboutPageCmsController extends Controller
             if ($label) $pillars[] = ['icon' => trim($icon), 'label' => $label];
         }
         $validated['pillars'] = $pillars;
-        AboutWhoweare::updateOrCreate(['id' => 1], $validated);
+        AboutWhoWeAre::updateOrCreate(['id' => 1], $validated);
         $notify[] = ['success', 'Who We Are updated'];
         return back()->withNotify($notify);
     }

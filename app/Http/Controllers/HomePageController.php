@@ -15,7 +15,7 @@ use App\Models\HomeLearningTab;
 use App\Models\HomeTestimonial;
 // ── About Models ─────────────────────────────────────────────────────────────
 use App\Models\AboutHero;
-use App\Models\AboutWhoweare;
+use App\Models\AboutWhoWeAre;
 use App\Models\AboutMission;
 use App\Models\AboutFounder;
 use App\Models\AboutWorkspace;
@@ -252,7 +252,7 @@ class HomePageController extends Controller
             'stat4_label' => $heroDb->stat4_label ?? 'Students Trained',
         ];
 
-        $whoDb   = AboutWhoweare::first() ?? "";
+        $whoDb   = AboutWhoWeAre::first() ?? "";
         $pillars = [];
         if ($whoDb && !empty($whoDb->pillars)) {
             $decoded = is_array($whoDb->pillars) ? $whoDb->pillars : json_decode($whoDb->pillars, true);
