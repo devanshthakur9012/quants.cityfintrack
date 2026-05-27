@@ -252,7 +252,7 @@ class HomePageController extends Controller
             'stat4_label' => $heroDb->stat4_label ?? 'Students Trained',
         ];
 
-        $whoDb   = AboutWhoweare::first();
+        $whoDb   = AboutWhoweare::first() ?? "";
         $pillars = [];
         if ($whoDb && !empty($whoDb->pillars)) {
             $decoded = is_array($whoDb->pillars) ? $whoDb->pillars : json_decode($whoDb->pillars, true);
