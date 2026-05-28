@@ -31,7 +31,7 @@ use Carbon\Carbon;
  */
 class StrataOptionsFairValueController extends Controller
 {
-    private const TIMEFRAMES = ['15min', '30min', '1hr'];
+    private const TF = '15min';
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Page
@@ -40,7 +40,7 @@ class StrataOptionsFairValueController extends Controller
     public function index()
     {
         $pageTitle = 'Strata — Options Fair Value';
-        return view($this->activeTemplate . 'user.strata-options-fv.index', compact('pageTitle'));
+        return view(activeTemplate() . 'user.strata-options-fv.index', compact('pageTitle'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -49,22 +49,21 @@ class StrataOptionsFairValueController extends Controller
 
     public function getSymbols(Request $request)
     {
-        $timeframe = $this->resolveTimeframe($request);
-        $config    = $this->getActiveConfig($timeframe);
+        $config = $this->getActiveConfig();
 
         if (!$config) {
             return response()->json([
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => "No active Analysis Config for [{$timeframe}].",
+                'message'   => 'No active Analysis Config for [' . self::TF . '].',
             ]);
         }
 
         return response()->json([
             'success'   => true,
             'symbols'   => $this->getConfigSymbols($config->id),
-            'timeframe' => $timeframe,
+            'timeframe' => self::TF,
         ]);
     }
 
@@ -75,18 +74,17 @@ class StrataOptionsFairValueController extends Controller
     public function analyze(Request $request)
     {
         try {
-            $timeframe    = $this->resolveTimeframe($request);
             $strikeFilter = $request->get('strike_filter', 'ATM');
             $sortBy       = $request->get('sort_by', 'symbol');
             $symbolParam  = $request->get('symbol');
             $dateFilter   = $request->get('date');
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active Analysis Config for [{$timeframe}].",
+                    'message'   => 'No active Analysis Config for [' . self::TF . '].',
                 ]);
             }
 
@@ -95,8 +93,8 @@ class StrataOptionsFairValueController extends Controller
                 return response()->json(['success' => false, 'message' => 'No symbols configured.']);
             }
 
-            $optTable = 'cp_option_ohlc_' . $timeframe;
-            $futTable = 'cp_fut_ohlc_'    . $timeframe;
+            $optTable = 'cp_option_ohlc_15min';
+            $futTable = 'cp_fut_ohlc_15min';
 
             // ── Resolve trade date ────────────────────────────────────────
             if ($dateFilter) {
@@ -167,7 +165,7 @@ class StrataOptionsFairValueController extends Controller
                     'is_today'      => $isToday,
                     'mode'          => 'single',
                     'strike_filter' => $strikeFilter,
-                    'timeframe'     => $timeframe,
+                    'timeframe'     => self::TF,
                     'total_rows'    => count($rows),
                     'summary'       => $this->buildSummary($rows),
                     'rows'          => $rows,
@@ -202,7 +200,7 @@ class StrataOptionsFairValueController extends Controller
                 'is_today'      => $isToday,
                 'mode'          => 'all',
                 'strike_filter' => $strikeFilter,
-                'timeframe'     => $timeframe,
+                'timeframe'     => self::TF,
                 'total_rows'    => count($rows),
                 'summary'       => $this->buildSummary($rows),
                 'rows'          => $rows,
@@ -567,9 +565,12 @@ class StrataOptionsFairValueController extends Controller
         return $rows;
     }
 
-    private function getActiveConfig(string $timeframe): ?object
+    private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', $timeframe)->where('is_active', 1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
@@ -578,11 +579,5 @@ class StrataOptionsFairValueController extends Controller
             ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
             ->pluck('symbol_lists.symbol')->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min')));
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
     }
 }

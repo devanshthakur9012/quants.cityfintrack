@@ -13,36 +13,19 @@ use Carbon\Carbon;
  * PrimeFlow — Multi-Symbol Option Scanner
  *
  * Runs the Smart Entry Engine across ALL config-scoped symbols for a given date.
- * Data source : cp_option_ohlc_{timeframe} + cp_fut_ohlc_{timeframe}
+ * Data source : cp_option_ohlc_15min + cp_fut_ohlc_15min
  * Config scope: analysis_configs + analysis_config_symbols
  *
  * ── Threshold fixes (vs previous version) ────────────────────────────────────
  *
  * FIX 1 — PREMIUM_EXP_MIN: 0.40 → 0.10
- *   A 40% ATM premium expansion in a single 15-min candle is near-impossible
- *   even on expiry days. 10% is realistic for active sessions.
- *
- * FIX 2 — OI Build: was AND of 3 conditions (OI change + premium + volume all
- *   simultaneously). Changed to: OI increasing + premium rising (volume optional).
+ * FIX 2 — OI Build: OI increasing + premium rising (volume optional)
  *   OI_CHANGE_MIN: 0.05 → 0.02 (2%), OI_PREMIUM_MIN: 0.25 → 0.05 (5%)
- *
- * FIX 3 — VOLUME_SPIKE_MIN: 1.5 → 1.3 (vol spike for OI build gate)
- *   OI build no longer requires volume spike. Volume spike is its own signal.
- *
+ * FIX 3 — VOLUME_SPIKE_MIN: 1.5 → 1.3
  * FIX 4 — GAMMA_THRESHOLD: 0.35 → 0.12
- *   35% simultaneous move on ATM and ATM+1 in one candle requires an extreme
- *   market event. 12% is a strong gamma squeeze on 15-min data.
- *
  * FIX 5 — FUTURES_FLAT_MAX: 0.003 → 0.008
- *   Premium expansion was gated by futures being "flat" (<0.3%). During
- *   genuine premium expansion the futures CAN move a little. 0.8% is safer.
- *
  * FIX 6 — SCORE_THRESHOLD: 8 → 6
- *   With 7 signals and max 17, a score of 8 requires at least 3 heavy signals
- *   firing together. 6 (≈35% of max) is the professional industry standard
- *   for "meaningful confluence" without being noisy.
- *
- * FIX 7 — Default timeframe: 30min → 15min
+ * FIX 7 — Timeframe hardcoded to 15min
  *
  * Signal engine (7 components, max score 17):
  *   Premium Expansion  +3 — ATM option premium rising while futures reasonably flat
@@ -57,16 +40,20 @@ use Carbon\Carbon;
  */
 class PrimeFlowScannerController extends Controller
 {
-    private const TIMEFRAMES = ['15min', '30min', '1hr'];
+    // Hardcoded to 15min — no timeframe switching
+    private const TF = '15min';
 
-    // ── Signal thresholds (fixed for intraday realism) ─────────────────────
-    private const PREMIUM_EXP_MIN  = 0.10;   // FIX1: was 0.40 — 10% premium expansion
-    private const FUTURES_FLAT_MAX = 0.008;  // FIX5: was 0.003 — futures flat = <0.8%
-    private const OI_CHANGE_MIN    = 0.02;   // FIX2: was 0.05 — 2% OI increase
-    private const OI_PREMIUM_MIN   = 0.05;   // FIX2: was 0.25 — 5% premium rise with OI
-    private const VOLUME_SPIKE_MIN = 1.3;    // FIX3: was 1.5 — 1.3× previous slot volume
-    private const FUTURES_MOMENTUM = 0.0025; // unchanged — 0.25% futures move
-    private const GAMMA_THRESHOLD  = 0.12;   // FIX4: was 0.35 — 12% move on ATM + ATM+1
+    private const OPT_TABLE = 'cp_option_ohlc_15min';
+    private const FUT_TABLE = 'cp_fut_ohlc_15min';
+
+    // ── Signal thresholds ──────────────────────────────────────────────────
+    private const PREMIUM_EXP_MIN  = 0.10;
+    private const FUTURES_FLAT_MAX = 0.008;
+    private const OI_CHANGE_MIN    = 0.02;
+    private const OI_PREMIUM_MIN   = 0.05;
+    private const VOLUME_SPIKE_MIN = 1.3;
+    private const FUTURES_MOMENTUM = 0.0025;
+    private const GAMMA_THRESHOLD  = 0.12;
 
     // ── Weights (max = 17) ─────────────────────────────────────────────────
     private const W_PREMIUM  = 3;
@@ -79,7 +66,7 @@ class PrimeFlowScannerController extends Controller
     private const SCORE_MAX  = 17;
 
     // ── Trade rules ────────────────────────────────────────────────────────
-    private const SCORE_THRESHOLD = 6;      // FIX6: was 8 — 6/17 = ~35% confluence
+    private const SCORE_THRESHOLD = 6;
     private const ENTRY_START     = '10:30';
     private const ENTRY_END       = '14:30';
     private const TARGET_MULT     = 3.0;
@@ -91,9 +78,9 @@ class PrimeFlowScannerController extends Controller
 
     public function index()
     {
-        $pageTitle = 'PrimeFlow — Option Scanner';
+        $pageTitle   = 'PrimeFlow — Option Scanner';
         $thresh_hold = self::SCORE_THRESHOLD;
-        return view($this->activeTemplate . 'user.primeflow-scanner.index', compact('pageTitle','thresh_hold'));
+        return view(activeTemplate() . 'user.primeflow-scanner.index', compact('pageTitle', 'thresh_hold'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -103,17 +90,16 @@ class PrimeFlowScannerController extends Controller
     public function getData(Request $request)
     {
         try {
-            $timeframe = $this->resolveTimeframe($request);
-            $date      = $request->get('date')
+            $date = $request->get('date')
                 ? Carbon::parse($request->get('date'))->toDateString()
                 : Carbon::today()->toDateString();
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active Analysis Config for [{$timeframe}].",
+                    'message'   => 'No active Analysis Config for [15min]. Go to Admin → Analysis Config to create one.',
                 ]);
             }
 
@@ -122,10 +108,7 @@ class PrimeFlowScannerController extends Controller
                 return response()->json(['success' => false, 'message' => 'No symbols configured.']);
             }
 
-            $optTable = 'cp_option_ohlc_' . $timeframe;
-            $futTable = 'cp_fut_ohlc_'    . $timeframe;
-
-            $hasData = DB::table($optTable)
+            $hasData = DB::table(self::OPT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->whereDate('trade_date', $date)
                 ->exists();
@@ -141,7 +124,7 @@ class PrimeFlowScannerController extends Controller
 
             foreach ($symbols as $symbol) {
                 try {
-                    $results[] = $this->scanSymbol($symbol, $date, $config->id, $optTable, $futTable);
+                    $results[] = $this->scanSymbol($symbol, $date, $config->id);
                 } catch (\Throwable $e) {
                     Log::warning("PrimeFlow scan failed for {$symbol}: " . $e->getMessage());
                     $results[] = $this->errorRow($symbol, $e->getMessage());
@@ -160,7 +143,7 @@ class PrimeFlowScannerController extends Controller
                 'success'       => true,
                 'date'          => $date,
                 'is_today'      => ($date === Carbon::today()->toDateString()),
-                'timeframe'     => $timeframe,
+                'timeframe'     => self::TF,
                 'total_symbols' => count($symbols),
                 'trade_count'   => count(array_filter($results, fn($r) => in_array($r['signal'], ['BUY_CALL', 'BUY_PUT']))),
                 'results'       => $results,
@@ -177,11 +160,11 @@ class PrimeFlowScannerController extends Controller
     //  Scan one symbol
     // ─────────────────────────────────────────────────────────────────────────
 
-    private function scanSymbol(string $symbol, string $date, int $configId, string $optTable, string $futTable): array
+    private function scanSymbol(string $symbol, string $date, int $configId): array
     {
         $base = $this->baseRow($symbol);
 
-        $futRows = DB::table($futTable)
+        $futRows = DB::table(self::FUT_TABLE)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
             ->whereDate('trade_date', $date)
@@ -190,7 +173,7 @@ class PrimeFlowScannerController extends Controller
             ->select(['interval_time', 'open', 'high', 'low', 'close', 'volume', 'oi'])
             ->get();
 
-        $optRows = DB::table($optTable)
+        $optRows = DB::table(self::OPT_TABLE)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
             ->whereIn('instrument_type', ['CE', 'PE'])
@@ -366,7 +349,7 @@ class PrimeFlowScannerController extends Controller
 
             $inWindow = ($slot >= self::ENTRY_START && $slot <= self::ENTRY_END);
 
-            $signals   = $this->computeSignals(
+            $signals = $this->computeSignals(
                 $currCe, $prevCe, $prevPrevCe,
                 $currPe, $prevPe, $prevPrevPe,
                 $prevFut, $currFut,
@@ -421,7 +404,7 @@ class PrimeFlowScannerController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Signal computations (relaxed thresholds)
+    //  Signal computations
     // ─────────────────────────────────────────────────────────────────────────
 
     private function computeSignals(
@@ -451,7 +434,6 @@ class PrimeFlowScannerController extends Controller
         }
     }
 
-    // FIX 1+5: Premium expansion — 10% threshold, futures flat = <0.8%
     private function premiumExpansion(array $prev, array $curr, ?float $prevFut, ?float $currFut): array
     {
         $atm = $curr['ATM'] ?? null; $patm = $prev['ATM'] ?? null;
@@ -464,7 +446,6 @@ class PrimeFlowScannerController extends Controller
         ];
     }
 
-    // FIX 2: OI build — only needs OI increase + premium rising (no volume gate here)
     private function oiBuild(array $prev, array $curr): array
     {
         $atm = $curr['ATM'] ?? null; $patm = $prev['ATM'] ?? null;
@@ -477,7 +458,6 @@ class PrimeFlowScannerController extends Controller
         ];
     }
 
-    // FIX 3: Volume spike — 1.3× (was 1.5×)
     private function volSpike(array $prev, array $curr): array
     {
         $atm = $curr['ATM'] ?? null; $patm = $prev['ATM'] ?? null;
@@ -503,7 +483,6 @@ class PrimeFlowScannerController extends Controller
         ];
     }
 
-    // FIX 4: Gamma squeeze — 12% threshold (was 35%)
     private function gammaSqueeze(array $prevCe, array $currCe, array $prevPe, array $currPe): array
     {
         $ce = $pe = false;
@@ -641,9 +620,12 @@ class PrimeFlowScannerController extends Controller
         return array_merge($this->baseRow($symbol), ['signal' => 'ERROR', 'error' => $msg]);
     }
 
-    private function getActiveConfig(string $timeframe): ?object
+    private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', $timeframe)->where('is_active', 1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
@@ -652,11 +634,5 @@ class PrimeFlowScannerController extends Controller
             ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
             ->pluck('symbol_lists.symbol')->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min'))); // FIX7: default 15min
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
     }
 }

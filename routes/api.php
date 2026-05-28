@@ -19,7 +19,6 @@ Route::prefix('zerodha')->group(function () {
 
     Route::post('/save-token', [ZerodhaAutoLoginController::class, 'saveToken']);
     Route::get('/brokers', [ZerodhaAutoLoginController::class, 'brokers']);
-
 });
 
 Route::namespace('Api')->name('api.')->group(function(){

@@ -1,247 +1,320 @@
-@extends($activeTemplate . 'layouts.master')
-
+{{-- FILE: resources/views/themes/{active_theme}/user/strata-options-fv/index.blade.php --}}
+@extends($activeTemplate.'layouts.frontend')
 @section('content')
-@push('style')
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
-:root {
-    --navy-900:#0a0f1e; --navy-800:#0d1428; --navy-700:#111b35;
-    --border:rgba(255,255,255,0.07);
-    --ce:#38bdf8; --pe:#4ade80; --iv:#fbbf24; --sig:#a78bfa;
-    --over:#f87171; --under:#4ade80;
-    --text-1:rgba(255,255,255,0.92); --text-2:rgba(255,255,255,0.55); --text-3:rgba(255,255,255,0.25);
-    --mono:'JetBrains Mono',monospace; --display:'Rajdhani',sans-serif;
-}
+/* ── BASE ── */
+body { background:#f7f8fc; }
+.sfv-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
+.sfv-wrap * { box-sizing:border-box; }
+.sfv-wrap h1,.sfv-wrap h2,.sfv-wrap h3,.sfv-wrap h4 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
+.mono { font-family:'JetBrains Mono',monospace; }
+@keyframes sfvFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.sfv-anim { animation:sfvFadeUp .5s ease both; }
+@keyframes sfvSpin { to{ transform:rotate(360deg); } }
 
-.ios-header {
-    background:linear-gradient(135deg,#0d1428 0%,#1a1035 50%,#0d1428 100%);
-    border:1px solid var(--border); border-bottom:2px solid var(--sig);
-    border-radius:14px; padding:20px 28px; margin-bottom:18px;
-    position:relative; overflow:hidden;
+/* ── HERO ── */
+.sfv-hero {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:32px 48px; display:flex; align-items:center;
+    justify-content:space-between; gap:24px;
 }
-.ios-header::before {
-    content:'STRATA'; position:absolute; right:24px; top:50%; transform:translateY(-50%);
-    font-family:var(--display); font-size:72px; font-weight:700;
-    color:rgba(167,139,250,0.05); letter-spacing:6px; pointer-events:none; user-select:none;
+.sfv-hero-left h1 {
+    font-size:clamp(26px,3.5vw,42px); font-weight:700;
+    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.ios-title { font-family:var(--display); font-size:22px; font-weight:700; color:var(--text-1); margin:0; }
-.tag {
-    font-size:10px; font-weight:700; padding:2px 9px; border-radius:4px;
-    margin-left:6px; vertical-align:middle; letter-spacing:1.5px;
-    background:rgba(167,139,250,0.12); border:1px solid rgba(167,139,250,0.3); color:var(--sig);
+.sfv-hero-left h1 span { color:#F5A623; }
+.sfv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:580px; }
+.sfv-hero-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.sfv-pill {
+    display:inline-block; padding:3px 10px; border-radius:4px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
 }
-.tag-ce { background:rgba(56,189,248,0.12); border-color:rgba(56,189,248,0.3); color:var(--ce); }
-.tag-pe { background:rgba(74,222,128,0.12); border-color:rgba(74,222,128,0.3); color:var(--pe); }
-.ios-sub { font-family:var(--mono); font-size:11px; color:var(--text-2); margin:6px 0 0; }
-
-/* Controls */
-.ios-controls {
-    background:var(--navy-800); border:1px solid var(--border);
-    border-radius:12px; padding:14px 20px; margin-bottom:16px;
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-}
-.ctrl-label { font-family:var(--display); font-size:10px; font-weight:700; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; }
-.ctrl-sep   { width:1px; height:28px; background:var(--border); flex-shrink:0; }
-.tf-group { display:flex; gap:4px; }
-.tf-btn {
-    font-family:var(--display); font-size:12px; font-weight:700;
-    padding:6px 15px; border-radius:7px; border:1px solid var(--border);
-    background:transparent; color:var(--text-2); cursor:pointer; transition:.15s;
-}
-.tf-btn:hover  { border-color:rgba(167,139,250,0.4); color:var(--sig); }
-.tf-btn.active { background:rgba(167,139,250,0.15); border-color:var(--sig); color:var(--sig); }
-.ios-date {
-    background:rgba(255,255,255,0.06); border:1px solid var(--border);
-    border-radius:8px; color:var(--text-1); padding:5px 10px;
-    font-family:var(--mono); font-size:11px; outline:none;
-}
-.ios-date::-webkit-calendar-picker-indicator { filter:invert(.55); cursor:pointer; }
-.dnav {
-    background:rgba(255,255,255,0.06); border:1px solid var(--border);
-    color:var(--text-1); border-radius:7px; width:26px; height:26px;
+.sfv-pill-bs   { background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
+.sfv-pill-over { background:rgba(185,28,28,.08);  color:#b91c1c; border:1px solid rgba(185,28,28,.2); }
+.sfv-pill-und  { background:rgba(4,120,87,.08);   color:#047857; border:1px solid rgba(4,120,87,.25); }
+.sfv-pill-tol  { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
+.sfv-hero-icon {
+    width:80px; height:80px; border-radius:16px;
+    background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; font-size:13px; font-weight:700; transition:.12s;
+    font-size:36px; color:#F5A623; flex-shrink:0;
 }
-.dnav:hover { background:rgba(255,255,255,0.1); }
-.dnav.today-btn { width:auto; padding:0 10px; font-family:var(--display); font-size:9px; }
-.sp-wrap { display:flex; gap:3px; }
-.sp {
-    padding:4px 12px; border-radius:20px; font-family:var(--display); font-size:10px; font-weight:700;
-    cursor:pointer; border:1px solid var(--border); background:var(--navy-800); color:var(--text-2); transition:.15s;
-}
-.sp:hover  { border-color:var(--iv); color:var(--iv); }
-.sp.active { background:rgba(251,191,36,0.15); border-color:var(--iv); color:var(--iv); }
-.ios-select {
-    background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text-1);
-    border-radius:8px; padding:5px 10px; font-family:var(--display); font-size:12px;
-    font-weight:600; cursor:pointer; outline:none; min-width:150px;
-}
-.ios-select option { background:#0d1428; }
-.ios-btn {
-    background:var(--sig); color:#fff; border:none; border-radius:8px;
-    padding:7px 22px; font-family:var(--display); font-size:13px; font-weight:800; cursor:pointer;
-}
-.ios-btn:hover { background:#c4b5fd; color:#000; }
-.ios-reset-btn {
-    background:rgba(255,255,255,0.07); color:var(--text-2); border:1px solid var(--border);
-    border-radius:8px; padding:6px 16px; font-family:var(--display); font-size:12px; font-weight:700; cursor:pointer;
-}
-.ml-auto { margin-left:auto; }
-.last-upd { font-family:var(--mono); font-size:9px; color:var(--text-3); }
-.dbadge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; }
-.dbadge.live { background:rgba(74,222,128,0.12); color:#4ade80; border:1px solid rgba(74,222,128,0.25); }
-.dbadge.hist { background:rgba(251,191,36,0.12); color:var(--iv); border:1px solid rgba(251,191,36,0.25); }
-.auto-btn {
-    background:rgba(255,255,255,0.07); color:var(--text-2); border:1px solid var(--border);
-    border-radius:8px; padding:6px 14px; font-family:var(--display); font-size:10px; font-weight:700; cursor:pointer;
-}
-.auto-btn.on { border-color:#4ade80; color:#4ade80; }
-
-/* Warn */
-.ios-warn {
-    background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.28);
-    border-radius:10px; padding:12px 18px; margin-bottom:14px;
-    font-family:var(--display); font-size:13px; color:var(--iv); display:none;
+@media(max-width:768px){
+    .sfv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
+    .sfv-hero-pills { justify-content:center; }
 }
 
-/* Stats */
-.ios-stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-.stat-box {
-    background:var(--navy-800); border:1px solid var(--border);
-    border-radius:10px; padding:12px 16px; min-width:100px; flex:1;
+/* ── FILTER BAR ── */
+.sfv-filter-bar {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:0 48px; position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
-.stat-box small { display:block; font-family:var(--display); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-3); margin-bottom:4px; }
-.stat-box strong { display:block; font-family:var(--mono); font-size:1.15rem; font-weight:700; }
-.s-total { border-left:3px solid var(--sig); }
-.s-ce    { border-left:3px solid var(--ce); }
-.s-pe    { border-left:3px solid var(--pe); }
+.sfv-filter-inner {
+    display:flex; align-items:center; gap:14px;
+    padding:13px 0; flex-wrap:wrap;
+}
+.sfv-filter-label {
+    font-size:10.5px; color:#999; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em;
+}
+.sfv-filter-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
 
-/* Card / Table */
-.ios-card { background:var(--navy-800); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
-.ios-card-hdr {
-    padding:14px 20px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:10px; background:var(--navy-700);
+/* Date */
+.sfv-date-wrap { display:flex; align-items:center; gap:4px; }
+.sfv-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
 }
-.ios-card-title { font-family:var(--display); font-size:14px; font-weight:700; color:var(--text-1); }
-.ios-tscroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.sfv-date-input:focus { border-color:#F5A623; }
+.sfv-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.sfv-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.sfv-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
-.ios-table { width:100%; border-collapse:collapse; font-family:var(--mono); min-width:900px; }
-.ios-table thead tr.hdr-grp th {
-    padding:9px 10px 5px; text-align:center; font-family:var(--display);
-    font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-    background:rgba(0,0,0,0.4); border-bottom:none; white-space:nowrap;
-}
-.ios-table thead tr.hdr-cols th {
-    padding:5px 10px 9px; text-align:center; font-family:var(--display);
-    font-size:8px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;
-    background:rgba(0,0,0,0.3); color:var(--text-3); border-bottom:2px solid var(--border); white-space:nowrap;
-}
-.ios-table tbody td {
-    padding:9px 10px; text-align:center; font-size:11px;
-    border-bottom:1px solid rgba(255,255,255,0.03);
-    vertical-align:middle; white-space:nowrap; color:var(--text-2);
-}
-.ios-table tbody tr:hover { background:rgba(255,255,255,0.04) !important; }
-.row-even { background:rgba(255,255,255,0.008); }
-.row-odd  { background:rgba(0,0,0,0.1); }
+/* Status badge */
+.sfv-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.sfv-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
 
-.sep-ce  { border-left:2px solid rgba(56,189,248,0.2)  !important; }
-.sep-pe  { border-left:2px solid rgba(74,222,128,0.2)  !important; }
-.sep-d   { border-left:1px dashed rgba(255,255,255,0.07)!important; }
-.hce { color:var(--ce) !important; }
-.hpe { color:var(--pe) !important; }
-
-.c-num  { font-size:9px; color:var(--text-3); }
-.c-time { font-size:12px; font-weight:700; color:var(--sig); }
-.c-spot { font-size:12px; font-weight:700; color:var(--text-1); }
-.sym-badge {
-    display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700;
-    background:rgba(167,139,250,0.10); color:var(--sig); border:1px solid rgba(167,139,250,0.22);
+/* Strike pills */
+.sfv-sp-wrap { display:flex; gap:3px; }
+.sfv-sp {
+    padding:5px 13px; border-radius:20px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:700;
+    cursor:pointer; border:1.5px solid #e5e9f2; background:#fff; color:#888; transition:.15s;
 }
-.level-badge {
+.sfv-sp:hover  { border-color:#F5A623; color:#c97f00; }
+.sfv-sp.active { background:rgba(245,166,35,.1); border-color:#F5A623; color:#c97f00; }
+
+/* Symbol + Sort selects */
+.sfv-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; cursor:pointer; outline:none; min-width:150px;
+}
+.sfv-select:focus { border-color:#F5A623; }
+
+/* Buttons */
+.sfv-btn {
+    background:#F5A623; color:#000; border:none; border-radius:8px;
+    padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
+    font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
+}
+.sfv-btn:hover { background:#d4890e; }
+.sfv-reset-btn {
+    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
+    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:'Exo 2',sans-serif; transition:.2s;
+}
+.sfv-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.sfv-auto-btn {
+    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
+    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:'Exo 2',sans-serif; transition:.2s;
+}
+.sfv-auto-btn.on { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
+
+.sfv-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.sfv-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.sfv-last-upd  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
+
+@media(max-width:768px){
+    .sfv-filter-bar { padding:0 16px; }
+    .sfv-filter-inner { gap:8px; }
+    .sfv-filter-right { margin-left:0; width:100%; }
+}
+
+/* ── CONTENT ── */
+.sfv-content { padding:28px 48px 64px; }
+@media(max-width:768px){ .sfv-content { padding:16px 12px 48px; } }
+
+/* Config warning */
+.sfv-warn {
+    background:#fff3e0; border:1px solid #ffcc80; border-radius:10px;
+    padding:16px 20px; margin-bottom:20px;
+    display:none; align-items:center; gap:14px; font-size:13px; color:#e65100;
+}
+.sfv-warn.show { display:flex; }
+.sfv-warn i { font-size:20px; flex-shrink:0; }
+
+/* ── STATS ── */
+.sfv-stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+.sfv-stat-box {
+    background:#fff; border:1px solid #e8e8e8;
+    border-radius:12px; padding:14px 18px; min-width:110px; flex:1;
+}
+.sfv-stat-box small {
+    display:block; font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; color:#aab; margin-bottom:5px;
+}
+.sfv-stat-box strong {
+    display:block; font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700;
+}
+.s-total { border-left:3px solid #F5A623; }
+.s-ce    { border-left:3px solid #047857; }
+.s-pe    { border-left:3px solid #b91c1c; }
+
+/* ── TABLE CARD ── */
+.sfv-card {
+    background:#fff; border-radius:12px; border:1px solid #e8e8e8;
+    overflow:hidden;
+}
+.sfv-card-header {
+    padding:14px 20px; border-bottom:1px solid #f0f0f0;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:8px; background:#fafafa;
+}
+.sfv-card-title {
+    font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
+    color:#1a1a2e; display:flex; align-items:center; gap:8px;
+}
+.sfv-card-subtitle { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.sfv-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* ── TABLE ── */
+.sfv-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:960px; }
+
+.sfv-table thead tr.th-group th {
+    padding:9px 10px 5px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800;
+    letter-spacing:.1em; text-transform:uppercase;
+    background:#f7f8fc; border-bottom:none; white-space:nowrap;
+}
+.sfv-table thead tr.th-cols th {
+    padding:5px 10px 9px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
+    letter-spacing:.03em; text-transform:uppercase;
+    background:#f4f6fb; color:#aab;
+    border-bottom:2px solid #e8e8e8; white-space:nowrap;
+}
+
+/* Group heading colours */
+.g-meta   { color:#888 !important; }
+.g-ce     { color:#047857 !important; }
+.g-pe     { color:#b91c1c !important; }
+.g-iv     { color:#c97f00 !important; }
+
+/* Column separators */
+.sep-ce    { border-left:2px solid rgba(4,120,87,.2)  !important; }
+.sep-pe    { border-left:2px solid rgba(185,28,28,.2)  !important; }
+.sep-dash  { border-left:1px dashed #e8e8e8 !important; }
+
+.sfv-table tbody td {
+    padding:8px 10px; text-align:center; font-size:11px;
+    border-bottom:1px solid #f5f5f5; vertical-align:middle;
+    white-space:nowrap; color:#555;
+}
+.sfv-table tbody tr:hover { background:#fafbff !important; }
+.tr-even { background:#fff; }
+.tr-odd  { background:#fbfcff; }
+.tr-over-ce  { background:rgba(185,28,28,.03) !important; }
+.tr-over-pe  { background:rgba(185,28,28,.03) !important; }
+.tr-under-ce { background:rgba(4,120,87,.03)  !important; }
+
+/* Cell styles */
+.c-num  { font-size:9px; color:#ccc; }
+.c-time { font-size:12px; font-weight:700; color:#F5A623; }
+.c-spot { font-size:12px; font-weight:700; color:#1a1a2e; }
+.c-sym  {
+    display:inline-block; padding:2px 9px; border-radius:5px; font-size:10px; font-weight:700;
+    background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.25);
+}
+.c-level {
     display:inline-block; padding:1px 5px; border-radius:3px; font-size:7px; font-weight:700;
-    background:rgba(251,191,36,0.10); color:var(--iv); border:1px solid rgba(251,191,36,0.20); margin-top:2px;
+    background:#fff3e0; color:#e65100; border:1px solid #ffcc80; margin-top:2px;
 }
 
-/* valuation badge */
+/* Valuation badge */
 .vb { display:inline-block; padding:2px 8px; border-radius:5px; font-size:9px; font-weight:700; }
-.vb-over  { background:rgba(248,113,113,0.15); color:var(--over);  border:1px solid rgba(248,113,113,0.30); }
-.vb-under { background:rgba(74,222,128,0.15);  color:var(--under); border:1px solid rgba(74,222,128,0.30); }
-.vb-fair  { background:rgba(255,255,255,0.04); color:var(--text-3); border:1px solid var(--border); }
-.vb-na    { color:rgba(255,255,255,0.15); font-size:9px; }
-.dp { color:var(--over);  font-weight:700; }
-.dn { color:var(--under); font-weight:700; }
-.dz { color:var(--text-3); }
+.vb-over  { background:rgba(185,28,28,.1);  color:#b91c1c; border:1px solid rgba(185,28,28,.25); }
+.vb-under { background:rgba(4,120,87,.1);   color:#047857; border:1px solid rgba(4,120,87,.25);  }
+.vb-fair  { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
+.vb-na    { color:#ccc; font-size:9px; }
+
+.dp { color:#b91c1c; font-weight:700; }
+.dn { color:#047857; font-weight:700; }
+.dz { color:#ccc; }
 
 /* Loading / empty */
-.ios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px; }
-.ios-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.1); border-top:3px solid var(--sig); border-radius:50%; animation:spin 1s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.ios-spin-txt { color:var(--text-2); margin-top:12px; font-family:var(--display); font-size:13px; }
-.ios-empty { text-align:center; padding:60px 20px; color:var(--text-3); font-family:var(--display); font-size:13px; }
-.ios-empty i { font-size:2.5rem; opacity:.3; display:block; margin-bottom:10px; }
+.sfv-loading {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; padding:60px 20px;
+}
+.sfv-spinner {
+    width:36px; height:36px; border:3px solid #f0f0f0;
+    border-top:3px solid #F5A623; border-radius:50%;
+    animation:sfvSpin 1s linear infinite;
+}
+.sfv-loading-text { color:#aab; margin-top:12px; font-size:13px; font-family:'Exo 2',sans-serif; }
+.sfv-empty { text-align:center; padding:56px 20px; color:#ccc; font-family:'Exo 2',sans-serif; font-size:13px; }
+.sfv-empty i { font-size:2.5rem; display:block; margin-bottom:12px; }
 </style>
-@endpush
 
-<section class="pt-40 pb-50">
-<div class="container-fluid content-container">
+<div class="sfv-wrap">
 
-    {{-- Header --}}
-    <div class="ios-header">
-        <h4 class="ios-title">
-            &#9670; Strata — Options Fair Value
-            <span class="tag">BLACK-SCHOLES</span>
-            <span class="tag tag-ce">CE</span>
-            <span class="tag tag-pe">PE</span>
-        </h4>
-        <div class="ios-sub">
-            Fair Price = BS(Spot, Strike, ATM IV, DTE) &nbsp;·&nbsp;
-            OVERPRICED = LTP &gt; Fair &nbsp;·&nbsp;
-            UNDERPRICED = LTP &lt; Fair &nbsp;·&nbsp;
-            Tolerance ±5% &nbsp;·&nbsp;
-            Source: cp_option_ohlc + cp_fut_ohlc
+{{-- ══ HERO ══ --}}
+<div class="sfv-hero sfv-anim">
+    <div class="sfv-hero-left">
+        <h1>Options <span>Fair Value</span></h1>
+        <p>
+            Black-Scholes fair price vs market LTP for CE &amp; PE —
+            cross-leg IV derivation eliminates circular mispricing bias.
+            Powered by live 15min candle data.
+        </p>
+        <div class="sfv-hero-pills">
+            <span class="sfv-pill sfv-pill-bs">Fair = BS(Spot, Strike, ATM IV, DTE)</span>
+            <span class="sfv-pill sfv-pill-over">OVERPRICED: LTP &gt; Fair</span>
+            <span class="sfv-pill sfv-pill-und">UNDERPRICED: LTP &lt; Fair</span>
+            <span class="sfv-pill sfv-pill-tol">Tolerance ±5%</span>
         </div>
     </div>
+    <div class="sfv-hero-icon">
+        <i class="las la-balance-scale"></i>
+    </div>
+</div>
 
-    {{-- Controls --}}
-    <div class="ios-controls">
-        <span class="ctrl-label">TF</span>
-        <div class="tf-group">
-            <button class="tf-btn active" data-tf="15min" onclick="setTf('15min',this)">15 Min</button>
-            <button class="tf-btn"        data-tf="30min" onclick="setTf('30min',this)">30 Min</button>
-            <button class="tf-btn"        data-tf="1hr"   onclick="setTf('1hr',this)">1 Hour</button>
+{{-- ══ FILTER BAR ══ --}}
+<div class="sfv-filter-bar">
+    <div class="sfv-filter-inner">
+
+        {{-- Date --}}
+        <span class="sfv-filter-label">Date</span>
+        <div class="sfv-date-wrap">
+            <button class="sfv-date-nav" onclick="sfvShiftDate(-1)">‹</button>
+            <input type="date" id="sfv-date" class="sfv-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="sfvRunAnalysis()">
+            <button class="sfv-date-nav" onclick="sfvShiftDate(1)">›</button>
+            <button class="sfv-date-nav sfv-today-btn" onclick="sfvGoToday()">TODAY</button>
+            <span id="sfv-date-badge"></span>
         </div>
 
-        <div class="ctrl-sep"></div>
+        <div class="sfv-filter-sep"></div>
 
-        <span class="ctrl-label">DATE</span>
-        <div style="display:flex;align-items:center;gap:4px;">
-            <button class="dnav" onclick="shiftDate(-1)">&#8249;</button>
-            <input type="date" id="ios-date" class="ios-date"
-                   value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}"
-                   onchange="runAnalysis()">
-            <button class="dnav" onclick="shiftDate(1)">&#8250;</button>
-            <button class="dnav today-btn" onclick="goToday()">TODAY</button>
-            <span id="date-badge"></span>
+        {{-- Strike --}}
+        <span class="sfv-filter-label">Strike</span>
+        <div class="sfv-sp-wrap">
+            <div class="sfv-sp" data-val="ATM-1">ATM−1</div>
+            <div class="sfv-sp active" data-val="ATM">ATM</div>
+            <div class="sfv-sp" data-val="ATM+1">ATM+1</div>
         </div>
 
-        <div class="ctrl-sep"></div>
+        <div class="sfv-filter-sep"></div>
 
-        <span class="ctrl-label">STRIKE</span>
-        <div class="sp-wrap">
-            <div class="sp" data-val="ATM-1">ATM−1</div>
-            <div class="sp active" data-val="ATM">ATM</div>
-            <div class="sp" data-val="ATM+1">ATM+1</div>
-        </div>
-
-        <div class="ctrl-sep"></div>
-
-        <span class="ctrl-label">SYMBOL</span>
-        <select id="ios-sym" class="ios-select" onchange="runAnalysis()">
+        {{-- Symbol --}}
+        <span class="sfv-filter-label">Symbol</span>
+        <select id="sfv-sym" class="sfv-select" onchange="sfvRunAnalysis()">
             <option value="">— All Symbols —</option>
         </select>
 
-        <select id="ios-sort" class="ios-select">
+        {{-- Sort --}}
+        <select id="sfv-sort" class="sfv-select">
             <option value="symbol">Sort: A – Z</option>
             <option value="ce_overpriced">CE Most Overpriced</option>
             <option value="ce_underpriced">CE Most Underpriced</option>
@@ -250,231 +323,408 @@
             <option value="mispricing">Largest Mispricing</option>
         </select>
 
-        <button class="ios-btn" onclick="runAnalysis()">&#9670; Analyze</button>
-        <button class="ios-reset-btn" onclick="clearSymbol()">All Symbols</button>
-        <button class="auto-btn" id="auto-btn" onclick="toggleAuto()">&#9654; Auto 60s</button>
+        <button class="sfv-btn" onclick="sfvRunAnalysis()">&#9670; Analyze</button>
+        <button class="sfv-reset-btn" onclick="sfvClearSymbol()">All Symbols</button>
+        <button class="sfv-auto-btn" id="sfv-auto-btn" onclick="sfvToggleAuto()">&#9654; Auto 60s</button>
 
-        <div class="ml-auto d-flex align-items-center" style="gap:12px;">
-            <span id="ios-info" style="font-family:var(--mono);font-size:10px;color:var(--text-2);"></span>
-            <span class="last-upd" id="ios-upd"></span>
+        <div class="sfv-filter-right">
+            <span class="sfv-info-text" id="sfv-info"></span>
+            <span class="sfv-last-upd"  id="sfv-upd"></span>
+        </div>
+
+    </div>
+</div>
+
+{{-- ══ CONTENT ══ --}}
+<div class="sfv-content">
+
+    {{-- Config warning --}}
+    <div class="sfv-warn" id="sfv-warn">
+        <i class="las la-exclamation-triangle"></i>
+        <div>
+            <strong>No Analysis Config Found</strong>
+            <div style="font-size:12px;margin-top:3px;" id="sfv-warn-msg">
+                Go to Admin → Analysis Config and create a 15min config with symbols.
+            </div>
         </div>
     </div>
-
-    {{-- Warn --}}
-    <div class="ios-warn" id="ios-warn">&#9888; <span id="ios-warn-msg"></span></div>
 
     {{-- Stats --}}
-    <div class="ios-stats" id="ios-stats" style="display:none;">
-        <div class="stat-box s-total"><small>Total Rows</small><strong id="st-total" style="color:var(--sig);">0</strong></div>
-        <div class="stat-box s-ce"><small>CE Overpriced</small><strong id="st-ce-over"  style="color:var(--over);">0</strong></div>
-        <div class="stat-box s-ce"><small>CE Underpriced</small><strong id="st-ce-under" style="color:var(--under);">0</strong></div>
-        <div class="stat-box s-pe"><small>PE Overpriced</small><strong id="st-pe-over"  style="color:var(--over);">0</strong></div>
-        <div class="stat-box s-pe"><small>PE Underpriced</small><strong id="st-pe-under" style="color:var(--under);">0</strong></div>
+    <div class="sfv-stats" id="sfv-stats" style="display:none;">
+        <div class="sfv-stat-box s-total"><small>Total Rows</small><strong id="st-total" style="color:#F5A623;">0</strong></div>
+        <div class="sfv-stat-box s-ce"><small>CE Overpriced</small><strong id="st-ce-over"  style="color:#b91c1c;">0</strong></div>
+        <div class="sfv-stat-box s-ce"><small>CE Underpriced</small><strong id="st-ce-under" style="color:#047857;">0</strong></div>
+        <div class="sfv-stat-box s-pe"><small>PE Overpriced</small><strong id="st-pe-over"  style="color:#b91c1c;">0</strong></div>
+        <div class="sfv-stat-box s-pe"><small>PE Underpriced</small><strong id="st-pe-under" style="color:#047857;">0</strong></div>
     </div>
 
-    {{-- Table --}}
-    <div class="ios-card">
-        <div class="ios-card-hdr">
-            <span class="ios-card-title" id="ios-card-title">&#9670; Strata Fair Value &nbsp;·&nbsp; 15 Min</span>
-            <span style="font-size:10px;color:var(--text-3);margin-left:auto;font-family:var(--mono);" id="ios-card-info"></span>
+    {{-- Table card --}}
+    <div class="sfv-card">
+        <div class="sfv-card-header">
+            <div class="sfv-card-title" id="sfv-card-title">
+                &#9670; Strata Fair Value &nbsp;·&nbsp; 15 Min
+            </div>
+            <span class="sfv-card-subtitle" id="sfv-card-subtitle"></span>
         </div>
-        <div class="ios-tscroll">
-            <table class="ios-table">
+        <div class="sfv-table-scroll">
+            <table class="sfv-table">
                 <thead>
-                    <tr class="hdr-grp">
-                        <th colspan="5">Info</th>
-                        <th colspan="5" class="hce sep-ce">&#9651; CE — Market vs Fair</th>
-                        <th colspan="5" class="hpe sep-pe">&#9661; PE — Market vs Fair</th>
-                        <th>ATM IV</th>
-                        <th>Exp Move</th>
+                    <tr class="th-group">
+                        <th colspan="5" class="g-meta">Info</th>
+                        <th colspan="5" class="g-ce sep-ce">&#9651; CE — Market vs Fair</th>
+                        <th colspan="5" class="g-pe sep-pe">&#9661; PE — Market vs Fair</th>
+                        <th class="g-iv">ATM IV</th>
+                        <th class="g-iv">Exp Move</th>
                     </tr>
-                    <tr class="hdr-cols">
-                        <th>#</th>
-                        <th>Time</th>
-                        <th style="text-align:left;padding-left:14px;">Symbol</th>
-                        <th>Spot</th>
-                        <th>Strike<br><span style="font-size:7px;opacity:.5;font-weight:400;">Level · DTE</span></th>
+                    <tr class="th-cols">
+                        <th class="g-meta">#</th>
+                        <th class="g-meta">Time</th>
+                        <th class="g-meta" style="text-align:left;padding-left:14px;">Symbol</th>
+                        <th class="g-meta">Spot</th>
+                        <th class="g-meta">Strike<br><span style="font-size:7px;opacity:.5;font-weight:400;">Level · DTE</span></th>
                         {{-- CE --}}
-                        <th class="hce sep-ce">LTP</th>
-                        <th class="hce">Fair ₹</th>
-                        <th class="hce">Status</th>
-                        <th class="hce sep-d">Diff ₹</th>
-                        <th class="hce">Diff %</th>
+                        <th class="g-ce sep-ce">LTP</th>
+                        <th class="g-ce">Fair ₹</th>
+                        <th class="g-ce">Status</th>
+                        <th class="g-ce sep-dash">Diff ₹</th>
+                        <th class="g-ce">Diff %</th>
                         {{-- PE --}}
-                        <th class="hpe sep-pe">LTP</th>
-                        <th class="hpe">Fair ₹</th>
-                        <th class="hpe">Status</th>
-                        <th class="hpe sep-d">Diff ₹</th>
-                        <th class="hpe">Diff %</th>
-                        <th>IV %</th>
-                        <th>±₹</th>
+                        <th class="g-pe sep-pe">LTP</th>
+                        <th class="g-pe">Fair ₹</th>
+                        <th class="g-pe">Status</th>
+                        <th class="g-pe sep-dash">Diff ₹</th>
+                        <th class="g-pe">Diff %</th>
+                        <th class="g-iv">IV %</th>
+                        <th class="g-iv">±₹</th>
                     </tr>
                 </thead>
-                <tbody id="ios-tbody">
+                <tbody id="sfv-tbody">
                     <tr><td colspan="17">
-                        <div class="ios-empty"><i class="fas fa-chart-line"></i>Select date and click Analyze</div>
+                        <div class="sfv-empty">
+                            <i class="las la-chart-line"></i>
+                            Select date and click Analyze
+                        </div>
                     </td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-</div>
-</section>
+</div>{{-- /.sfv-content --}}
+</div>{{-- /.sfv-wrap --}}
+
 @endsection
 
 @push('script')
 <script>
-const ANALYZE_URL = '{{ route("strata-options-fv.analyze") }}';
-const SYM_URL     = '{{ route("strata-options-fv.symbols") }}';
-const todayStr    = '{{ now()->toDateString() }}';
+// ═══════════════════════════════════════════════════════════════
+//  STRATA OPTIONS FAIR VALUE — JS (zero jQuery)
+// ═══════════════════════════════════════════════════════════════
 
-let curTf = '15min', curStrike = 'ATM', symCache = {}, autoTimer = null;
+var SFV_ANALYZE_URL = '{{ route("strata-options-fv.analyze") }}';
+var SFV_SYM_URL     = '{{ route("strata-options-fv.symbols") }}';
+var SFV_TODAY       = '{{ now()->toDateString() }}';
 
-$(document).ready(function () {
-    loadSymbols(); runAnalysis(); updateDateBadge();
-    $('.sp').on('click', function () { $('.sp').removeClass('active'); $(this).addClass('active'); curStrike = $(this).data('val'); runAnalysis(); });
-    $('#ios-sort').on('change', runAnalysis);
+var sfvCurStrike = 'ATM';
+var sfvSymCache  = null;
+var sfvAutoTimer = null;
+
+// Vanilla helpers
+function sfvHtml(id, h) { var e = document.getElementById(id); if (e) e.innerHTML  = h; }
+function sfvText(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
+
+document.addEventListener('DOMContentLoaded', function () {
+    sfvUpdateDateBadge();
+    sfvLoadSymbols();
+    sfvRunAnalysis();
+
+    // Strike pill clicks
+    document.querySelectorAll('.sfv-sp').forEach(function (pill) {
+        pill.addEventListener('click', function () {
+            document.querySelectorAll('.sfv-sp').forEach(function (p) { p.classList.remove('active'); });
+            pill.classList.add('active');
+            sfvCurStrike = pill.getAttribute('data-val');
+            sfvRunAnalysis();
+        });
+    });
+
+    // Sort change
+    document.getElementById('sfv-sort').addEventListener('change', sfvRunAnalysis);
 });
 
-function setTf(tf, btn) {
-    curTf = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    $('#ios-card-title').text('⬡ Strata Fair Value · ' + tf.toUpperCase());
-    loadSymbols();
-}
+// ── Date helpers ──────────────────────────────────────────────
 
-function shiftDate(d) {
-    var p = document.getElementById('ios-date');
-    var dt = new Date(p.value); dt.setDate(dt.getDate() + d);
+function sfvShiftDate(d) {
+    var picker = document.getElementById('sfv-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
     var s = dt.toISOString().split('T')[0];
-    if (s > todayStr) return;
-    p.value = s; updateDateBadge(); runAnalysis();
-}
-function goToday() { document.getElementById('ios-date').value = todayStr; updateDateBadge(); runAnalysis(); }
-function updateDateBadge() {
-    var d = document.getElementById('ios-date').value;
-    $('#date-badge').html(d === todayStr
-        ? '<span class="dbadge live">&#11044; Live</span>'
-        : '<span class="dbadge hist">&#9724; Historical</span>');
+    if (s > SFV_TODAY) return;
+    picker.value = s;
+    sfvUpdateDateBadge();
+    sfvRunAnalysis();
 }
 
-function loadSymbols() {
-    if (symCache[curTf]) { rebuildSym(symCache[curTf]); return; }
-    $.get(SYM_URL, { timeframe: curTf }, function (res) {
-        if (res.no_config) { showWarn(res.message); rebuildSym([]); return; }
-        hideWarn(); symCache[curTf] = res.symbols || []; rebuildSym(symCache[curTf]);
+function sfvGoToday() {
+    document.getElementById('sfv-date').value = SFV_TODAY;
+    sfvUpdateDateBadge();
+    sfvRunAnalysis();
+}
+
+function sfvUpdateDateBadge() {
+    var d  = document.getElementById('sfv-date').value;
+    var el = document.getElementById('sfv-date-badge');
+    if (!el) return;
+    el.innerHTML = d === SFV_TODAY
+        ? '<span class="sfv-live-badge">● Live</span>'
+        : '<span class="sfv-hist-badge">📅 Historical</span>';
+}
+
+// ── Symbol helpers ────────────────────────────────────────────
+
+function sfvLoadSymbols() {
+    if (sfvSymCache !== null) { sfvRebuildSym(sfvSymCache); return; }
+
+    fetch(SFV_SYM_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.no_config) {
+                sfvShowWarn(res.message);
+                sfvRebuildSym([]);
+                return;
+            }
+            sfvHideWarn();
+            sfvSymCache = res.symbols || [];
+            sfvRebuildSym(sfvSymCache);
+        })
+        .catch(function () { sfvRebuildSym([]); });
+}
+
+function sfvRebuildSym(syms) {
+    var sel  = document.getElementById('sfv-sym');
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">— All Symbols —</option>';
+    syms.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        if (s === prev) opt.selected = true;
+        sel.appendChild(opt);
     });
 }
-function rebuildSym(syms) {
-    $('#ios-sym').html('<option value="">— All Symbols —</option>' + syms.map(s => `<option value="${s}">${s}</option>`).join(''));
-}
-function clearSymbol() { $('#ios-sym').val(''); runAnalysis(); }
 
-function toggleAuto() {
-    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; $('#auto-btn').text('▶ Auto 60s').removeClass('on'); }
-    else { autoTimer = setInterval(runAnalysis, 60000); $('#auto-btn').text('■ Stop').addClass('on'); runAnalysis(); }
+function sfvClearSymbol() {
+    document.getElementById('sfv-sym').value = '';
+    sfvRunAnalysis();
 }
 
-function runAnalysis() {
-    var sym  = $('#ios-sym').val();
-    var sort = $('#ios-sort').val();
-    var date = document.getElementById('ios-date').value;
-    updateDateBadge();
-    $('#ios-sort').toggle(!sym);
-    showLoading();
+// ── Auto refresh ──────────────────────────────────────────────
 
-    $.ajax({
-        url: ANALYZE_URL, type: 'GET',
-        data: { timeframe: curTf, strike_filter: curStrike, sort_by: sort, symbol: sym, date: date },
-        success(res) {
-            if (res.no_config) { showWarn(res.message); emptyTable(); return; }
-            if (!res.success)  { emptyTable(res.message); return; }
-            hideWarn();
-            renderStats(res.summary, res.total_rows);
-            renderTable(res.rows);
-            $('#ios-info').html(`Date: <span style="color:var(--iv)">${res.trade_date}</span> &nbsp;·&nbsp; Time: <span style="color:var(--ce)">${res.latest_time || '—'}</span> &nbsp;·&nbsp; TF: <span style="color:var(--sig)">${res.timeframe}</span>`);
-            $('#ios-card-info').text(res.total_rows + ' row(s)');
-            $('#ios-upd').text('Updated ' + new Date().toLocaleTimeString());
-        },
-        error(xhr) { emptyTable('&#9888; ' + ((xhr.responseJSON && xhr.responseJSON.message) || 'Server error')); }
+function sfvToggleAuto() {
+    var btn = document.getElementById('sfv-auto-btn');
+    if (sfvAutoTimer) {
+        clearInterval(sfvAutoTimer);
+        sfvAutoTimer = null;
+        btn.textContent = '▶ Auto 60s';
+        btn.classList.remove('on');
+    } else {
+        sfvAutoTimer = setInterval(sfvRunAnalysis, 60000);
+        btn.textContent = '■ Stop';
+        btn.classList.add('on');
+        sfvRunAnalysis();
+    }
+}
+
+// ── Main analysis call ────────────────────────────────────────
+
+function sfvRunAnalysis() {
+    var sym  = document.getElementById('sfv-sym').value;
+    var sort = document.getElementById('sfv-sort').value;
+    var date = document.getElementById('sfv-date').value;
+
+    sfvUpdateDateBadge();
+
+    // Hide sort when single symbol is selected
+    document.getElementById('sfv-sort').style.display = sym ? 'none' : '';
+
+    sfvShowLoading();
+
+    var params = new URLSearchParams({
+        strike_filter : sfvCurStrike,
+        sort_by       : sort,
+        date          : date,
+    });
+    if (sym) params.append('symbol', sym);
+
+    fetch(SFV_ANALYZE_URL + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function (res) {
+        if (res.no_config) {
+            sfvShowWarn(res.message);
+            sfvEmptyTable();
+            return;
+        }
+        if (!res.success) {
+            sfvEmptyTable(res.message);
+            return;
+        }
+
+        sfvHideWarn();
+        sfvRenderStats(res.summary, res.total_rows);
+        sfvRenderTable(res.rows);
+
+        sfvHtml('sfv-info',
+            'Date: <span style="color:#c97f00">' + res.trade_date + '</span>'
+            + ' &nbsp;·&nbsp; Time: <span style="color:#047857">' + (res.latest_time || '—') + '</span>'
+            + ' &nbsp;·&nbsp; TF: <span style="color:#F5A623">15min</span>'
+        );
+        sfvText('sfv-card-subtitle', res.total_rows + ' row(s)');
+        sfvText('sfv-upd', 'Updated ' + new Date().toLocaleTimeString());
+    })
+    .catch(function (err) {
+        sfvEmptyTable('⚠ ' + err.message);
     });
 }
 
-function renderStats(s, total) {
-    $('#st-total').text(total);
-    $('#st-ce-over').text(s.ceOver); $('#st-ce-under').text(s.ceUnder);
-    $('#st-pe-over').text(s.peOver); $('#st-pe-under').text(s.peUnder);
-    $('#ios-stats').show();
+// ── Stats ─────────────────────────────────────────────────────
+
+function sfvRenderStats(s, total) {
+    sfvText('st-total',    total);
+    sfvText('st-ce-over',  s.ceOver);
+    sfvText('st-ce-under', s.ceUnder);
+    sfvText('st-pe-over',  s.peOver);
+    sfvText('st-pe-under', s.peUnder);
+    var el = document.getElementById('sfv-stats');
+    if (el) el.style.display = '';
 }
 
-function renderTable(rows) {
-    if (!rows || !rows.length) { emptyTable('No data for selected filters.'); return; }
+// ── Table renderer ────────────────────────────────────────────
+
+function sfvRenderTable(rows) {
+    if (!rows || !rows.length) { sfvEmptyTable('No data for selected filters.'); return; }
+
     var html = '';
-
     rows.forEach(function (r, idx) {
-        var zebra = idx % 2 === 0 ? 'row-even' : 'row-odd';
+        var zebra = idx % 2 === 0 ? 'tr-even' : 'tr-odd';
 
         var ceCols = r.ce_ltp != null
-            ? td('sep-ce', '₹' + r.ce_ltp)
-            + td('', '<strong style="color:var(--ce);">₹' + nv(r.ce_fair) + '</strong>')
-            + td('', vbadge(r.ce_status))
-            + td('sep-d ' + dc(r.ce_diff), diffFmt(r.ce_diff, '₹'))
-            + td(dc(r.ce_diff_pct), diffp(r.ce_diff_pct))
-            : '<td colspan="5" class="sep-ce" style="color:rgba(255,255,255,.1);font-size:9px;">— no CE —</td>';
+            ? sfvTd('sep-ce', '₹' + r.ce_ltp)
+            + sfvTd('', '<strong style="color:#047857;">₹' + sfvNv(r.ce_fair) + '</strong>')
+            + sfvTd('', sfvVbadge(r.ce_status))
+            + sfvTd('sep-dash ' + sfvDc(r.ce_diff),  sfvDiffFmt(r.ce_diff, '₹'))
+            + sfvTd(sfvDc(r.ce_diff_pct), sfvDiffPct(r.ce_diff_pct))
+            : '<td colspan="5" class="sep-ce" style="color:#ccc;font-size:9px;">— no CE —</td>';
 
         var peCols = r.pe_ltp != null
-            ? td('sep-pe', '₹' + r.pe_ltp)
-            + td('', '<strong style="color:var(--pe);">₹' + nv(r.pe_fair) + '</strong>')
-            + td('', vbadge(r.pe_status))
-            + td('sep-d ' + dc(r.pe_diff), diffFmt(r.pe_diff, '₹'))
-            + td(dc(r.pe_diff_pct), diffp(r.pe_diff_pct))
-            : '<td colspan="5" class="sep-pe" style="color:rgba(255,255,255,.1);font-size:9px;">— no PE —</td>';
+            ? sfvTd('sep-pe', '₹' + r.pe_ltp)
+            + sfvTd('', '<strong style="color:#b91c1c;">₹' + sfvNv(r.pe_fair) + '</strong>')
+            + sfvTd('', sfvVbadge(r.pe_status))
+            + sfvTd('sep-dash ' + sfvDc(r.pe_diff),  sfvDiffFmt(r.pe_diff, '₹'))
+            + sfvTd(sfvDc(r.pe_diff_pct), sfvDiffPct(r.pe_diff_pct))
+            : '<td colspan="5" class="sep-pe" style="color:#ccc;font-size:9px;">— no PE —</td>';
 
         var strikeMeta =
-            '<span style="color:var(--iv);font-weight:700;">₹' + fmt(r.strike) + '</span>'
-            + '<br><span class="level-badge">' + (r.strike_level || 'ATM') + '</span>'
-            + '&thinsp;<span style="font-size:8px;color:var(--text-3);">' + r.days_to_expiry + 'd</span>';
+            '<span style="color:#c97f00;font-weight:700;">₹' + sfvFmt(r.strike) + '</span>'
+            + '<br><span class="c-level">' + (r.strike_level || 'ATM') + '</span>'
+            + '&thinsp;<span style="font-size:8px;color:#ccc;">' + r.days_to_expiry + 'd</span>';
 
-        html +=
-            '<tr class="' + zebra + '">'
-            + td('c-num', idx + 1)
-            + td('c-time', r.time || '—')
-            + '<td style="text-align:left;padding-left:14px;"><span class="sym-badge">' + esc(r.symbol) + '</span></td>'
-            + td('c-spot', '₹' + fmt(r.spot))
+        html += '<tr class="' + zebra + '">'
+            + sfvTd('c-num', idx + 1)
+            + sfvTd('c-time', r.time || '—')
+            + '<td style="text-align:left;padding-left:14px;"><span class="c-sym">' + sfvEsc(r.symbol) + '</span></td>'
+            + sfvTd('c-spot', '₹' + sfvFmt(r.spot))
             + '<td>' + strikeMeta + '</td>'
-            + ceCols + peCols
-            + td('', r.atm_iv != null ? '<span style="color:var(--iv);font-weight:700;">' + r.atm_iv + '%</span>' : dash())
-            + td('', r.expected_move != null ? '<span style="color:var(--sig);font-weight:700;">±₹' + r.expected_move + '</span>' : dash())
+            + ceCols
+            + peCols
+            + sfvTd('', r.atm_iv != null
+                ? '<span style="color:#c97f00;font-weight:700;">' + r.atm_iv + '%</span>'
+                : sfvDash())
+            + sfvTd('', r.expected_move != null
+                ? '<span style="color:#F5A623;font-weight:700;">±₹' + r.expected_move + '</span>'
+                : sfvDash())
             + '</tr>';
     });
 
-    $('#ios-tbody').html(html);
+    sfvHtml('sfv-tbody', html);
 }
 
-function td(cls, inner) { return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + inner + '</td>'; }
-function vbadge(st) {
+// ── Cell / badge helpers ──────────────────────────────────────
+
+function sfvTd(cls, inner) {
+    return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + inner + '</td>';
+}
+
+function sfvVbadge(st) {
     var map = { OVERPRICED:'vb-over', UNDERPRICED:'vb-under', FAIR:'vb-fair' };
-    return '<span class="vb ' + (map[st] || 'vb-na') + '">' + (st === 'N/A' ? '—' : (st || '—')) + '</span>';
+    return '<span class="vb ' + (map[st] || 'vb-na') + '">'
+        + (st === 'N/A' ? '—' : (st || '—')) + '</span>';
 }
-function dc(v)           { if (v == null) return 'dz'; return Number(v) > 0 ? 'dp' : (Number(v) < 0 ? 'dn' : 'dz'); }
-function diffFmt(v, pfx) { if (v == null) return dash(); var n = Number(v); return (n >= 0 ? '+' : '') + pfx + Math.abs(n).toFixed(2); }
-function diffp(v)        { if (v == null) return dash(); var n = Number(v); return (n >= 0 ? '+' : '') + n + '%'; }
-function nv(v)           { return v != null ? v : '—'; }
-function dash()          { return '<span style="color:rgba(255,255,255,.15);font-size:9px;">—</span>'; }
-function fmt(v)          { return v != null ? Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—'; }
-function esc(s)          { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function showLoading() {
-    $('#ios-tbody').html('<tr><td colspan="17"><div class="ios-loading"><div class="ios-spinner"></div><div class="ios-spin-txt">Calculating fair values…</div></div></td></tr>');
-    $('#ios-stats').hide();
+function sfvDc(v) {
+    if (v == null) return 'dz';
+    return Number(v) > 0 ? 'dp' : (Number(v) < 0 ? 'dn' : 'dz');
 }
-function emptyTable(msg) {
-    $('#ios-tbody').html('<tr><td colspan="17"><div class="ios-empty"><i class="fas fa-chart-line"></i>' + (msg || 'Select date and click Analyze') + '</div></td></tr>');
-    $('#ios-stats').hide();
+
+function sfvDiffFmt(v, pfx) {
+    if (v == null) return sfvDash();
+    var n = Number(v);
+    return (n >= 0 ? '+' : '') + pfx + Math.abs(n).toFixed(2);
 }
-function showWarn(msg) { $('#ios-warn').show(); $('#ios-warn-msg').text(msg || ''); }
-function hideWarn()    { $('#ios-warn').hide(); }
+
+function sfvDiffPct(v) {
+    if (v == null) return sfvDash();
+    var n = Number(v);
+    return (n >= 0 ? '+' : '') + n + '%';
+}
+
+function sfvNv(v)  { return v != null ? v : '—'; }
+function sfvDash() { return '<span style="color:#ccc;font-size:9px;">—</span>'; }
+function sfvFmt(v) {
+    return v != null
+        ? Number(v).toLocaleString('en-IN', { maximumFractionDigits:2 })
+        : '—';
+}
+function sfvEsc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Loading / empty / warn ────────────────────────────────────
+
+function sfvShowLoading() {
+    sfvHtml('sfv-tbody',
+        '<tr><td colspan="17">'
+        + '<div class="sfv-loading"><div class="sfv-spinner"></div>'
+        + '<div class="sfv-loading-text">Calculating fair values…</div></div>'
+        + '</td></tr>'
+    );
+    var el = document.getElementById('sfv-stats');
+    if (el) el.style.display = 'none';
+}
+
+function sfvEmptyTable(msg) {
+    sfvHtml('sfv-tbody',
+        '<tr><td colspan="17">'
+        + '<div class="sfv-empty"><i class="las la-chart-line"></i>'
+        + (msg || 'Select date and click Analyze')
+        + '</div></td></tr>'
+    );
+    var el = document.getElementById('sfv-stats');
+    if (el) el.style.display = 'none';
+}
+
+function sfvShowWarn(msg) {
+    var el = document.getElementById('sfv-warn');
+    if (el) el.classList.add('show');
+    sfvText('sfv-warn-msg', msg || '');
+}
+
+function sfvHideWarn() {
+    var el = document.getElementById('sfv-warn');
+    if (el) el.classList.remove('show');
+}
 </script>
 @endpush

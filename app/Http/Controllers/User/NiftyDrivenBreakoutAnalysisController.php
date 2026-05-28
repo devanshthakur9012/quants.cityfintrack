@@ -1,65 +1,77 @@
 <?php
-
+// FILE: app/Http/Controllers/User/NiftyDrivenBreakoutAnalysisController.php
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * NIFTY-Driven Multi-Symbol Breakout Analyzer — 15min only
+ *
+ * Signal source : NIFTY FUT 15min candles
+ *   CE signal   : any candle HIGH  >= 09:15 open + threshold
+ *   PE signal   : any candle LOW   <= 09:15 open − threshold
+ *   Entry       : OPEN of NEXT candle after trigger bar
+ *   Strike pick : highest-OI ATM strike at buy candle time
+ *   Lot size    : from zerodha_instruments
+ */
 class NiftyDrivenBreakoutAnalysisController extends Controller
 {
-    private const TIMEFRAMES   = ['15min', '30min', '1hr'];
+    private const TF           = '15min';
     private const MARKET_OPEN  = '09:15';
     private const NIFTY_SYMBOL = 'NIFTY';
+
+    // ── Page ──────────────────────────────────────────────────────────────────
 
     public function index()
     {
         $pageTitle = 'NIFTY Breakout — Signal Analyzer';
-        return view($this->activeTemplate . 'user.nifty-breakout-analyzer.index', compact('pageTitle'));
+        return view(activeTemplate() . 'user.nifty-breakout-analyzer.index', compact('pageTitle'));
     }
 
-    public function getSymbols(Request $request)
-    {
-        $timeframe = $this->resolveTimeframe($request);
-        $config    = $this->getActiveConfig($timeframe);
+    // ── Symbols API ───────────────────────────────────────────────────────────
 
+    public function getSymbols(Request $request): JsonResponse
+    {
+        $config = $this->getActiveConfig();
         if (!$config) {
             return response()->json([
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => "No active Analysis Config for [{$timeframe}]. Go to Admin → Analysis Config.",
+                'message'   => 'No active 15min Analysis Config. Go to Admin → Analysis Config.',
             ]);
         }
-
         return response()->json([
-            'success'   => true,
-            'symbols'   => $this->getConfigSymbols($config->id),
-            'timeframe' => $timeframe,
+            'success' => true,
+            'symbols' => $this->getConfigSymbols($config->id),
         ]);
     }
 
-    public function analyze(Request $request)
+    // ── Main Analyze API ──────────────────────────────────────────────────────
+
+    public function analyze(Request $request): JsonResponse
     {
         try {
-            $timeframe    = $this->resolveTimeframe($request);
             $fromDate     = $request->get('from_date');
             $toDate       = $request->get('to_date');
-            $threshold    = (float) ($request->get('threshold', 30));
-            $signalFilter = strtoupper($request->get('filter', 'BOTH'));
+            $threshold    = (float) $request->get('threshold', 30);
+            $signalFilter = strtoupper($request->get('filter', 'BOTH'));    // CE | PE | BOTH
             $symbolFilter = strtoupper($request->get('symbol_filter', 'ALL'));
 
             if (!$fromDate || !$toDate) {
                 return response()->json(['success' => false, 'message' => 'Please select both dates.', 'data' => []]);
             }
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active Analysis Config for [{$timeframe}].",
+                    'message'   => 'No active 15min Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -73,8 +85,8 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 ? $allSymbols
                 : [$symbolFilter];
 
-            $futTable = 'cp_fut_ohlc_' . $timeframe;
-            $optTable = 'cp_option_ohlc_' . $timeframe;
+            $futTable = 'cp_fut_ohlc_15min';
+            $optTable = 'cp_option_ohlc_15min';
 
             // ── Trading dates ─────────────────────────────────────────────
             $tradeDates = DB::table($futTable)
@@ -87,7 +99,10 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 ->pluck('d')->toArray();
 
             if (empty($tradeDates)) {
-                return response()->json(['success' => true, 'data' => [], 'message' => 'No NIFTY FUT data for this range.']);
+                return response()->json([
+                    'success' => true, 'data' => [],
+                    'message' => 'No NIFTY FUT data for this range.',
+                ]);
             }
 
             // ── NIFTY FUT candles ─────────────────────────────────────────
@@ -121,26 +136,49 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 foreach ($times as $i => $t) {
                     $c = $candles[$t];
                     if (!$ceFired && in_array($signalFilter, ['CE', 'BOTH']) && (float)$c->high >= $dayOpen + $threshold) {
-                        $ceFired = true;
-                        $buyTime = $times[$i + 1] ?? null;
-                        if ($buyTime) $signals[] = ['date' => $date, 'signal_type' => 'CE', 'trigger_time' => $t, 'buy_time' => $buyTime, 'nifty_open' => $dayOpen, 'nifty_trigger' => (float)$c->high, 'nifty_move' => round((float)$c->high - $dayOpen, 2)];
+                        $ceFired  = true;
+                        $buyTime  = $times[$i + 1] ?? null;
+                        if ($buyTime) {
+                            $signals[] = [
+                                'date'          => $date,
+                                'signal_type'   => 'CE',
+                                'trigger_time'  => $t,
+                                'buy_time'      => $buyTime,
+                                'nifty_open'    => $dayOpen,
+                                'nifty_trigger' => (float) $c->high,
+                                'nifty_move'    => round((float)$c->high - $dayOpen, 2),
+                            ];
+                        }
                     }
                     if (!$peFired && in_array($signalFilter, ['PE', 'BOTH']) && (float)$c->low <= $dayOpen - $threshold) {
-                        $peFired = true;
-                        $buyTime = $times[$i + 1] ?? null;
-                        if ($buyTime) $signals[] = ['date' => $date, 'signal_type' => 'PE', 'trigger_time' => $t, 'buy_time' => $buyTime, 'nifty_open' => $dayOpen, 'nifty_trigger' => (float)$c->low, 'nifty_move' => round((float)$c->low - $dayOpen, 2)];
+                        $peFired  = true;
+                        $buyTime  = $times[$i + 1] ?? null;
+                        if ($buyTime) {
+                            $signals[] = [
+                                'date'          => $date,
+                                'signal_type'   => 'PE',
+                                'trigger_time'  => $t,
+                                'buy_time'      => $buyTime,
+                                'nifty_open'    => $dayOpen,
+                                'nifty_trigger' => (float) $c->low,
+                                'nifty_move'    => round((float)$c->low - $dayOpen, 2),
+                            ];
+                        }
                     }
                     if ($ceFired && $peFired) break;
                 }
             }
 
             if (empty($signals)) {
-                return response()->json(['success' => true, 'data' => [], 'message' => "No signals found. Try a lower threshold (current: {$threshold} pts)."]);
+                return response()->json([
+                    'success' => true, 'data' => [],
+                    'message' => "No signals found. Try a lower threshold (current: {$threshold} pts).",
+                ]);
             }
 
             $optDates = array_unique(array_column($signals, 'date'));
 
-            // ── Option rows (no lot_size — not in cp_option_ohlc) ─────────
+            // ── Option rows (highest-OI per slot) ─────────────────────────
             $optRows = DB::table($optTable)
                 ->where('analysis_config_id', $config->id)
                 ->whereIn('base_symbol', $symbols)
@@ -157,7 +195,7 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 ->orderByDesc('oi')
                 ->get();
 
-            // ── lot_size from zerodha_instruments ─────────────────────────
+            // ── Lot sizes from zerodha_instruments ────────────────────────
             $tradingSymbols = $optRows->pluck('trading_symbol')->unique()->values()->toArray();
             $lotSizeMap = DB::table('zerodha_instruments')
                 ->whereIn('trading_symbol', $tradingSymbols)
@@ -177,11 +215,12 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
             $results = [];
             foreach ($signals as $sig) {
                 foreach ($symbols as $symbol) {
-                    $opt = $optMap[$sig['date'] . '|' . $symbol . '|' . $sig['signal_type'] . '|' . $sig['buy_time']] ?? null;
+                    $mapKey = $sig['date'] . '|' . $symbol . '|' . $sig['signal_type'] . '|' . $sig['buy_time'];
+                    $opt    = $optMap[$mapKey] ?? null;
                     if (!$opt) continue;
 
-                    $lotSize    = (int) ($lotSizeMap[$opt->trading_symbol] ?? 1);
-                    $buyPrice   = (float) $opt->open;
+                    $lotSize  = (int) ($lotSizeMap[$opt->trading_symbol] ?? 1);
+                    $buyPrice = (float) $opt->open;
 
                     $results[] = [
                         'date'          => $sig['date'],
@@ -214,21 +253,25 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 'symbols_hit'       => count(array_unique(array_column($results, 'symbol'))),
                 'total_investment'  => round(array_sum(array_column($results, 'investment')), 2),
                 'signal_count'      => count($signals),
-                'timeframe'         => $timeframe,
                 'threshold'         => $threshold,
                 'message'           => count($results) . ' trade(s) found',
                 'available_symbols' => $allSymbols,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('NiftyDrivenBreakoutAnalysis: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => []], 500);
+            Log::error('NiftyDrivenBreakout: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
     }
 
-    private function getActiveConfig(string $timeframe): ?object
+    // ── Config helpers ────────────────────────────────────────────────────────
+
+    private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', $timeframe)->where('is_active', 1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
@@ -236,12 +279,7 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
         return DB::table('analysis_config_symbols')
             ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
-            ->pluck('symbol_lists.symbol')->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min')));
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
+            ->pluck('symbol_lists.symbol')
+            ->toArray();
     }
 }

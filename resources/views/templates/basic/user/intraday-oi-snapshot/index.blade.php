@@ -1,207 +1,272 @@
-@extends($activeTemplate . 'layouts.master')
-
+{{-- FILE: resources/views/themes/{active_theme}/user/intraday-oi-snapshot/index.blade.php --}}
+@extends($activeTemplate.'layouts.frontend')
 @section('content')
-@push('style')
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
-:root {
-    --navy-900:#0a0f1e; --navy-800:#0d1428; --navy-700:#111b35;
-    --border:rgba(255,255,255,0.07);
-    --amber:#f59e0b; --emerald:#10b981; --rose:#f43f5e;
-    --sky:#38bdf8; --teal:#14b8a6;
-    --text-1:rgba(255,255,255,0.92); --text-2:rgba(255,255,255,0.55); --text-3:rgba(255,255,255,0.25);
-    --mono:'JetBrains Mono',monospace; --display:'Rajdhani',sans-serif;
+.ios-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
+.ios-wrap * { box-sizing:border-box; }
+.ios-wrap h1,.ios-wrap h2,.ios-wrap h3 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
+.mono { font-family:'JetBrains Mono',monospace; }
+@keyframes iosUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.ios-anim { animation:iosUp .5s ease both; }
+@keyframes iosSpin { to{transform:rotate(360deg);} }
+
+/* ── HERO ── */
+.ios-hero {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:32px 48px; display:flex; align-items:center;
+    justify-content:space-between; gap:24px;
 }
-body { background:var(--navy-900); }
+.ios-hero-left h1 { font-size:clamp(24px,3.5vw,40px); font-weight:700; color:#1a1a2e; margin:0 0 8px; line-height:1.1; }
+.ios-hero-left h1 span { color:#F5A623; }
+.ios-hero-left p { font-size:13px; color:#666; margin:0 0 10px; line-height:1.7; max-width:640px; }
+.ios-hero-pills { display:flex; flex-wrap:wrap; gap:6px; }
+.ios-pill { display:inline-block; padding:3px 10px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; }
+.ios-pill-snap { background:rgba(13,148,136,.08);  color:#0f766e; border:1px solid rgba(13,148,136,.25); }
+.ios-pill-bull { background:rgba(5,150,105,.08);   color:#047857; border:1px solid rgba(5,150,105,.25); }
+.ios-pill-bear { background:rgba(220,38,38,.07);   color:#b91c1c; border:1px solid rgba(220,38,38,.22); }
+.ios-hero-icon {
+    width:76px; height:76px; border-radius:16px;
+    background:linear-gradient(135deg,#0f1b2d,#1a3050);
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px; color:#F5A623; flex-shrink:0;
+}
+@media(max-width:768px){ .ios-hero{ flex-direction:column; padding:24px 16px; text-align:center; } .ios-hero-pills{ justify-content:center; } .ios-hero-icon{ display:none; } }
 
-.ios-header { background:linear-gradient(135deg,#0d1428 0%,#1a2744 50%,#0d1428 100%); border:1px solid var(--border); border-bottom:2px solid var(--teal); border-radius:14px; padding:20px 28px; margin-bottom:18px; position:relative; overflow:hidden; }
-.ios-header::before { content:'OI SNAP'; position:absolute; right:24px; top:50%; transform:translateY(-50%); font-family:var(--display); font-size:72px; font-weight:700; color:rgba(20,184,166,0.05); letter-spacing:6px; pointer-events:none; user-select:none; }
-.ios-title { font-family:var(--display); font-size:22px; font-weight:700; color:var(--text-1); margin:0; }
-.ios-title span { background:rgba(20,184,166,0.12); border:1px solid rgba(20,184,166,0.3); color:var(--teal); font-size:10px; font-weight:700; padding:2px 9px; border-radius:4px; margin-left:8px; vertical-align:middle; letter-spacing:2px; }
-.ios-sub { font-family:var(--mono); font-size:11px; color:var(--text-2); margin:7px 0 0; }
-.lp { display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 9px; border-radius:4px; margin:3px 2px; }
-.lp-snap { background:rgba(20,184,166,0.10); border:1px solid rgba(20,184,166,0.22); color:var(--teal); }
-.lp-bull { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); color:var(--emerald); }
-.lp-bear { background:rgba(244,63,94,0.12);  border:1px solid rgba(244,63,94,0.25);  color:var(--rose); }
+/* ── FILTER BAR ── */
+.ios-filter-bar { background:#fff; border-bottom:1px solid #e8e8e8; padding:0 48px; position:sticky; top:0; z-index:200; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.ios-filter-inner { display:flex; align-items:center; gap:12px; padding:12px 0; flex-wrap:wrap; }
+.ios-filter-label { font-size:10.5px; color:#999; font-weight:700; text-transform:uppercase; letter-spacing:.07em; flex-shrink:0; }
+.ios-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
 
-.ios-controls { background:var(--navy-800); border:1px solid var(--border); border-radius:12px; padding:14px 20px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.ctrl-label { font-family:var(--display); font-size:10px; font-weight:700; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; }
-.ctrl-sep { width:1px; height:28px; background:var(--border); flex-shrink:0; }
-.tf-group { display:flex; gap:4px; }
-.tf-btn { font-family:var(--display); font-size:12px; font-weight:700; padding:6px 15px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text-2); cursor:pointer; transition:.15s; }
-.tf-btn:hover { border-color:rgba(20,184,166,0.4); color:var(--teal); }
-.tf-btn.active { background:rgba(20,184,166,0.15); border-color:var(--teal); color:var(--teal); }
-.ios-date { background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; color:var(--text-1); padding:5px 10px; font-family:var(--mono); font-size:11px; outline:none; }
-.ios-date::-webkit-calendar-picker-indicator { filter:invert(.55); cursor:pointer; }
-.ios-select { background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text-1); border-radius:8px; padding:5px 10px; font-family:var(--display); font-size:12px; font-weight:600; cursor:pointer; outline:none; min-width:140px; }
-.ios-select option { background:#0d1428; }
-.ios-sym-select { background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text-1); border-radius:8px; padding:5px 8px; font-family:var(--display); font-size:11px; font-weight:600; cursor:pointer; outline:none; min-width:150px; }
-.ios-sym-select option { background:#0d1428; }
-.ios-btn { background:var(--teal); color:#000; border:none; border-radius:8px; padding:7px 22px; font-family:var(--display); font-size:13px; font-weight:800; cursor:pointer; }
-.ios-btn:hover { background:#2dd4bf; }
-.ios-reset-btn { background:rgba(255,255,255,0.07); color:var(--text-2); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-family:var(--display); font-size:12px; font-weight:700; cursor:pointer; }
-.ml-auto { margin-left:auto; }
-.last-upd { font-family:var(--mono); font-size:9px; color:var(--text-3); }
+.ios-date-input { border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:#333; outline:none; }
+.ios-date-input:focus { border-color:#F5A623; }
+.ios-sym-select { border:1.5px solid #e5e9f2; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif; background:#fff; cursor:pointer; outline:none; min-width:120px; }
+.ios-sym-select:focus { border-color:#F5A623; }
+.ios-action-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 28px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 9px center;
+    appearance:none; cursor:pointer; outline:none; min-width:130px;
+}
+.ios-action-select:focus { border-color:#F5A623; }
+.ios-analyze-btn { background:#F5A623; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
+.ios-analyze-btn:hover { background:#d4890e; }
+.ios-reset-btn { background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; font-family:'Exo 2',sans-serif; }
+.ios-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.ios-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.ios-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.ios-upd-text  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
+@media(max-width:768px){ .ios-filter-bar{ padding:0 12px; } .ios-filter-right{ margin-left:0;width:100%; } }
 
-.ios-warn { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:14px 18px; margin-bottom:14px; font-family:var(--display); font-size:13px; color:var(--amber); display:none; }
+/* ── CONTENT ── */
+.ios-content { padding:28px 48px 64px; }
+@media(max-width:768px){ .ios-content{ padding:16px 12px 48px; } }
 
-.ios-stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-.stat-box { background:var(--navy-800); border:1px solid var(--border); border-radius:10px; padding:12px 16px; min-width:110px; flex:1; }
-.stat-box small { display:block; font-family:var(--display); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-3); margin-bottom:4px; }
-.stat-box strong { display:block; font-family:var(--mono); font-size:1.2rem; font-weight:700; color:var(--text-1); }
-.s-ce   { border-left:3px solid var(--emerald); }
-.s-pe   { border-left:3px solid var(--rose); }
-.s-wt   { border-left:3px solid var(--amber); }
-.s-bull { border-left:3px solid var(--emerald); }
-.s-bear { border-left:3px solid var(--rose); }
+.ios-warn { background:#fff3e0; border:1px solid #ffcc80; border-radius:10px; padding:14px 20px; margin-bottom:20px; display:none; align-items:center; gap:12px; font-size:13px; color:#e65100; }
+.ios-warn.show { display:flex; }
 
-.ios-card { background:var(--navy-800); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
-.ios-card-hdr { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--navy-700); }
-.ios-card-title { font-family:var(--display); font-size:14px; font-weight:700; color:var(--text-1); }
+/* ── STATS ── */
+.ios-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:24px; }
+@media(max-width:900px){ .ios-stats{ grid-template-columns:repeat(3,1fr); } }
+@media(max-width:500px){ .ios-stats{ grid-template-columns:repeat(2,1fr); } }
+.ios-stat-card { background:#fff; border-radius:12px; border:1px solid #e8e8e8; padding:14px 16px; border-left:3px solid #e8e8e8; }
+.ios-stat-card.s-total { border-left-color:#0d9488; }
+.ios-stat-card.s-ce    { border-left-color:#059669; }
+.ios-stat-card.s-pe    { border-left-color:#dc2626; }
+.ios-stat-card.s-wait  { border-left-color:#c97f00; }
+.ios-stat-card.s-bull  { border-left-color:#059669; }
+.ios-stat-card.s-bear  { border-left-color:#dc2626; }
+.ios-stat-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#aab; margin-bottom:6px; }
+.ios-stat-val { font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:700; color:#1a1a2e; }
+.s-total .ios-stat-val { color:#0d9488; }
+.s-ce    .ios-stat-val { color:#047857; }
+.s-pe    .ios-stat-val { color:#b91c1c; }
+.s-wait  .ios-stat-val { color:#c97f00; }
+.s-bull  .ios-stat-val { color:#047857; }
+.s-bear  .ios-stat-val { color:#b91c1c; }
 
+/* ── TABLE CARD ── */
+.ios-card { background:#fff; border-radius:12px; border:1px solid #e8e8e8; overflow:hidden; }
+.ios-card-header { padding:14px 20px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; background:#fafafa; }
+.ios-card-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:#1a1a2e; }
+.ios-card-subtitle { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
 .ios-tscroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.ios-table { width:100%; border-collapse:collapse; font-family:var(--mono); min-width:900px; }
-.ios-table thead tr.hdr-grp th { padding:9px 10px 5px; text-align:center; font-family:var(--display); font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase; background:rgba(0,0,0,0.4); border-bottom:none; white-space:nowrap; }
-.ios-table thead tr.hdr-cols th { padding:5px 10px 9px; text-align:center; font-family:var(--display); font-size:8px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; background:rgba(0,0,0,0.3); color:var(--text-3); border-bottom:2px solid var(--border); white-space:nowrap; }
-.ios-table tbody td { padding:8px 10px; text-align:center; font-size:11px; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:middle; white-space:nowrap; color:var(--text-2); }
-.ios-table tbody tr:hover { background:rgba(255,255,255,0.04) !important; }
-.row-even { background:rgba(255,255,255,0.01); }
-.row-odd  { background:rgba(0,0,0,0.1); }
-.row-bull { background:rgba(16,185,129,0.04) !important; }
-.row-bear { background:rgba(244,63,94,0.04)  !important; }
 
-.sep-info { border-left:2px solid rgba(20,184,166,0.3)  !important; }
-.sep-oi   { border-left:2px solid rgba(245,158,11,0.35) !important; }
-.sep-sig  { border-left:2px solid rgba(16,185,129,0.35) !important; }
-.hdr-info { color:var(--teal)    !important; }
-.hdr-oi   { color:var(--amber)   !important; }
-.hdr-sig  { color:var(--emerald) !important; }
+.ios-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:1000px; }
+.ios-table thead tr.th-group th { padding:9px 10px 5px; text-align:center; font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; background:#f7f8fc; border-bottom:none; white-space:nowrap; }
+.ios-table thead tr.th-cols th  { padding:5px 10px 9px; text-align:center; font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; background:#f4f6fb; color:#aab; border-bottom:2px solid #e8e8e8; white-space:nowrap; }
+.g-info   { color:#0d9488 !important; }
+.g-oi     { color:#c97f00 !important; }
+.g-signal { color:#047857 !important; }
+.sep-oi     { border-left:2px solid rgba(245,166,35,.2)  !important; }
+.sep-signal { border-left:2px solid rgba(5,150,105,.2)   !important; }
 
-.c-num  { font-size:9px; color:var(--text-3); }
-.c-date { font-size:11px; font-weight:700; color:var(--teal); }
-.c-sym  { font-size:12px; font-weight:800; color:var(--sky); }
-.c-sym small { display:block; font-size:8px; color:var(--text-3); font-weight:400; }
-.c-atm  { font-size:10px; color:var(--amber); font-weight:700; }
-.c-oi   { font-size:10px; font-weight:700; color:var(--text-1); }
-.c-oi small { display:block; font-size:8px; color:var(--text-3); }
-.pct-up  { color:#34d399; font-weight:700; }
-.pct-dn  { color:#fb7185; font-weight:700; }
-.pct-neu { color:var(--text-3); }
+.ios-table tbody td { padding:8px 10px; text-align:center; font-size:11px; border-bottom:1px solid #f5f5f5; vertical-align:middle; white-space:nowrap; color:#555; }
+.ios-table tbody tr:hover { background:#fafbff !important; }
+.tr-even { background:#fff; }
+.tr-odd  { background:#fbfcff; }
+.tr-bull { background:rgba(5,150,105,.03) !important; }
+.tr-bear { background:rgba(220,38,38,.03) !important; }
 
-.sig-bull { display:inline-block; background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:10px; font-weight:800; }
-.sig-bear { display:inline-block; background:rgba(244,63,94,0.2);  color:#fb7185; border:1px solid rgba(244,63,94,0.45);  border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:10px; font-weight:800; }
-.sig-neut { display:inline-block; background:rgba(100,116,139,0.15); color:var(--text-3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:10px; }
-.act-ce { display:inline-block; background:rgba(16,185,129,0.18); color:#34d399; border:1px solid rgba(16,185,129,0.4); border-radius:5px; padding:2px 8px; font-family:var(--display); font-size:9px; font-weight:800; }
-.act-pe { display:inline-block; background:rgba(244,63,94,0.18);  color:#fb7185; border:1px solid rgba(244,63,94,0.4);  border-radius:5px; padding:2px 8px; font-family:var(--display); font-size:9px; font-weight:800; }
-.act-wt { display:inline-block; background:rgba(245,158,11,0.12); color:var(--amber); border:1px solid rgba(245,158,11,0.3); border-radius:5px; padding:2px 8px; font-family:var(--display); font-size:9px; }
-.cond-ce-pe { background:rgba(244,63,94,0.15); color:#fda4af; border:1px solid rgba(244,63,94,0.3); padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; display:inline-block; }
-.cond-pe-ce { background:rgba(16,185,129,0.15); color:#a7f3d0; border:1px solid rgba(16,185,129,0.3); padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; display:inline-block; }
-.cond-both  { background:rgba(167,139,250,0.15); color:#c4b5fd; border:1px solid rgba(167,139,250,0.3); padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; display:inline-block; }
-.cond-flat  { background:rgba(100,116,139,0.12); color:var(--text-3); border:1px solid rgba(255,255,255,0.08); padding:2px 7px; border-radius:4px; font-size:9px; display:inline-block; }
-.rank-1 { background:#7f1d1d; color:#fca5a5; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:800; display:inline-block; }
-.rank-2 { background:#78350f; color:#fcd34d; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:800; display:inline-block; }
-.rank-3 { background:#1e3a5f; color:#93c5fd; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; display:inline-block; }
-.rank-4 { background:#14532d; color:#86efac; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; display:inline-block; }
-.rank-n { background:rgba(100,116,139,0.12); color:var(--text-3); padding:2px 7px; border-radius:4px; font-size:9px; display:inline-block; }
-.reason-tip { font-size:9px; color:var(--text-3); margin-top:2px; max-width:180px; white-space:normal; line-height:1.3; }
+.c-num  { font-size:9px; color:#ccc; }
+.c-date { font-size:11px; font-weight:700; color:#F5A623; }
+.c-sym  { font-size:12px; font-weight:800; color:#1a56db; }
+.c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
+.c-atm  { font-size:10px; color:#c97f00; font-weight:700; }
+.c-fut  { font-size:10px; color:#1a56db; }
+.c-expiry { font-size:10px; color:#aab; }
+.c-oi   { font-size:11px; font-weight:700; color:#1a1a2e; }
+.c-oi small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
+.pct-up  { color:#059669; font-weight:700; }
+.pct-dn  { color:#dc2626; font-weight:700; }
+.pct-neu { color:#aab; }
 
-.ios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px; }
-.ios-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.1); border-top:3px solid var(--teal); border-radius:50%; animation:iosspin 1s linear infinite; }
-@keyframes iosspin { to { transform:rotate(360deg); } }
-.ios-spin-txt { color:var(--text-2); margin-top:12px; font-family:var(--display); font-size:13px; }
-.ios-empty { text-align:center; padding:60px 20px; color:var(--text-3); font-family:var(--display); font-size:13px; }
-.ios-empty i { font-size:2.5rem; opacity:.3; display:block; margin-bottom:10px; }
+.sig-bull { display:inline-block; background:rgba(5,150,105,.12); color:#047857; border:1px solid rgba(5,150,105,.35); border-radius:6px; padding:3px 10px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; }
+.sig-bear { display:inline-block; background:rgba(220,38,38,.1);  color:#b91c1c; border:1px solid rgba(220,38,38,.35);  border-radius:6px; padding:3px 10px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; }
+.sig-neut { display:inline-block; background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; border-radius:6px; padding:3px 10px; font-family:'Exo 2',sans-serif; font-size:10px; }
+.act-ce { display:inline-block; background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  border-radius:5px; padding:2px 8px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; }
+.act-pe { display:inline-block; background:rgba(220,38,38,.08); color:#b91c1c; border:1px solid rgba(220,38,38,.25); border-radius:5px; padding:2px 8px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; }
+.act-wt { display:inline-block; background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.3); border-radius:5px; padding:2px 8px; font-family:'Exo 2',sans-serif; font-size:10px; }
+
+.cond-base  { display:inline-block; padding:2px 7px; border-radius:4px; font-size:9px; font-weight:700; }
+.cond-ce-pe { background:rgba(220,38,38,.1); color:#b91c1c; border:1px solid rgba(220,38,38,.25); }
+.cond-pe-ce { background:rgba(5,150,105,.1); color:#047857; border:1px solid rgba(5,150,105,.25); }
+.cond-both  { background:rgba(124,58,237,.1); color:#6d28d9; border:1px solid rgba(124,58,237,.25); }
+.cond-flat  { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
+
+.rank-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700; }
+.rank-1 { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+.rank-2 { background:#fff7ed; color:#c97f00; border:1px solid #fed7aa; }
+.rank-3 { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.rank-4 { background:#f0fdf4; color:#047857; border:1px solid #bbf7d0; }
+.rank-n { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
+.rank-diff { font-size:8px; color:#aab; margin-top:1px; }
+.reason-tip { font-size:9px; color:#aab; margin-top:3px; line-height:1.4; max-width:200px; white-space:normal; }
+
+.ios-empty { text-align:center; padding:56px 20px; color:#ccc; }
+.ios-empty i { font-size:2.5rem; display:block; margin-bottom:12px; color:#e5e9f2; }
+.ios-empty p { font-size:13px; }
+.ios-spinner-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:48px; color:#aab; font-size:13px; }
+.ios-spinner { width:28px; height:28px; border:3px solid #f0f0f0; border-top:3px solid #F5A623; border-radius:50%; animation:iosSpin 1s linear infinite; flex-shrink:0; }
 </style>
-@endpush
 
-<section class="pt-40 pb-50">
-<div class="container-fluid content-container">
+<div class="ios-wrap">
 
-    <div class="ios-header">
-        <h4 class="ios-title">&#9670; Intraday OI Snapshot <span>09:15 → 12:00</span></h4>
-        <div class="ios-sub" style="margin-top:8px;">
-            <span class="lp lp-snap">Open: 09:15 &nbsp;→&nbsp; Snapshot: 12:00</span>
-            <span class="lp lp-bear">CE↑ + PE↓ → BEARISH → BUY PE</span>
-            <span class="lp lp-bull">CE↓ + PE↑ → BULLISH → BUY CE</span>
-        </div>
-        <div class="ios-sub" style="margin-top:5px; color:var(--text-3);">
-            Compares 09:15 open vs 12:00 midday CE/PE OI &nbsp;·&nbsp; Config-scoped symbols &nbsp;·&nbsp; cp_option_ohlc_ tables
+{{-- HERO --}}
+<div class="ios-hero ios-anim">
+    <div class="ios-hero-left">
+        <h1>Intraday OI <span>Snapshot</span></h1>
+        <p>
+            Compares CE/PE Open Interest at 09:15 (market open) vs 12:00 (midday snapshot)
+            to detect intraday option writing momentum — bullish or bearish.
+        </p>
+        <div class="ios-hero-pills">
+            <span class="ios-pill ios-pill-snap">09:15 Open → 12:00 Snapshot</span>
+            <span class="ios-pill ios-pill-bull">CE↓ + PE↑ → BULLISH → BUY CE</span>
+            <span class="ios-pill ios-pill-bear">CE↑ + PE↓ → BEARISH → BUY PE</span>
         </div>
     </div>
+    <div class="ios-hero-icon"><i class="las la-camera"></i></div>
+</div>
 
-    <div class="ios-controls">
-        <span class="ctrl-label">TF</span>
-        <div class="tf-group">
-            <button class="tf-btn active" data-tf="15min" onclick="setTf('15min',this)">15 Min</button>
-            <button class="tf-btn"        data-tf="30min" onclick="setTf('30min',this)">30 Min</button>
-            <button class="tf-btn"        data-tf="1hr"   onclick="setTf('1hr',this)">1 Hour</button>
-        </div>
-        <div class="ctrl-sep"></div>
-        <span class="ctrl-label">FROM</span>
-        <input type="date" id="ios-from" class="ios-date" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
-        <span class="ctrl-label">TO</span>
-        <input type="date" id="ios-to"   class="ios-date" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
-        <div class="ctrl-sep"></div>
-        <span class="ctrl-label">SYMBOL</span>
-        <select id="ios-sym" class="ios-sym-select" multiple size="1"><option value="">Loading…</option></select>
-        <span class="ctrl-label">ACTION</span>
-        <select id="ios-action" class="ios-select">
-            <option value="">All Actions</option>
-            <option value="BUY CE">BUY CE</option>
-            <option value="BUY PE">BUY PE</option>
-            <option value="WAIT">WAIT</option>
+{{-- FILTER BAR --}}
+<div class="ios-filter-bar">
+    <div class="ios-filter-inner">
+        <span class="ios-filter-label">From</span>
+        <input type="date" id="ios-from" class="ios-date-input"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+
+        <span class="ios-filter-label">To</span>
+        <input type="date" id="ios-to" class="ios-date-input"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+
+        <div class="ios-sep"></div>
+
+        <span class="ios-filter-label">Symbol</span>
+        <select id="ios-sym" class="ios-sym-select" multiple size="1">
+            <option value="">Loading…</option>
         </select>
-        <button class="ios-btn" onclick="runAnalysis()">&#9670; Analyze</button>
-        <button class="ios-reset-btn" onclick="resetAll()">&#8630; Reset</button>
-        <div class="ml-auto d-flex align-items-center gap-3">
-            <span id="ios-info" style="font-family:var(--mono);font-size:10px;color:var(--text-2);"></span>
-            <span class="last-upd" id="ios-upd"></span>
+
+        <span class="ios-filter-label">Action</span>
+        <select id="ios-action" class="ios-action-select">
+            <option value="">All Actions</option>
+            <option value="BUY CE">BUY CE Only</option>
+            <option value="BUY PE">BUY PE Only</option>
+            <option value="WAIT">WAIT Only</option>
+        </select>
+
+        <button class="ios-analyze-btn" onclick="iosAnalyze()">
+            <i class="las la-camera"></i> Analyze
+        </button>
+        <button class="ios-reset-btn" onclick="iosReset()">↺ Reset</button>
+
+        <div class="ios-filter-right">
+            <span class="ios-info-text" id="ios-info"></span>
+            <span class="ios-upd-text"  id="ios-upd"></span>
+        </div>
+    </div>
+</div>
+
+{{-- CONTENT --}}
+<div class="ios-content">
+
+    <div class="ios-warn" id="ios-warn">
+        <i class="las la-exclamation-triangle"></i>
+        <div>
+            <strong>No Analysis Config Found</strong>
+            <div style="font-size:12px;margin-top:3px;" id="ios-warn-msg">
+                Go to Admin → Analysis Config and create a 15min config.
+            </div>
         </div>
     </div>
 
-    <div class="ios-warn" id="ios-warn">&#9888; <span id="ios-warn-msg"></span></div>
-
-    <div class="ios-stats">
-        <div class="stat-box"><small>Total</small><strong id="st-total" style="color:var(--teal);">0</strong></div>
-        <div class="stat-box s-ce"><small>BUY CE</small><strong id="st-ce" style="color:var(--emerald);">0</strong></div>
-        <div class="stat-box s-pe"><small>BUY PE</small><strong id="st-pe" style="color:var(--rose);">0</strong></div>
-        <div class="stat-box s-wt"><small>WAIT</small><strong id="st-wt" style="color:var(--amber);">0</strong></div>
-        <div class="stat-box s-bull"><small>Bullish</small><strong id="st-bull" style="color:var(--emerald);">0</strong></div>
-        <div class="stat-box s-bear"><small>Bearish</small><strong id="st-bear" style="color:var(--rose);">0</strong></div>
+    {{-- Stats --}}
+    <div class="ios-stats ios-anim">
+        <div class="ios-stat-card s-total"><div class="ios-stat-label">Total</div><div class="ios-stat-val" id="st-total">—</div></div>
+        <div class="ios-stat-card s-ce">  <div class="ios-stat-label">BUY CE</div><div class="ios-stat-val" id="st-ce">—</div></div>
+        <div class="ios-stat-card s-pe">  <div class="ios-stat-label">BUY PE</div><div class="ios-stat-val" id="st-pe">—</div></div>
+        <div class="ios-stat-card s-wait"><div class="ios-stat-label">WAIT</div>  <div class="ios-stat-val" id="st-wait">—</div></div>
+        <div class="ios-stat-card s-bull"><div class="ios-stat-label">Bullish</div><div class="ios-stat-val" id="st-bull">—</div></div>
+        <div class="ios-stat-card s-bear"><div class="ios-stat-label">Bearish</div><div class="ios-stat-val" id="st-bear">—</div></div>
     </div>
 
-    <div class="ios-card">
-        <div class="ios-card-hdr">
-            <span class="ios-card-title" id="ios-card-title">&#9670; Intraday OI Snapshot — 15 Min &nbsp;·&nbsp; 09:15 → 12:00</span>
-            <span style="font-size:10px;color:var(--text-3);margin-left:auto;font-family:var(--mono);" id="ios-card-info"></span>
+    {{-- Table --}}
+    <div class="ios-card ios-anim">
+        <div class="ios-card-header">
+            <div class="ios-card-title">◆ Intraday OI Snapshot — 15min · 09:15 → 12:00</div>
+            <span class="ios-card-subtitle" id="ios-subtitle">Select dates and click Analyze</span>
         </div>
         <div class="ios-tscroll">
             <table class="ios-table">
                 <thead>
-                    <tr class="hdr-grp">
-                        <th colspan="5" class="hdr-info">Market Info</th>
-                        <th colspan="4" class="hdr-oi sep-oi">&#9651; CE / PE OI Change (09:15 → 12:00)</th>
-                        <th colspan="4" class="hdr-sig sep-sig">&#9678; Signal</th>
+                    <tr class="th-group">
+                        <th colspan="5" class="g-info">Market Info</th>
+                        <th colspan="4" class="g-oi sep-oi">CE / PE OI Change (09:15 → 12:00)</th>
+                        <th colspan="4" class="g-signal sep-signal">Signal</th>
                     </tr>
-                    <tr class="hdr-cols">
+                    <tr class="th-cols">
                         <th>#</th>
                         <th>Date</th>
                         <th>Symbol</th>
-                        <th>ATM / FUT<br><span style="font-size:7px;opacity:.5;font-weight:400;">Strike / Price</span></th>
+                        <th>ATM / FUT</th>
                         <th>Expiry</th>
-                        <th class="sep-oi">CE OI<br><span style="font-size:7px;opacity:.5;font-weight:400;">Today vs Prev</span></th>
-                        <th>CE %<br><span style="font-size:7px;opacity:.5;font-weight:400;">T vs T-1</span></th>
-                        <th>PE OI<br><span style="font-size:7px;opacity:.5;font-weight:400;">Today vs Prev</span></th>
-                        <th>PE %<br><span style="font-size:7px;opacity:.5;font-weight:400;">T vs T-1</span></th>
-                        <th class="sep-sig">Sentiment</th>
+                        <th class="sep-oi">CE OI<br><span style="font-size:7px;font-weight:400;opacity:.6;">Snap / Open</span></th>
+                        <th>CE Chg %</th>
+                        <th>PE OI<br><span style="font-size:7px;font-weight:400;opacity:.6;">Snap / Open</span></th>
+                        <th>PE Chg %</th>
+                        <th class="sep-signal">Sentiment</th>
                         <th>Condition</th>
-                        <th>Strength<br><span style="font-size:7px;opacity:.5;font-weight:400;">|CE−PE| diff</span></th>
+                        <th>Strength</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="ios-tbody">
                     <tr><td colspan="13">
-                        <div class="ios-empty"><i class="fas fa-chart-area"></i>Select date range and click <strong>Analyze</strong></div>
+                        <div class="ios-empty">
+                            <i class="las la-chart-bar"></i>
+                            <p>Select a date range and click <strong>Analyze</strong></p>
+                        </div>
                     </td></tr>
                 </tbody>
             </table>
@@ -209,116 +274,165 @@ body { background:var(--navy-900); }
     </div>
 
 </div>
-</section>
+</div>
+
 @endsection
 
 @push('script')
 <script>
-const ANALYZE_URL = '{{ route("intraday-oi-snapshot.analyze") }}';
-const SYM_URL     = '{{ route("intraday-oi-snapshot.symbols") }}';
-const todayStr    = '{{ now()->toDateString() }}';
-let curTf = '15min', symCache = {};
+// ═══════════════════════════════════════════════════════════
+//  Intraday OI Snapshot — JS (no jQuery)
+// ═══════════════════════════════════════════════════════════
 
-$(document).ready(function () { loadSymbols(); });
+var IOS_ANALYZE = '{{ route("intraday-oi-snapshot.analyze") }}';
+var IOS_SYMBOLS = '{{ route("intraday-oi-snapshot.symbols") }}';
+var IOS_TODAY   = '{{ now()->toDateString() }}';
+var iosSymCache = null;
 
-function setTf(tf, btn) {
-    curTf = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const snap = { '15min': '12:00', '30min': '12:00', '1hr': '11:15' };
-    $('#ios-card-title').text('⬡ Intraday OI Snapshot — ' + tf.toUpperCase() + ' · 09:15 → ' + snap[tf]);
-    loadSymbols();
+function el(id)      { return document.getElementById(id); }
+function html(id, h) { var e = el(id); if (e) e.innerHTML = h; }
+function txt(id, t)  { var e = el(id); if (e) e.textContent = t; }
+
+document.addEventListener('DOMContentLoaded', function() { iosLoadSymbols(); });
+
+function iosLoadSymbols() {
+    if (iosSymCache !== null) { iosRebuildSym(iosSymCache); return; }
+    fetch(IOS_SYMBOLS, { headers:{'X-Requested-With':'XMLHttpRequest'} })
+        .then(function(r){ return r.json(); })
+        .then(function(res) {
+            if (res.no_config) { iosShowWarn(res.message||''); iosRebuildSym([]); return; }
+            iosHideWarn();
+            iosSymCache = res.symbols || [];
+            iosRebuildSym(iosSymCache);
+        });
 }
 
-function loadSymbols() {
-    if (symCache[curTf]) { rebuildSym(symCache[curTf]); return; }
-    $.get(SYM_URL, { timeframe: curTf }, function (res) {
-        if (res.no_config) { showWarn(res.message || ''); rebuildSym([]); return; }
-        hideWarn();
-        symCache[curTf] = res.symbols || [];
-        rebuildSym(symCache[curTf]);
-    });
-}
-
-function rebuildSym(syms) {
-    const sel = document.getElementById('ios-sym');
-    const prev = Array.from(sel.selectedOptions).map(o => o.value);
-    sel.innerHTML = syms.length ? syms.map(s => `<option value="${s}"${prev.includes(s)?' selected':''}>${s}</option>`).join('') : '<option value="" disabled>No symbols</option>';
+function iosRebuildSym(syms) {
+    var sel  = el('ios-sym');
+    var prev = Array.from(sel.selectedOptions||[]).map(function(o){ return o.value; });
+    if (!syms.length) { sel.innerHTML='<option value="" disabled>No symbols</option>'; sel.size=1; return; }
+    sel.innerHTML = syms.map(function(s){
+        return '<option value="'+s+'"'+(prev.indexOf(s)>-1?' selected':'')+'>'+s+'</option>';
+    }).join('');
     sel.size = Math.min(3, Math.max(1, syms.length));
 }
 
-function runAnalysis() {
-    const from   = $('#ios-from').val();
-    const to     = $('#ios-to').val();
-    const syms   = Array.from(document.getElementById('ios-sym').selectedOptions).map(o => o.value).filter(Boolean);
-    const action = $('#ios-action').val();
-    if (!from || !to) { alert('Select both dates'); return; }
+function iosAnalyze() {
+    var from   = el('ios-from').value;
+    var to     = el('ios-to').value;
+    var action = el('ios-action').value;
+    var syms   = Array.from((el('ios-sym').selectedOptions)||[]).map(function(o){ return o.value; }).filter(Boolean);
 
-    hideWarn(); resetStats();
-    $('#ios-tbody').html(`<tr><td colspan="13"><div class="ios-loading"><div class="ios-spinner"></div><div class="ios-spin-txt">Comparing 09:15 → 12:00 OI…</div></div></td></tr>`);
+    if (!from || !to) { alert('Please select both dates.'); return; }
 
-    $.ajax({
-        url: ANALYZE_URL, type: 'GET',
-        data: { timeframe: curTf, from_date: from, to_date: to, symbols: syms, filter_action: action },
-        success(res) {
-            if (res.no_config) { showWarn(res.message); emptyTable(); return; }
-            if (!res.success || !res.data || !res.data.length) { emptyTable(res.message); return; }
-            renderTable(res.data);
-            updateStats(res);
-            $('#ios-info').html(`CE: <span style="color:var(--emerald)">${res.buy_ce_count}</span> &nbsp;·&nbsp; PE: <span style="color:var(--rose)">${res.buy_pe_count}</span> &nbsp;·&nbsp; TF: <span style="color:var(--teal)">${res.timeframe}</span>`);
-            $('#ios-card-info').text(res.message);
-            $('#ios-upd').text('Updated ' + new Date().toLocaleTimeString());
-        },
-        error(xhr) { emptyTable('⚠ ' + ((xhr.responseJSON && xhr.responseJSON.message) || 'Server error')); }
+    iosHideWarn();
+    iosResetStats();
+
+    html('ios-tbody', '<tr><td colspan="13"><div class="ios-spinner-row">'
+        + '<div class="ios-spinner"></div>'
+        + 'Comparing 09:15 → 12:00 OI for ' + from + ' → ' + to + '…'
+        + '</div></td></tr>');
+    txt('ios-subtitle', 'Loading…');
+
+    var params = new URLSearchParams({ from_date:from, to_date:to, filter_action:action });
+    syms.forEach(function(s){ params.append('symbols[]', s); });
+
+    fetch(IOS_ANALYZE + '?' + params.toString(), { headers:{'X-Requested-With':'XMLHttpRequest'} })
+        .then(function(r){ if(!r.ok) throw new Error('Server error '+r.status); return r.json(); })
+        .then(function(res) {
+            if (res.no_config) { iosShowWarn(res.message); iosEmptyTable('No active config.'); return; }
+            if (!res.success || !res.data || !res.data.length) {
+                iosEmptyTable(res.message || 'No signals found.');
+                return;
+            }
+            iosUpdateStats(res);
+            iosRenderTable(res.data);
+            el('ios-info').innerHTML =
+                '<span style="color:#047857;">CE: '+res.buy_ce_count+'</span>'
+                +' &nbsp;·&nbsp; '
+                +'<span style="color:#b91c1c;">PE: '+res.buy_pe_count+'</span>'
+                +' &nbsp;·&nbsp; 15min · 09:15→12:00';
+            txt('ios-subtitle', '15min · '+from+' → '+to+' · '+res.message);
+            txt('ios-upd', 'Updated ' + new Date().toLocaleTimeString());
+        })
+        .catch(function(err){ iosEmptyTable('⚠ '+err.message); });
+}
+
+function iosRenderTable(data) {
+    var h = '', num = 1;
+    data.forEach(function(r, i) {
+        var isBull = r.sentiment==='BULLISH', isBear = r.sentiment==='BEARISH';
+        var rowCls = (isBull?'tr-bull':isBear?'tr-bear':'') + ' ' + (i%2===0?'tr-even':'tr-odd');
+        var sentBadge = isBull ? '<span class="sig-bull">▲ BULLISH</span>'
+                      : isBear ? '<span class="sig-bear">▼ BEARISH</span>'
+                      : '<span class="sig-neut">— NEUTRAL</span>';
+        var actBadge = r.trade_action==='BUY CE' ? '<span class="act-ce">📈 BUY CE</span>'
+                     : r.trade_action==='BUY PE' ? '<span class="act-pe">📉 BUY PE</span>'
+                     : '<span class="act-wt">⏸ WAIT</span>';
+        var cond = r.condition || '';
+        var condCls = 'cond-base cond-flat';
+        if (cond.includes('CE ↑')&&cond.includes('PE ↓')) condCls='cond-base cond-ce-pe';
+        else if (cond.includes('CE ↓')&&cond.includes('PE ↑')) condCls='cond-base cond-pe-ce';
+        else if (cond.includes('Both')) condCls='cond-base cond-both';
+        var rankCls = {'Rank 1':'rank-badge rank-1','Rank 2':'rank-badge rank-2','Rank 3':'rank-badge rank-3','Rank 4':'rank-badge rank-4','Normal':'rank-badge rank-n'}[r.strength_rank]||'rank-badge rank-n';
+
+        h += '<tr class="'+rowCls+'">'
+            +'<td class="c-num">'+num+'</td>'
+            +'<td class="c-date">'+r.date+'</td>'
+            +'<td class="c-sym">'+esc(r.symbol)+'</td>'
+            +'<td>'+(r.atm_strike?'<span class="c-atm">₹'+nInt(r.atm_strike)+'</span>':'—')
+                   +(r.fut_price?'<br><span class="c-fut">F:₹'+f(r.fut_price)+'</span>':'')+'</td>'
+            +'<td class="c-expiry">'+(r.expiry||'—')+'</td>'
+            +'<td class="sep-oi c-oi">'+nInt(r.ce_oi)+'<small>open: '+nInt(r.ce_oi_prev)+'</small></td>'
+            +'<td>'+pctCell(r.ce_oi_pct)+'</td>'
+            +'<td class="c-oi">'+nInt(r.pe_oi)+'<small>open: '+nInt(r.pe_oi_prev)+'</small></td>'
+            +'<td>'+pctCell(r.pe_oi_pct)+'</td>'
+            +'<td class="sep-signal">'+sentBadge+'</td>'
+            +'<td><span class="'+condCls+'">'+esc(cond)+'</span>'
+                +(r.reason?'<div class="reason-tip">'+esc(r.reason)+'</div>':'')+'</td>'
+            +'<td><span class="'+rankCls+'">'+r.strength_rank+'</span><div class="rank-diff">Δ '+r.oi_diff+'%</div></td>'
+            +'<td>'+actBadge+'</td>'
+            +'</tr>';
+        num++;
     });
+    html('ios-tbody', h || iosEmptyHtml('No results.'));
 }
 
-function renderTable(data) {
-    let html = '', rowNum = 1;
-    data.forEach(function (r, i) {
-        const isBull = r.sentiment === 'BULLISH', isBear = r.sentiment === 'BEARISH';
-        const rowCls = (isBull ? 'row-bull' : isBear ? 'row-bear' : '') + ' ' + (i%2===0?'row-even':'row-odd');
-        const sentBadge = isBull ? '<span class="sig-bull">&#8679; BULLISH</span>' : isBear ? '<span class="sig-bear">&#8681; BEARISH</span>' : '<span class="sig-neut">&#9135; NEUTRAL</span>';
-        const actBadge  = r.trade_action === 'BUY CE' ? '<span class="act-ce">&#128200; BUY CE</span>' : r.trade_action === 'BUY PE' ? '<span class="act-pe">&#128201; BUY PE</span>' : '<span class="act-wt">&#9646; WAIT</span>';
-        let condCls = 'cond-flat', condTxt = r.condition || 'Flat';
-        if (condTxt.includes('CE ↑') && condTxt.includes('PE ↓')) condCls = 'cond-ce-pe';
-        else if (condTxt.includes('CE ↓') && condTxt.includes('PE ↑')) condCls = 'cond-pe-ce';
-        else if (condTxt.includes('Both')) condCls = 'cond-both';
-        const rankMap = {'Rank 1':'rank-1','Rank 2':'rank-2','Rank 3':'rank-3','Rank 4':'rank-4','Normal':'rank-n'};
-        const rankBadge = `<span class="${rankMap[r.strength_rank]||'rank-n'}">${r.strength_rank}</span><div style="font-size:8px;color:var(--text-3);margin-top:1px;">Δ ${r.oi_diff}%</div>`;
-        html += `<tr class="${rowCls}">
-            <td class="c-num">${rowNum++}</td>
-            <td class="c-date">${r.date}</td>
-            <td class="c-sym">${esc(r.symbol)}${r.expiry?`<small>${r.expiry}</small>`:''}</td>
-            <td class="c-atm">${r.atm_strike?'₹'+nInt(r.atm_strike):'—'}${r.fut_price?`<br><span style="font-size:9px;color:var(--sky);">F:₹${f(r.fut_price)}</span>`:''}</td>
-            <td style="font-size:9px;color:var(--text-3);">${r.expiry||'—'}</td>
-            <td class="sep-oi c-oi">${nInt(r.ce_oi)}<small>prev: ${nInt(r.ce_oi_prev)}</small></td>
-            <td>${pctCell(r.ce_oi_pct)}</td>
-            <td class="c-oi">${nInt(r.pe_oi)}<small>prev: ${nInt(r.pe_oi_prev)}</small></td>
-            <td>${pctCell(r.pe_oi_pct)}</td>
-            <td class="sep-sig">${sentBadge}</td>
-            <td><span class="${condCls}">${condTxt}</span>${r.reason?`<div class="reason-tip">${esc(r.reason)}</div>`:''}</td>
-            <td>${rankBadge}</td>
-            <td>${actBadge}</td>
-        </tr>`;
-    });
-    if (!html) emptyTable('No results.'); else $('#ios-tbody').html(html);
+function iosUpdateStats(res) {
+    txt('st-total', res.total_records||'0');
+    txt('st-ce',   res.buy_ce_count||'0');
+    txt('st-pe',   res.buy_pe_count||'0');
+    txt('st-wait', res.wait_count||'0');
+    txt('st-bull', res.bullish_count||'0');
+    txt('st-bear', res.bearish_count||'0');
 }
-
-function updateStats(res) {
-    $('#st-total').text(res.total_records||0); $('#st-ce').text(res.buy_ce_count||0);
-    $('#st-pe').text(res.buy_pe_count||0);     $('#st-wt').text(res.wait_count||0);
-    $('#st-bull').text(res.bullish_count||0);  $('#st-bear').text(res.bearish_count||0);
+function iosResetStats() {
+    ['st-total','st-ce','st-pe','st-wait','st-bull','st-bear'].forEach(function(id){ txt(id,'—'); });
 }
-function resetStats() { ['st-total','st-ce','st-pe','st-wt','st-bull','st-bear'].forEach(id => $('#'+id).text('0')); }
-
-function pctCell(v) { const n=parseFloat(v)||0; const c=n>0?'pct-up':n<0?'pct-dn':'pct-neu'; return `<span class="${c}">${n>0?'+':''}${n.toFixed(2)}%</span>`; }
-function f(v)    { return parseFloat(v||0).toFixed(2); }
-function nInt(v) { const n=Number(v)||0; if(n>=1e7)return(n/1e7).toFixed(2)+'Cr'; if(n>=1e5)return(n/1e5).toFixed(2)+'L'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return n.toLocaleString('en-IN'); }
-function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function emptyTable(msg) { $('#ios-tbody').html(`<tr><td colspan="13"><div class="ios-empty"><i class="fas fa-chart-area"></i>${msg||'Select dates and click Analyze'}</div></td></tr>`); }
-function showWarn(msg) { $('#ios-warn').show(); $('#ios-warn-msg').text(msg||''); }
-function hideWarn()    { $('#ios-warn').hide(); }
-function resetAll() { $('#ios-from,#ios-to').val(todayStr); $('#ios-sym option').prop('selected',false); $('#ios-action').val(''); resetStats(); emptyTable(); $('#ios-info').text(''); hideWarn(); }
+function iosShowWarn(msg) { el('ios-warn').classList.add('show'); txt('ios-warn-msg', msg||''); }
+function iosHideWarn()    { el('ios-warn').classList.remove('show'); }
+function iosEmptyTable(msg){ html('ios-tbody', iosEmptyHtml(msg)); }
+function iosEmptyHtml(msg) {
+    return '<tr><td colspan="13"><div class="ios-empty"><i class="las la-chart-bar"></i><p>'+(msg||'No data found.')+'</p></div></td></tr>';
+}
+function iosReset() {
+    el('ios-from').value = IOS_TODAY;
+    el('ios-to').value   = IOS_TODAY;
+    el('ios-action').value = '';
+    Array.from(el('ios-sym').options).forEach(function(o){ o.selected=false; });
+    iosResetStats();
+    iosEmptyTable('Reset — select dates and click Analyze.');
+    txt('ios-info',''); txt('ios-upd','');
+    txt('ios-subtitle','Select dates and click Analyze');
+    iosHideWarn();
+}
+function pctCell(v) {
+    if (v==null) return '<span class="pct-neu">—</span>';
+    var n=parseFloat(v)||0, cls=n>0?'pct-up':n<0?'pct-dn':'pct-neu';
+    return '<span class="'+cls+'">'+(n>0?'+':'')+n.toFixed(2)+'%</span>';
+}
+function f(v)   { return parseFloat(v||0).toFixed(2); }
+function nInt(v){ var n=Number(v)||0; if(n>=1e7)return(n/1e7).toFixed(2)+'Cr'; if(n>=1e5)return(n/1e5).toFixed(2)+'L'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return n.toLocaleString('en-IN'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 @endpush

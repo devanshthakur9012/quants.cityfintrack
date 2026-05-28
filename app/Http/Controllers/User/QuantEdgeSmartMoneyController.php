@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * QuantEdge — Smart Money Analysis
  *
- * SMC signals from cp_stock_ohlc_{timeframe} via analysis_config scope.
+ * SMC signals from cp_stock_ohlc_15min via analysis_config scope.
+ * Fixed to 15min timeframe — no timeframe switching in UI.
  *
  * ── Fixes vs previous version ────────────────────────────────────────────────
  *
@@ -45,7 +46,8 @@ use Illuminate\Support\Facades\Log;
  */
 class QuantEdgeSmartMoneyController extends Controller
 {
-    private const TIMEFRAMES  = ['15min', '30min', '1hr'];
+    // Fixed to 15min — no timeframe switching
+    private const TF          = '15min';
     private const MIN_CANDLES = 30;   // reduced from 50 — 30 is sufficient for all indicators
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -55,31 +57,30 @@ class QuantEdgeSmartMoneyController extends Controller
     public function index()
     {
         $pageTitle = 'QuantEdge — Smart Money Analysis';
-        return view($this->activeTemplate . 'user.quantedge-smc.index', compact('pageTitle'));
+        return view(activeTemplate() . 'user.quantedge-smc.index', compact('pageTitle'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Symbols (config-scoped)
     // ─────────────────────────────────────────────────────────────────────────
 
-    public function getSymbols(Request $request)
+    public function getSymbols()
     {
-        $timeframe = $this->resolveTimeframe($request);
-        $config    = $this->getActiveConfig($timeframe);
+        $config = $this->getActiveConfig();
 
         if (!$config) {
             return response()->json([
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => "No active Analysis Config for [{$timeframe}].",
+                'message'   => 'No active Analysis Config for [' . self::TF . '].',
             ]);
         }
 
         return response()->json([
             'success'   => true,
             'symbols'   => $this->getConfigSymbols($config->id),
-            'timeframe' => $timeframe,
+            'timeframe' => self::TF,
         ]);
     }
 
@@ -90,7 +91,6 @@ class QuantEdgeSmartMoneyController extends Controller
     public function signals(Request $request)
     {
         try {
-            $timeframe    = $this->resolveTimeframe($request);
             $fromDate     = $request->get('from_date', now()->toDateString());
             $toDate       = $request->get('to_date',   now()->toDateString());
             $symbolFilter = strtoupper($request->get('symbol', 'ALL'));
@@ -100,12 +100,12 @@ class QuantEdgeSmartMoneyController extends Controller
             if ($toDate   > $todayStr) $toDate   = $todayStr;
             if ($fromDate > $toDate)   [$fromDate, $toDate] = [$toDate, $fromDate];
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active Analysis Config for [{$timeframe}].",
+                    'message'   => 'No active Analysis Config for [' . self::TF . '].',
                 ]);
             }
 
@@ -118,7 +118,7 @@ class QuantEdgeSmartMoneyController extends Controller
                 ? $allSymbols
                 : [$symbolFilter];
 
-            $stockTable = 'cp_stock_ohlc_' . $timeframe;
+            $stockTable = 'cp_stock_ohlc_15min';
 
             // Trading dates that have actual data
             $tradeDates = DB::table($stockTable)
@@ -139,7 +139,7 @@ class QuantEdgeSmartMoneyController extends Controller
                     'symbols'   => $allSymbols,
                     'from_date' => $fromDate,
                     'to_date'   => $toDate,
-                    'timeframe' => $timeframe,
+                    'timeframe' => self::TF,
                     'is_range'  => ($fromDate !== $toDate),
                 ]);
             }
@@ -191,7 +191,7 @@ class QuantEdgeSmartMoneyController extends Controller
                 'symbols'   => $allSymbols,
                 'from_date' => $fromDate,
                 'to_date'   => $toDate,
-                'timeframe' => $timeframe,
+                'timeframe' => self::TF,
                 'is_today'  => ($fromDate === $todayStr && $toDate === $todayStr),
                 'is_range'  => ($fromDate !== $toDate),
             ]);
@@ -250,9 +250,6 @@ class QuantEdgeSmartMoneyController extends Controller
             $trend = 'SIDEWAYS';
         }
 
-        // ── FIX 2: Trend confirmation via EMA slope ───────────────────────
-        // Also use EMA direction as a secondary trend confirmation below.
-
         // ── FIX 4 (moved up): EMA-20 — seeded from SMA of first 20 values ─
         $emaPeriod = 20;
         $k         = 2.0 / ($emaPeriod + 1);
@@ -308,7 +305,6 @@ class QuantEdgeSmartMoneyController extends Controller
         //              AND last candle's open >= prev candle's midpoint
         $prevBodyPct  = $prev['close'] > 0 ? abs($prev['close'] - $prev['open']) / $prev['close'] * 100 : 0;
         $prevMid      = ($prev['high'] + $prev['low']) / 2;
-        $prev2Mid     = ($prev2['high'] + $prev2['low']) / 2;
 
         $fvgBull = ($prev['close'] > $prev['open'])           // prev was bullish
             && ($prevBodyPct > 0.2)                           // body at least 0.2%
@@ -438,9 +434,12 @@ class QuantEdgeSmartMoneyController extends Controller
         return ['buy'=>0,'sell'=>0,'buy_pullback'=>0,'sell_pullback'=>0,'no_trade'=>0,'total'=>0];
     }
 
-    private function getActiveConfig(string $timeframe): ?object
+    private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', $timeframe)->where('is_active', 1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
@@ -449,11 +448,5 @@ class QuantEdgeSmartMoneyController extends Controller
             ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
             ->pluck('symbol_lists.symbol')->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min')));
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
     }
 }

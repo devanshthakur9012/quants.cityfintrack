@@ -12,8 +12,9 @@ use Carbon\Carbon;
 /**
  * StraddleStrategyController — BUY CE / BUY PE Signal Engine
  *
- * Data  : cp_option_ohlc_{timeframe} + cp_fut_ohlc_{timeframe}
+ * Data  : cp_option_ohlc_15min + cp_fut_ohlc_15min
  * Scope : analysis_configs + analysis_config_symbols
+ * Timeframe : 15min ONLY
  *
  * ── Signal Philosophy (industry standard) ────────────────────────────────────
  *
@@ -61,11 +62,13 @@ use Carbon\Carbon;
  */
 class StraddleStrategyController extends Controller
 {
-    private const TIMEFRAMES = ['15min', '30min', '1hr'];
+    // Fixed to 15min — no timeframe switching in UI
+    private const TF = '15min';
+
     private const ENTRY_SLOT = '09:15';
 
     // Minimum factors required to fire a directional signal (out of 5)
-    private const MIN_SCORE  = 3;
+    private const MIN_SCORE = 3;
 
     private const STRATEGIES = [
         'long_straddle'  => ['name' => 'Long Straddle',  'ce_pos' => 'ATM',   'pe_pos' => 'ATM'],
@@ -81,7 +84,7 @@ class StraddleStrategyController extends Controller
     public function index()
     {
         $pageTitle = 'Straddle & Strangle — Signal Engine';
-        return view($this->activeTemplate . 'user.straddle-strategy.index', compact('pageTitle'));
+        return view(activeTemplate() . 'user.straddle-strategy.index', compact('pageTitle'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -91,8 +94,7 @@ class StraddleStrategyController extends Controller
     public function getData(Request $request)
     {
         try {
-            $timeframe = $this->resolveTimeframe($request);
-            $stratKey  = $request->get('strategy', 'long_straddle');
+            $stratKey = $request->get('strategy', 'long_straddle');
             if (!isset(self::STRATEGIES[$stratKey])) $stratKey = 'long_straddle';
             $def = self::STRATEGIES[$stratKey];
 
@@ -104,12 +106,12 @@ class StraddleStrategyController extends Controller
             $isAll        = ($symbolFilter === 'ALL');
             $isToday      = ($date === Carbon::today()->toDateString());
 
-            $config = $this->getActiveConfig($timeframe);
+            $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => "No active Analysis Config for [{$timeframe}].",
+                    'message'   => 'No active 15min analysis config found. Go to Admin → Analysis Config to create one.',
                 ]);
             }
 
@@ -118,8 +120,8 @@ class StraddleStrategyController extends Controller
                 return response()->json(['success' => false, 'message' => 'No symbols configured.']);
             }
 
-            $optTable = 'cp_option_ohlc_' . $timeframe;
-            $futTable = 'cp_fut_ohlc_'    . $timeframe;
+            $optTable = 'cp_option_ohlc_15min';
+            $futTable = 'cp_fut_ohlc_15min';
 
             $hasData = DB::table($optTable)
                 ->where('analysis_config_id', $config->id)
@@ -129,8 +131,8 @@ class StraddleStrategyController extends Controller
 
             if (!$hasData) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'No data for ' . $date . '. Market may have been closed.',
+                    'success'           => false,
+                    'message'           => 'No data for ' . $date . '. Market may have been closed.',
                     'available_symbols' => $allSymbols,
                 ]);
             }
@@ -158,13 +160,13 @@ class StraddleStrategyController extends Controller
 
             if ($optRows->isEmpty()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => "No data for [{$def['name']}] positions on {$date}.",
+                    'success'           => false,
+                    'message'           => "No data for [{$def['name']}] positions on {$date}.",
                     'available_symbols' => $allSymbols,
                 ]);
             }
 
-            // ── Load FUT rows ──────────────────────────────────────────────────
+            // ── Load FUT rows ─────────────────────────────────────────────────
             $futRows = DB::table($futTable)
                 ->where('analysis_config_id', $config->id)
                 ->whereIn('base_symbol', $symbols)
@@ -202,7 +204,7 @@ class StraddleStrategyController extends Controller
 
             // Latest complete slot per symbol
             $nowMins    = Carbon::now()->hour * 60 + Carbon::now()->minute;
-            $candleMins = $timeframe === '1hr' ? 60 : ($timeframe === '30min' ? 30 : 15);
+            $candleMins = 15;
             $latestSlot = [];
 
             foreach ($allTimes as $sym => $times) {
@@ -243,7 +245,7 @@ class StraddleStrategyController extends Controller
                     'pe_pos'            => $def['pe_pos'],
                     'date'              => $date,
                     'is_today'          => $isToday,
-                    'timeframe'         => $timeframe,
+                    'timeframe'         => self::TF,
                     'total'             => count($results),
                     'buy_ce_count'      => count(array_filter($results, fn($r) => $r['signal'] === 'BUY_CE')),
                     'buy_pe_count'      => count(array_filter($results, fn($r) => $r['signal'] === 'BUY_PE')),
@@ -265,19 +267,19 @@ class StraddleStrategyController extends Controller
                 ]);
             }
 
-            $times   = $allTimes[$sym]  ?? [];
+            $times   = $allTimes[$sym]           ?? [];
             $ceSlots = $optIdx[$sym]['CE'][$def['ce_pos']] ?? [];
             $peSlots = $optIdx[$sym]['PE'][$def['pe_pos']] ?? [];
-            $futSym  = $futIdx[$sym]    ?? [];
+            $futSym  = $futIdx[$sym]              ?? [];
 
             $ceEntry   = $ceSlots[self::ENTRY_SLOT] ?? reset($ceSlots) ?: null;
             $peEntry   = $peSlots[self::ENTRY_SLOT] ?? reset($peSlots) ?: null;
             $atmStrike = $ceEntry?->atm_strike ?? $peEntry?->atm_strike ?? null;
             $expiry    = $ceEntry?->expiry_date ?? $peEntry?->expiry_date ?? null;
 
-            $rows = [];
-            $prevCe = null;
-            $prevPe = null;
+            $rows    = [];
+            $prevCe  = null;
+            $prevPe  = null;
             $prevFut = null;
 
             foreach ($times as $t) {
@@ -299,33 +301,33 @@ class StraddleStrategyController extends Controller
                 $pcr = $totalCeOi > 0 ? round($totalPeOi / $totalCeOi, 3) : null;
 
                 $rows[] = [
-                    'time'            => $t,
-                    'is_entry'        => ($t === self::ENTRY_SLOT),
-                    'is_latest'       => ($t === ($latestSlot[$sym] ?? null)),
+                    'time'          => $t,
+                    'is_entry'      => ($t === self::ENTRY_SLOT),
+                    'is_latest'     => ($t === ($latestSlot[$sym] ?? null)),
                     // CE
-                    'ce_ltp'          => $ce  ? round((float)$ce->close, 2)  : null,
-                    'ce_open'         => $ce  ? round((float)$ce->open,  2)  : null,
-                    'ce_high'         => $ce  ? round((float)$ce->high,  2)  : null,
-                    'ce_oi'           => $ce  ? (int)$ce->oi                 : null,
-                    'ce_strike'       => $ce  ? (float)$ce->strike : ($ceEntry ? (float)$ceEntry->strike : null),
+                    'ce_ltp'        => $ce  ? round((float)$ce->close, 2)  : null,
+                    'ce_open'       => $ce  ? round((float)$ce->open,  2)  : null,
+                    'ce_high'       => $ce  ? round((float)$ce->high,  2)  : null,
+                    'ce_oi'         => $ce  ? (int)$ce->oi                 : null,
+                    'ce_strike'     => $ce  ? (float)$ce->strike : ($ceEntry ? (float)$ceEntry->strike : null),
                     // PE
-                    'pe_ltp'          => $pe  ? round((float)$pe->close, 2)  : null,
-                    'pe_open'         => $pe  ? round((float)$pe->open,  2)  : null,
-                    'pe_high'         => $pe  ? round((float)$pe->high,  2)  : null,
-                    'pe_oi'           => $pe  ? (int)$pe->oi                 : null,
-                    'pe_strike'       => $pe  ? (float)$pe->strike : ($peEntry ? (float)$peEntry->strike : null),
+                    'pe_ltp'        => $pe  ? round((float)$pe->close, 2)  : null,
+                    'pe_open'       => $pe  ? round((float)$pe->open,  2)  : null,
+                    'pe_high'       => $pe  ? round((float)$pe->high,  2)  : null,
+                    'pe_oi'         => $pe  ? (int)$pe->oi                 : null,
+                    'pe_strike'     => $pe  ? (float)$pe->strike : ($peEntry ? (float)$peEntry->strike : null),
                     // FUT
-                    'spot'            => $fut ? round((float)$fut->close, 2) : null,
-                    'fut_open'        => $fut ? round((float)$fut->open,  2) : null,
+                    'spot'          => $fut ? round((float)$fut->close, 2) : null,
+                    'fut_open'      => $fut ? round((float)$fut->open,  2) : null,
                     // Combined
-                    'combined_prem'   => ($ce && $pe) ? round((float)$ce->close + (float)$pe->close, 2) : null,
-                    'pcr'             => $pcr,
+                    'combined_prem' => ($ce && $pe) ? round((float)$ce->close + (float)$pe->close, 2) : null,
+                    'pcr'           => $pcr,
                     // Signal
-                    'signal'          => $signal['signal'],
-                    'ce_score'        => $signal['ce_score'],
-                    'pe_score'        => $signal['pe_score'],
-                    'factors'         => $signal['factors'],
-                    'reason'          => $signal['reason'],
+                    'signal'        => $signal['signal'],
+                    'ce_score'      => $signal['ce_score'],
+                    'pe_score'      => $signal['pe_score'],
+                    'factors'       => $signal['factors'],
+                    'reason'        => $signal['reason'],
                 ];
 
                 $prevCe  = $ce;
@@ -346,7 +348,7 @@ class StraddleStrategyController extends Controller
                 'strategy_name'     => $def['name'],
                 'date'              => $date,
                 'is_today'          => $isToday,
-                'timeframe'         => $timeframe,
+                'timeframe'         => self::TF,
                 'entry_slot'        => self::ENTRY_SLOT,
                 'latest_slot'       => $latestSlot[$sym] ?? null,
                 'total_intervals'   => count($rows),
@@ -373,20 +375,16 @@ class StraddleStrategyController extends Controller
         array $ceSlots, array $peSlots, array $futSlots
     ): array {
 
-        $ceScore  = 0;
-        $peScore  = 0;
-        $factors  = [];
+        $ceScore = 0;
+        $peScore = 0;
+        $factors = [];
 
         // ── FACTOR 1: Futures Momentum ────────────────────────────────────────
-        // The single most important directional anchor.
-        // Bullish candle (close > open) = CE, Bearish (close < open) = PE.
         if ($fut) {
             $futOpen  = (float) $fut->open;
             $futClose = (float) $fut->close;
             $futBody  = $futClose - $futOpen;
-
-            // Require meaningful body (at least 0.05% of price) to avoid noise
-            $minBody = $futOpen * 0.0005;
+            $minBody  = $futOpen * 0.0005;
 
             if ($futBody > $minBody) {
                 $ceScore++;
@@ -405,15 +403,13 @@ class StraddleStrategyController extends Controller
         }
 
         // ── FACTOR 2: OI Confirmation ─────────────────────────────────────────
-        // Fresh buying = OI rising + LTP rising simultaneously.
-        // Short covering = OI falling + LTP rising (weaker, does not vote).
         $ceOiRising  = $ce && $prevCe && (int)$ce->oi > (int)$prevCe->oi;
         $peLtpRising = $ce && $prevCe && (float)$ce->close > (float)$prevCe->close;
         $ceFreshBuy  = $ceOiRising && $peLtpRising;
 
-        $peOiRising  = $pe && $prevPe && (int)$pe->oi > (int)$prevPe->oi;
+        $peOiRising    = $pe && $prevPe && (int)$pe->oi > (int)$prevPe->oi;
         $pePeLtpRising = $pe && $prevPe && (float)$pe->close > (float)$prevPe->close;
-        $peFreshBuy  = $peOiRising && $pePeLtpRising;
+        $peFreshBuy    = $peOiRising && $pePeLtpRising;
 
         if ($ceFreshBuy && !$peFreshBuy) {
             $ceScore++;
@@ -432,8 +428,6 @@ class StraddleStrategyController extends Controller
         }
 
         // ── FACTOR 3: Premium Momentum ────────────────────────────────────────
-        // Which option is gaining faster within the candle?
-        // CE candle return vs PE candle return — larger return side wins.
         if ($ce && $pe) {
             $ceOpen   = (float) $ce->open;
             $peOpen   = (float) $pe->open;
@@ -444,11 +438,10 @@ class StraddleStrategyController extends Controller
             $pePremChg = $peOpen > 0 ? (($peLtp - $peOpen) / $peOpen) * 100 : 0;
             $diff      = round($cePremChg - $pePremChg, 2);
 
-            // Need at least 2% differential to count as a vote
             if ($diff > 2.0) {
                 $ceScore++;
                 $factors[] = ['name' => 'Premium Momentum', 'side' => 'CE',
-                    'detail' => 'CE premium gaining +'  . round($cePremChg, 1) . '% vs PE ' . round($pePremChg, 1) . '%'];
+                    'detail' => 'CE premium gaining +' . round($cePremChg, 1) . '% vs PE ' . round($pePremChg, 1) . '%'];
             } elseif ($diff < -2.0) {
                 $peScore++;
                 $factors[] = ['name' => 'Premium Momentum', 'side' => 'PE',
@@ -462,9 +455,6 @@ class StraddleStrategyController extends Controller
         }
 
         // ── FACTOR 4: PCR (Put-Call Ratio) ────────────────────────────────────
-        // Computed from ALL CE and PE OI at this time slot, not just ATM.
-        // PCR < 0.8 = bullish (less puts relative to calls)
-        // PCR > 1.2 = bearish (more puts = hedging = directional fear)
         if ($ce && $pe) {
             $totalCeOi = (int) $ce->oi;
             $totalPeOi = (int) $pe->oi;
@@ -491,9 +481,6 @@ class StraddleStrategyController extends Controller
         }
 
         // ── FACTOR 5: Candle Structure ────────────────────────────────────────
-        // Is this a breakout candle on the CE or PE side?
-        // CE breakout: CE high > prev CE high + CE is a bullish candle
-        // PE breakout: PE high > prev PE high + PE is a bullish candle
         $ceBreakout = $ce && $prevCe
             && (float)$ce->high  > (float)$prevCe->high
             && (float)$ce->close > (float)$ce->open;
@@ -557,14 +544,14 @@ class StraddleStrategyController extends Controller
         $ceSlots = $symIdx['CE'][$def['ce_pos']] ?? [];
         $peSlots = $symIdx['PE'][$def['pe_pos']] ?? [];
 
-        $ce  = $ceSlots[$latest]                    ?? null;
-        $pe  = $peSlots[$latest]                    ?? null;
-        $fut = $futSym[$latest]                     ?? null;
+        $ce  = $ceSlots[$latest] ?? null;
+        $pe  = $peSlots[$latest] ?? null;
+        $fut = $futSym[$latest]  ?? null;
 
         // Previous slot for factor calculations
         $sortedTimes = array_keys($ceSlots + $peSlots);
         sort($sortedTimes);
-        $prevTime    = null;
+        $prevTime = null;
         foreach ($sortedTimes as $t) {
             if ($t >= $latest) break;
             $prevTime = $t;
@@ -590,24 +577,24 @@ class StraddleStrategyController extends Controller
         $signal = $this->calcSignal($ce, $pe, $fut, $prevCe, $prevPe, $prevFut, $ceSlots, $peSlots, $futSym);
 
         return [
-            'symbol'         => $sym,
-            'atm_strike'     => $atmStrike,
-            'expiry'         => $expiry,
-            'latest_slot'    => $latest,
-            'spot'           => $spot,
-            'ce_strike'      => $ce ? (float)$ce->strike : null,
-            'pe_strike'      => $pe ? (float)$pe->strike : null,
-            'ce_ltp'         => $ceLtp,
-            'pe_ltp'         => $peLtp,
-            'ce_oi'          => $ceOi,
-            'pe_oi'          => $peOi,
-            'combined_prem'  => ($ceLtp !== null && $peLtp !== null) ? round($ceLtp + $peLtp, 2) : null,
-            'pcr'            => $pcr,
-            'signal'         => $signal['signal'],
-            'ce_score'       => $signal['ce_score'],
-            'pe_score'       => $signal['pe_score'],
-            'factors'        => $signal['factors'],
-            'reason'         => $signal['reason'],
+            'symbol'        => $sym,
+            'atm_strike'    => $atmStrike,
+            'expiry'        => $expiry,
+            'latest_slot'   => $latest,
+            'spot'          => $spot,
+            'ce_strike'     => $ce ? (float)$ce->strike : null,
+            'pe_strike'     => $pe ? (float)$pe->strike : null,
+            'ce_ltp'        => $ceLtp,
+            'pe_ltp'        => $peLtp,
+            'ce_oi'         => $ceOi,
+            'pe_oi'         => $peOi,
+            'combined_prem' => ($ceLtp !== null && $peLtp !== null) ? round($ceLtp + $peLtp, 2) : null,
+            'pcr'           => $pcr,
+            'signal'        => $signal['signal'],
+            'ce_score'      => $signal['ce_score'],
+            'pe_score'      => $signal['pe_score'],
+            'factors'       => $signal['factors'],
+            'reason'        => $signal['reason'],
         ];
     }
 
@@ -615,9 +602,12 @@ class StraddleStrategyController extends Controller
     //  Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private function getActiveConfig(string $timeframe): ?object
+    private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', $timeframe)->where('is_active', 1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
@@ -625,12 +615,7 @@ class StraddleStrategyController extends Controller
         return DB::table('analysis_config_symbols')
             ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
-            ->pluck('symbol_lists.symbol')->toArray();
-    }
-
-    private function resolveTimeframe(Request $request): string
-    {
-        $tf = strtolower(trim($request->get('timeframe', '15min')));
-        return in_array($tf, self::TIMEFRAMES) ? $tf : '15min';
+            ->pluck('symbol_lists.symbol')
+            ->toArray();
     }
 }

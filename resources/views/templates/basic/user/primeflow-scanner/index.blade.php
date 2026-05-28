@@ -1,474 +1,677 @@
-@extends($activeTemplate . 'layouts.master')
-
+{{-- FILE: resources/views/themes/{active_theme}/user/primeflow-scanner/index.blade.php --}}
+@extends($activeTemplate.'layouts.frontend')
 @section('content')
-@push('style')
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
-:root {
-    --navy-900:#0a0f1e; --navy-800:#0d1428; --navy-700:#111b35;
-    --border:rgba(255,255,255,0.07);
-    --call:#00ff88; --call-dim:rgba(0,255,136,0.10); --call-bdr:rgba(0,255,136,0.28);
-    --put:#ff4060;  --put-dim:rgba(255,64,96,0.10);  --put-bdr:rgba(255,64,96,0.28);
-    --wait:#f0b429; --wait-dim:rgba(240,180,41,0.08); --wait-bdr:rgba(240,180,41,0.28);
-    --trap:#c084fc; --trap-dim:rgba(192,132,252,0.10); --trap-bdr:rgba(192,132,252,0.28);
-    --text-1:rgba(255,255,255,0.92); --text-2:rgba(255,255,255,0.55); --text-3:rgba(255,255,255,0.25);
-    --mono:'JetBrains Mono',monospace; --display:'Rajdhani',sans-serif;
-}
+/* ── BASE ── */
+.pf-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
+.pf-wrap * { box-sizing:border-box; }
+.pf-wrap h1,.pf-wrap h2,.pf-wrap h3 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
+.mono { font-family:'JetBrains Mono',monospace; }
+@keyframes pfFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.pf-anim { animation:pfFadeUp .5s ease both; }
+@keyframes pfSpin { to{ transform:rotate(360deg); } }
 
-.ios-header {
-    background:linear-gradient(135deg,#0d1428 0%,#1a1500 50%,#0d1428 100%);
-    border:1px solid var(--border); border-bottom:2px solid var(--wait);
-    border-radius:14px; padding:20px 28px; margin-bottom:18px;
-    position:relative; overflow:hidden;
+/* ── HERO ── */
+.pf-hero {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:32px 48px; display:flex; align-items:center;
+    justify-content:space-between; gap:24px;
 }
-.ios-header::before {
-    content:'FLOW'; position:absolute; right:24px; top:50%; transform:translateY(-50%);
-    font-family:var(--display); font-size:80px; font-weight:700;
-    color:rgba(240,180,41,0.04); letter-spacing:6px; pointer-events:none; user-select:none;
+.pf-hero-left h1 {
+    font-size:clamp(24px,3.5vw,40px); font-weight:700;
+    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.ios-title { font-family:var(--display); font-size:22px; font-weight:700; color:var(--text-1); margin:0; }
-.tag { font-size:10px; font-weight:700; padding:2px 9px; border-radius:4px; margin-left:6px; vertical-align:middle; letter-spacing:1.5px; }
-.tag-call { background:var(--call-dim); border:1px solid var(--call-bdr); color:var(--call); }
-.tag-put  { background:var(--put-dim);  border:1px solid var(--put-bdr);  color:var(--put); }
-.tag-trap { background:var(--trap-dim); border:1px solid var(--trap-bdr); color:var(--trap); }
-.ios-sub  { font-family:var(--mono); font-size:11px; color:var(--text-2); margin:6px 0 0; }
-.lp { display:inline-block; font-family:var(--mono); font-size:10px; padding:2px 9px; border-radius:4px; margin:2px; }
-.lp-w { background:var(--wait-dim); border:1px solid var(--wait-bdr); color:var(--wait); }
-
-.ios-controls {
-    background:var(--navy-800); border:1px solid var(--border);
-    border-radius:12px; padding:14px 20px; margin-bottom:16px;
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+.pf-hero-left h1 span { color:#F5A623; }
+.pf-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:580px; }
+.pf-hero-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.pf-pill {
+    display:inline-block; padding:3px 10px; border-radius:4px;
+    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
 }
-.ctrl-label { font-family:var(--display); font-size:10px; font-weight:700; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; }
-.ctrl-sep   { width:1px; height:28px; background:var(--border); flex-shrink:0; }
-.tf-group { display:flex; gap:4px; }
-.tf-btn {
-    font-family:var(--display); font-size:12px; font-weight:700;
-    padding:6px 15px; border-radius:7px; border:1px solid var(--border);
-    background:transparent; color:var(--text-2); cursor:pointer; transition:.15s;
-}
-.tf-btn:hover  { border-color:var(--wait-bdr); color:var(--wait); }
-.tf-btn.active { background:var(--wait-dim); border-color:var(--wait); color:var(--wait); }
-.ios-date {
-    background:rgba(255,255,255,0.06); border:1px solid var(--border);
-    border-radius:8px; color:var(--text-1); padding:5px 10px;
-    font-family:var(--mono); font-size:11px; outline:none;
-}
-.ios-date::-webkit-calendar-picker-indicator { filter:invert(.55); cursor:pointer; }
-.dnav {
-    background:rgba(255,255,255,0.06); border:1px solid var(--border);
-    color:var(--text-1); border-radius:7px; width:26px; height:26px;
+.pf-pill-call   { background:rgba(4,120,87,.1);   color:#047857; border:1px solid rgba(4,120,87,.3);   }
+.pf-pill-put    { background:rgba(185,28,28,.08);  color:#b91c1c; border:1px solid rgba(185,28,28,.25); }
+.pf-pill-trap   { background:rgba(109,40,217,.1);  color:#6d28d9; border:1px solid rgba(109,40,217,.3); }
+.pf-pill-score  { background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
+.pf-hero-icon {
+    width:80px; height:80px; border-radius:16px;
+    background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; font-size:13px; font-weight:700; transition:.12s;
+    font-size:32px; color:#F5A623; flex-shrink:0; font-family:'Rajdhani',sans-serif;
+    font-weight:900; letter-spacing:-1px;
 }
-.dnav:hover { background:rgba(255,255,255,0.1); }
-.dnav.today-btn { width:auto; padding:0 10px; font-family:var(--display); font-size:9px; }
-.ios-btn { background:var(--wait); color:#000; border:none; border-radius:8px; padding:7px 22px; font-family:var(--display); font-size:13px; font-weight:800; cursor:pointer; }
-.ios-btn:hover { background:#fbbf24; }
-.auto-btn { background:rgba(255,255,255,0.07); color:var(--text-2); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-family:var(--display); font-size:10px; font-weight:700; cursor:pointer; }
-.auto-btn.on { border-color:var(--call-bdr); color:var(--call); }
-.sp-wrap { display:flex; gap:3px; flex-wrap:wrap; }
-.sp { padding:4px 12px; border-radius:20px; font-family:var(--display); font-size:10px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:var(--navy-800); color:var(--text-2); transition:.15s; }
-.sp:hover       { border-color:var(--wait-bdr); color:var(--wait); }
-.sp.active      { background:var(--wait-dim); border-color:var(--wait); color:var(--wait); }
-.sp.active-call { background:var(--call-dim); border-color:var(--call-bdr); color:var(--call); }
-.sp.active-put  { background:var(--put-dim);  border-color:var(--put-bdr);  color:var(--put); }
-.ml-auto { margin-left:auto; }
-.last-upd { font-family:var(--mono); font-size:9px; color:var(--text-3); }
-.dbadge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; }
-.dbadge.live { background:var(--call-dim); color:var(--call); border:1px solid var(--call-bdr); }
-.dbadge.hist { background:var(--wait-dim); color:var(--wait); border:1px solid var(--wait-bdr); }
-
-.ios-warn { background:rgba(240,180,41,0.08); border:1px solid rgba(240,180,41,0.28); border-radius:10px; padding:12px 18px; margin-bottom:14px; font-family:var(--display); font-size:13px; color:var(--wait); display:none; }
-
-.ios-stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-.stat-box { background:var(--navy-800); border:1px solid var(--border); border-radius:10px; padding:12px 16px; min-width:100px; flex:1; }
-.stat-box small { display:block; font-family:var(--display); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-3); margin-bottom:4px; }
-.stat-box strong { display:block; font-family:var(--mono); font-size:1.2rem; font-weight:700; }
-.s-call  { border-left:3px solid var(--call); }
-.s-put   { border-left:3px solid var(--put); }
-.s-trap  { border-left:3px solid var(--trap); }
-.s-wait  { border-left:3px solid var(--wait); }
-.s-total { border-left:3px solid rgba(56,189,248,0.6); }
-
-.ios-card { background:var(--navy-800); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
-.ios-card-hdr { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--navy-700); }
-.ios-card-title { font-family:var(--display); font-size:14px; font-weight:700; color:var(--text-1); }
-.ios-tscroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-
-.ios-table { width:100%; border-collapse:collapse; font-family:var(--mono); min-width:900px; }
-.ios-table thead tr.hdr-grp th {
-    padding:9px 10px 5px; text-align:center; font-family:var(--display);
-    font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-    background:rgba(0,0,0,0.4); border-bottom:none; white-space:nowrap;
+@media(max-width:768px){
+    .pf-hero { flex-direction:column; padding:24px 16px; text-align:center; }
+    .pf-hero-pills { justify-content:center; }
 }
-.ios-table thead tr.hdr-cols th {
-    padding:5px 10px 9px; text-align:center; font-family:var(--display);
-    font-size:8px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;
-    background:rgba(0,0,0,0.3); color:var(--text-3); border-bottom:2px solid var(--border); white-space:nowrap;
+
+/* ── FILTER BAR ── */
+.pf-filter-bar {
+    background:#fff; border-bottom:1px solid #e8e8e8;
+    padding:0 48px; position:sticky; top:0; z-index:200;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
-.ios-table tbody td {
+.pf-filter-inner {
+    display:flex; align-items:center; gap:14px;
+    padding:13px 0; flex-wrap:wrap;
+}
+.pf-filter-label {
+    font-size:10.5px; color:#999; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em;
+}
+.pf-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
+
+/* Date controls */
+.pf-date-wrap { display:flex; align-items:center; gap:4px; }
+.pf-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
+}
+.pf-date-input:focus { border-color:#F5A623; }
+.pf-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.pf-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.pf-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
+
+/* Badges */
+.pf-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.pf-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+
+/* Buttons */
+.pf-scan-btn {
+    background:#F5A623; color:#000; border:none; border-radius:8px;
+    padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:13px;
+    font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
+}
+.pf-scan-btn:hover { background:#d4890e; }
+.pf-auto-btn {
+    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
+    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:'Exo 2',sans-serif; transition:.2s;
+}
+.pf-auto-btn.on { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
+
+/* Filter pills */
+.pf-pills-wrap { display:flex; gap:4px; flex-wrap:wrap; }
+.pf-fp {
+    padding:5px 13px; border-radius:20px; font-family:'Exo 2',sans-serif;
+    font-size:11px; font-weight:700; cursor:pointer; border:1.5px solid #e5e9f2;
+    background:#fff; color:#888; transition:.15s;
+}
+.pf-fp:hover           { border-color:#F5A623; color:#c97f00; }
+.pf-fp.active          { background:rgba(245,166,35,.1);  border-color:#F5A623; color:#c97f00; }
+.pf-fp.active-call     { background:rgba(4,120,87,.1);    border-color:#059669; color:#047857; }
+.pf-fp.active-put      { background:rgba(185,28,28,.08);  border-color:#b91c1c; color:#b91c1c; }
+
+.pf-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.pf-last-upd     { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
+
+@media(max-width:768px){
+    .pf-filter-bar { padding:0 16px; }
+    .pf-filter-inner { gap:8px; }
+    .pf-filter-right { margin-left:0; width:100%; }
+}
+
+/* ── CONTENT ── */
+.pf-content { padding:28px 48px 64px; }
+@media(max-width:768px){ .pf-content { padding:16px 12px 48px; } }
+
+/* Config warning */
+.pf-warn {
+    background:#fff3e0; border:1px solid #ffcc80; border-radius:10px;
+    padding:16px 20px; margin-bottom:20px; font-size:13px; color:#e65100;
+    align-items:center; gap:14px; display:none;
+}
+.pf-warn.show { display:flex; }
+.pf-warn i { font-size:20px; flex-shrink:0; }
+
+/* ── STATS ── */
+.pf-stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+.pf-stat {
+    background:#fff; border:1px solid #e8e8e8; border-radius:12px;
+    padding:14px 18px; min-width:110px; flex:1;
+}
+.pf-stat small {
+    display:block; font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1px; color:#bbb; margin-bottom:5px;
+}
+.pf-stat strong { display:block; font-family:'JetBrains Mono',monospace; font-size:1.25rem; font-weight:700; }
+.ps-total { border-left:3px solid rgba(56,189,248,.6); }
+.ps-call  { border-left:3px solid #059669; }
+.ps-put   { border-left:3px solid #b91c1c; }
+.ps-trap  { border-left:3px solid #7c3aed; }
+.ps-wait  { border-left:3px solid #F5A623; }
+
+/* ── CARD ── */
+.pf-card { background:#fff; border:1px solid #e8e8e8; border-radius:12px; overflow:hidden; }
+.pf-card-hdr {
+    padding:14px 20px; border-bottom:1px solid #f0f0f0;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:8px; background:#fafafa;
+}
+.pf-card-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:#1a1a2e; }
+.pf-card-info  { font-size:11px; color:#bbb; font-family:'JetBrains Mono',monospace; }
+
+/* ── TABLE ── */
+.pf-tscroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.pf-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:980px; }
+
+.pf-table thead tr.th-group th {
+    padding:9px 10px 5px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800;
+    letter-spacing:.1em; text-transform:uppercase;
+    background:#f7f8fc; border-bottom:none; white-space:nowrap;
+}
+.pf-table thead tr.th-cols th {
+    padding:5px 10px 9px; text-align:center;
+    font-family:'Exo 2',sans-serif; font-size:8.5px; font-weight:700;
+    letter-spacing:.03em; text-transform:uppercase;
+    background:#f4f6fb; color:#bbb;
+    border-bottom:2px solid #e8e8e8; white-space:nowrap;
+}
+
+.g-info   { color:#888 !important; }
+.g-trade  { color:#c97f00 !important; }
+.g-entry  { color:#1a56db !important; }
+.g-signal { color:#047857 !important; }
+
+.sep-trade  { border-left:2px solid rgba(245,166,35,.25) !important; }
+.sep-entry  { border-left:2px solid rgba(26,86,219,.15)  !important; }
+.sep-signal { border-left:2px solid rgba(4,120,87,.2)    !important; }
+
+.pf-table tbody td {
     padding:9px 10px; text-align:center; font-size:11px;
-    border-bottom:1px solid rgba(255,255,255,0.03);
-    vertical-align:middle; white-space:nowrap; color:var(--text-2);
+    border-bottom:1px solid #f5f5f5; vertical-align:middle;
+    white-space:nowrap; color:#555;
 }
-.ios-table tbody tr:hover { background:rgba(255,255,255,0.04) !important; }
-.row-even { background:rgba(255,255,255,0.008); }
-.row-odd  { background:rgba(0,0,0,0.1); }
-.row-call { border-left:2px solid var(--call) !important; background:rgba(0,255,136,0.03) !important; }
-.row-put  { border-left:2px solid var(--put)  !important; background:rgba(255,64,96,0.03)  !important; }
-.row-wait { border-left:2px solid transparent; opacity:.7; }
-.sep-trade { border-left:2px solid rgba(0,255,136,0.25) !important; }
-.sep-sig   { border-left:2px solid rgba(240,180,41,0.25) !important; }
-.hg-trade  { color:var(--call) !important; }
-.hg-sig    { color:var(--wait) !important; }
+.pf-table tbody tr:hover { background:#fafbff !important; }
+.tr-even { background:#fff; }
+.tr-odd  { background:#fbfcff; }
+.tr-call { background:rgba(4,120,87,.03)  !important; border-left:2px solid #059669 !important; }
+.tr-put  { background:rgba(185,28,28,.03) !important; border-left:2px solid #b91c1c !important; }
+.tr-wait { opacity:.7; }
 
-.c-num { font-size:9px; color:var(--text-3); }
-.sym-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:11px; font-weight:800; background:rgba(255,255,255,0.07); color:var(--text-1); border:1px solid var(--border); }
-.sig-call { display:inline-block; background:var(--call-dim); color:var(--call); border:1px solid var(--call-bdr); border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:10px; font-weight:800; }
-.sig-put  { display:inline-block; background:var(--put-dim);  color:var(--put);  border:1px solid var(--put-bdr);  border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:10px; font-weight:800; }
-.sig-wait { display:inline-block; background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.2); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-family:var(--display); font-size:9px; }
-.sig-nd   { display:inline-block; color:rgba(255,255,255,0.15); font-size:9px; font-family:var(--display); }
-.score-wrap  { display:flex; align-items:center; gap:5px; justify-content:center; }
-.score-num   { font-size:11px; font-weight:800; min-width:16px; }
-.score-track { width:44px; height:3px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+/* Cell styles */
+.c-num   { font-size:9px; color:#ccc; }
+.c-sym   { display:inline-block; padding:3px 9px; border-radius:5px; font-size:11px; font-weight:800; background:#f4f6fb; color:#1a1a2e; border:1px solid #e8e8e8; }
+
+/* Signal badges */
+.sig-call { display:inline-block; background:rgba(4,120,87,.12); color:#047857; border:1px solid rgba(4,120,87,.35); border-radius:6px; padding:4px 11px; font-family:'Exo 2',sans-serif; font-size:11px; font-weight:800; }
+.sig-put  { display:inline-block; background:rgba(185,28,28,.1);  color:#b91c1c; border:1px solid rgba(185,28,28,.3);  border-radius:6px; padding:4px 11px; font-family:'Exo 2',sans-serif; font-size:11px; font-weight:800; }
+.sig-wait { display:inline-block; background:#f7f8fc; color:#bbb; border:1px solid #e8e8e8; border-radius:6px; padding:4px 10px; font-family:'Exo 2',sans-serif; font-size:10px; }
+.sig-nd   { color:#ddd; font-size:10px; font-family:'Exo 2',sans-serif; }
+
+/* Score bar */
+.score-wrap  { display:flex; align-items:center; gap:6px; justify-content:center; }
+.score-num   { font-size:12px; font-weight:800; min-width:18px; }
+.score-track { width:48px; height:4px; background:#f0f0f0; border-radius:2px; overflow:hidden; }
 .score-fill  { height:100%; border-radius:2px; }
-.sig-dots    { display:flex; align-items:center; gap:3px; justify-content:center; flex-wrap:wrap; }
-.sd          { width:7px; height:7px; border-radius:50%; display:inline-block; }
-.sd-on-call  { background:var(--call); box-shadow:0 0 4px var(--call); }
-.sd-on-put   { background:var(--put);  box-shadow:0 0 4px var(--put); }
-.sd-on-trap  { background:var(--trap); box-shadow:0 0 4px var(--trap); }
-.sd-off      { background:rgba(255,255,255,0.1); }
-.fd-bull { color:var(--call); font-size:10px; font-weight:800; }
-.fd-bear { color:var(--put);  font-size:10px; font-weight:800; }
-.fd-side { color:var(--text-3); font-size:10px; }
 
-.ios-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px; }
-.ios-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.1); border-top:3px solid var(--wait); border-radius:50%; animation:spin 1s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.ios-spin-txt { color:var(--text-2); margin-top:12px; font-family:var(--display); font-size:13px; }
-.ios-empty { text-align:center; padding:60px 20px; color:var(--text-3); font-family:var(--display); font-size:13px; }
-.ios-empty i { font-size:2.5rem; opacity:.3; display:block; margin-bottom:10px; }
+/* Futures direction */
+.fd-bull { color:#047857; font-size:11px; font-weight:800; }
+.fd-bear { color:#b91c1c; font-size:11px; font-weight:800; }
+.fd-side { color:#bbb; font-size:10px; }
+
+/* Signal dots */
+.sig-dots { display:flex; align-items:center; gap:3px; justify-content:center; flex-wrap:wrap; }
+.sd       { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.sd-call  { background:#059669; box-shadow:0 0 4px rgba(5,150,105,.5); }
+.sd-put   { background:#b91c1c; box-shadow:0 0 4px rgba(185,28,28,.5); }
+.sd-trap  { background:#7c3aed; box-shadow:0 0 4px rgba(124,58,237,.5); }
+.sd-off   { background:#e8e8e8; }
+
+/* Entry price cells */
+.c-entry  { color:#1a56db; font-weight:700; }
+.c-target { color:#047857; font-weight:700; }
+.c-sl     { color:#b91c1c; font-weight:700; }
+.c-pcr    { font-size:10px; color:#888; }
+.c-strike { color:#c97f00; font-weight:700; }
+.c-time   { color:#F5A623; font-weight:700; }
+.c-strsym { display:block; font-size:8px; color:#bbb; margin-top:1px; }
+
+/* Loading / empty */
+.pf-loading {
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; padding:64px 20px;
+}
+.pf-spinner {
+    width:36px; height:36px; border:3px solid #f0f0f0;
+    border-top:3px solid #F5A623; border-radius:50%;
+    animation:pfSpin 1s linear infinite;
+}
+.pf-loading-txt { color:#bbb; margin-top:12px; font-family:'Exo 2',sans-serif; font-size:13px; }
+.pf-empty { text-align:center; padding:60px 20px; color:#ccc; font-family:'Exo 2',sans-serif; font-size:13px; }
+.pf-empty i { font-size:2.5rem; display:block; margin-bottom:12px; }
 </style>
-@endpush
 
-<section class="pt-40 pb-50">
-<div class="container-fluid content-container">
+<div class="pf-wrap">
 
-    <div class="ios-header">
-        <h4 class="ios-title">
-            &#9670; PrimeFlow — Option Scanner
-            <span class="tag tag-call">BUY CALL</span>
-            <span class="tag tag-put">BUY PUT</span>
-            <span class="tag tag-trap">MM TRAP</span>
-        </h4>
-        <div class="ios-sub" style="margin-top:8px;">
-            <span class="lp lp-w">Score threshold: {{ $thresh_hold ?? 6 }}/17 &nbsp;·&nbsp; Entry window: 10:30–14:30</span>
+{{-- ══ HERO ══ --}}
+<div class="pf-hero pf-anim">
+    <div class="pf-hero-left">
+        <h1>PrimeFlow <span>Option Scanner</span></h1>
+        <p>
+            Smart Entry Engine across all configured symbols — 7-signal confluence model
+            running on live 15min option &amp; futures candle data. Entry window: 10:30–14:30.
+        </p>
+        <div class="pf-hero-pills">
+            <span class="pf-pill pf-pill-score">Threshold: {{ $thresh_hold ?? 6 }}/17</span>
+            <span class="pf-pill pf-pill-call">Prem Exp +3</span>
+            <span class="pf-pill pf-pill-call">OI Build +2</span>
+            <span class="pf-pill pf-pill-call">Vol Spike +2</span>
+            <span class="pf-pill pf-pill-put">Futures Dir +2</span>
+            <span class="pf-pill pf-pill-put">Gamma +2</span>
+            <span class="pf-pill pf-pill-put">Momentum +2</span>
+            <span class="pf-pill pf-pill-trap">MM Trap +4</span>
         </div>
-        <div class="ios-sub" style="margin-top:5px; color:var(--text-3);">
-            Premium Expansion(+3) &nbsp;·&nbsp; OI Build(+2) &nbsp;·&nbsp; Vol Spike(+2) &nbsp;·&nbsp;
-            Futures Dir(+2) &nbsp;·&nbsp; Gamma(+2) &nbsp;·&nbsp; Momentum(+2) &nbsp;·&nbsp; MM Trap(+4)
-            &nbsp;·&nbsp; Source: cp_option_ohlc + cp_fut_ohlc
+    </div>
+    <div class="pf-hero-icon">PF</div>
+</div>
+
+{{-- ══ FILTER BAR ══ --}}
+<div class="pf-filter-bar">
+    <div class="pf-filter-inner">
+
+        <span class="pf-filter-label">Date</span>
+        <div class="pf-date-wrap">
+            <button class="pf-date-nav" onclick="pfShiftDate(-1)">&#8249;</button>
+            <input type="date" id="pf-date" class="pf-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="pfScan()">
+            <button class="pf-date-nav" onclick="pfShiftDate(1)">&#8250;</button>
+            <button class="pf-date-nav pf-today-btn" onclick="pfToday()">TODAY</button>
+            <span id="pf-date-badge"></span>
+        </div>
+
+        <button class="pf-scan-btn" onclick="pfScan()">&#9670; Scan All</button>
+        <button class="pf-auto-btn" id="pf-auto-btn" onclick="pfToggleAuto()">&#9654; Auto 60s</button>
+
+        <div class="pf-sep"></div>
+
+        <span class="pf-filter-label">Filter</span>
+        <div class="pf-pills-wrap" id="pf-filter-pills">
+            <div class="pf-fp active"      data-f="ALL"     onclick="pfSetFilter('ALL',this)">All</div>
+            <div class="pf-fp"             data-f="CALL"    onclick="pfSetFilter('CALL',this)">&#8679; Call</div>
+            <div class="pf-fp"             data-f="PUT"     onclick="pfSetFilter('PUT',this)">&#8681; Put</div>
+            <div class="pf-fp"             data-f="TRADE"   onclick="pfSetFilter('TRADE',this)">&#128293; Trades</div>
+            <div class="pf-fp"             data-f="NOTRADE" onclick="pfSetFilter('NOTRADE',this)">No Trade</div>
+        </div>
+
+        <div class="pf-filter-right">
+            <span class="pf-last-upd" id="pf-upd"></span>
+        </div>
+    </div>
+</div>
+
+{{-- ══ CONTENT ══ --}}
+<div class="pf-content">
+
+    {{-- Config warning --}}
+    <div class="pf-warn" id="pf-warn">
+        <i class="las la-exclamation-triangle"></i>
+        <div>
+            <strong>No Analysis Config Found</strong>
+            <div style="font-size:12px;margin-top:3px;" id="pf-warn-msg">
+                Go to Admin → Analysis Config and create a 15min config with symbols.
+            </div>
         </div>
     </div>
 
-    <div class="ios-controls">
-        {{-- Timeframe — 15min active by default --}}
-        <span class="ctrl-label">TF</span>
-        <div class="tf-group">
-            <button class="tf-btn active" data-tf="15min" onclick="setTf('15min',this)">15 Min</button>
-            <button class="tf-btn"        data-tf="30min" onclick="setTf('30min',this)">30 Min</button>
-            <button class="tf-btn"        data-tf="1hr"   onclick="setTf('1hr',this)">1 Hour</button>
-        </div>
-
-        <div class="ctrl-sep"></div>
-
-        <span class="ctrl-label">DATE</span>
-        <div style="display:flex;align-items:center;gap:4px;">
-            <button class="dnav" onclick="shiftDate(-1)">&#8249;</button>
-            <input type="date" id="ios-date" class="ios-date"
-                   value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}"
-                   onchange="runScan()">
-            <button class="dnav" onclick="shiftDate(1)">&#8250;</button>
-            <button class="dnav today-btn" onclick="goToday()">TODAY</button>
-            <span id="date-badge"></span>
-        </div>
-
-        <button class="ios-btn" onclick="runScan()">&#9670; Scan All</button>
-        <button class="auto-btn" id="auto-btn" onclick="toggleAuto()">&#9654; Auto 60s</button>
-
-        <div class="ctrl-sep"></div>
-
-        <span class="ctrl-label">FILTER</span>
-        <div class="sp-wrap" id="filter-pills">
-            <div class="sp active"  data-f="ALL"     onclick="setFilter('ALL',this)">All</div>
-            <div class="sp"         data-f="CALL"    onclick="setFilter('CALL',this)">&#8679; Call</div>
-            <div class="sp"         data-f="PUT"     onclick="setFilter('PUT',this)">&#8681; Put</div>
-            <div class="sp"         data-f="TRADE"   onclick="setFilter('TRADE',this)">&#128293; Trades</div>
-            <div class="sp"         data-f="NOTRADE" onclick="setFilter('NOTRADE',this)">No Trade</div>
-        </div>
-
-        <div class="ml-auto">
-            <span class="last-upd" id="ios-upd"></span>
-        </div>
+    {{-- Stats --}}
+    <div class="pf-stats" id="pf-stats" style="display:none;">
+        <div class="pf-stat ps-total"><small>Total</small><strong id="st-total" style="color:rgba(56,189,248,.9);">0</strong></div>
+        <div class="pf-stat ps-call"><small>&#8679; Buy Call</small><strong id="st-call" style="color:#047857;">0</strong></div>
+        <div class="pf-stat ps-put"><small>&#8681; Buy Put</small><strong id="st-put" style="color:#b91c1c;">0</strong></div>
+        <div class="pf-stat ps-trap"><small>&#128375; MM Traps</small><strong id="st-trap" style="color:#7c3aed;">0</strong></div>
+        <div class="pf-stat ps-wait"><small>No Trade</small><strong id="st-wait" style="color:#c97f00;">0</strong></div>
     </div>
 
-    <div class="ios-warn" id="ios-warn">&#9888; <span id="ios-warn-msg"></span></div>
-
-    <div class="ios-stats" id="ios-stats" style="display:none;">
-        <div class="stat-box s-total"><small>Total</small><strong id="st-total" style="color:#38bdf8;">0</strong></div>
-        <div class="stat-box s-call"><small>&#8679; Buy Call</small><strong id="st-call" style="color:var(--call);">0</strong></div>
-        <div class="stat-box s-put"><small>&#8681; Buy Put</small><strong id="st-put" style="color:var(--put);">0</strong></div>
-        <div class="stat-box s-trap"><small>&#128375; MM Traps</small><strong id="st-trap" style="color:var(--trap);">0</strong></div>
-        <div class="stat-box s-wait"><small>No Trade</small><strong id="st-wait" style="color:var(--wait);">0</strong></div>
-    </div>
-
-    <div class="ios-card">
-        <div class="ios-card-hdr">
-            <span class="ios-card-title" id="ios-card-title">&#9670; PrimeFlow Scanner &nbsp;·&nbsp; 15 Min</span>
-            <span style="font-size:10px;color:var(--text-3);margin-left:auto;font-family:var(--mono);" id="ios-card-info"></span>
+    {{-- Table card --}}
+    <div class="pf-card">
+        <div class="pf-card-hdr">
+            <span class="pf-card-title">&#9670; PrimeFlow Scanner &nbsp;·&nbsp; 15 Min</span>
+            <span class="pf-card-info" id="pf-card-info"></span>
         </div>
-        <div class="ios-tscroll">
-            <table class="ios-table">
+        <div class="pf-tscroll">
+            <table class="pf-table">
                 <thead>
-                    <tr class="hdr-grp">
-                        <th colspan="3">Info</th>
-                        <th colspan="2" class="hg-trade sep-trade">&#128200; Trade</th>
-                        <th colspan="4" class="hg-trade">Entry Details</th>
-                        <th colspan="3" class="hg-sig sep-sig">&#9889; Signals</th>
+                    <tr class="th-group">
+                        <th colspan="3" class="g-info">Info</th>
+                        <th colspan="2" class="g-trade  sep-trade">&#128200; Trade</th>
+                        <th colspan="4" class="g-entry  sep-entry">Entry Details</th>
+                        <th colspan="3" class="g-signal sep-signal">&#9889; Signals</th>
                     </tr>
-                    <tr class="hdr-cols">
-                        <th>#</th>
-                        <th style="text-align:left;padding-left:14px;">Symbol</th>
-                        <th>Futures Dir</th>
-                        <th class="sep-trade hg-trade">Signal</th>
-                        <th class="hg-trade">Entry Time</th>
-                        <th>Strike</th>
-                        <th>Entry ₹</th>
-                        <th>Target ₹</th>
-                        <th>SL ₹</th>
-                        <th class="sep-sig">Score /17</th>
-                        <th>Active Signals</th>
-                        <th>PCR</th>
+                    <tr class="th-cols">
+                        <th class="g-info">#</th>
+                        <th class="g-info" style="text-align:left;padding-left:14px;">Symbol</th>
+                        <th class="g-info">Futures Dir</th>
+                        <th class="g-trade  sep-trade">Signal</th>
+                        <th class="g-trade">Entry Time</th>
+                        <th class="g-entry  sep-entry">Strike</th>
+                        <th class="g-entry">Entry &#8377;</th>
+                        <th class="g-entry">Target &#8377;</th>
+                        <th class="g-entry">SL &#8377;</th>
+                        <th class="g-signal sep-signal">Score /17</th>
+                        <th class="g-signal">Active Signals</th>
+                        <th class="g-signal">PCR</th>
                     </tr>
                 </thead>
-                <tbody id="ios-tbody">
+                <tbody id="pf-tbody">
                     <tr><td colspan="12">
-                        <div class="ios-empty"><i class="fas fa-bolt"></i>Select date and click Scan All</div>
+                        <div class="pf-empty"><i class="las la-bolt"></i>Select date and click Scan All</div>
                     </td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-</div>
-</section>
+</div>{{-- /.pf-content --}}
+</div>{{-- /.pf-wrap --}}
+
 @endsection
 
 @push('script')
 <script>
-const SCAN_URL  = '{{ route("primeflow-scanner.data") }}';
-const TODAY_STR = '{{ now()->toDateString() }}';
+// ═══════════════════════════════════════════════════════════════
+//  PRIMEFLOW SCANNER — Vanilla JS (no jQuery)
+// ═══════════════════════════════════════════════════════════════
 
-let curTf      = '15min';   // default 15min
-let curFilter  = 'ALL';
-let allResults = [];
-let autoTimer  = null;
+var PF_SCAN_URL = '{{ route("primeflow-scanner.data") }}';
+var PF_TODAY    = '{{ now()->toDateString() }}';
 
-$(document).ready(function () {
-    updateDateBadge();
-    runScan();
+var pfFilter    = 'ALL';
+var pfAutoTimer = null;
+var pfResults   = [];
+
+// ── DOM helpers ───────────────────────────────────────────────
+function pfHtml(id, h) { var e = document.getElementById(id); if (e) e.innerHTML = h; }
+function pfText(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
+
+document.addEventListener('DOMContentLoaded', function () {
+    pfUpdateDateBadge();
+    pfScan();
 });
 
-function setTf(tf, btn) {
-    curTf = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    $('#ios-card-title').text('⬡ PrimeFlow Scanner · ' + tf.toUpperCase());
-    runScan();
+// ── Date helpers ──────────────────────────────────────────────
+function pfShiftDate(d) {
+    var picker = document.getElementById('pf-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
+    var s = dt.toISOString().split('T')[0];
+    if (s > PF_TODAY) return;
+    picker.value = s;
+    pfUpdateDateBadge();
+    pfScan();
 }
 
-function shiftDate(d) {
-    const p  = document.getElementById('ios-date');
-    const dt = new Date(p.value); dt.setDate(dt.getDate() + d);
-    const s  = dt.toISOString().split('T')[0];
-    if (s > TODAY_STR) return;
-    p.value = s; updateDateBadge(); runScan();
-}
-function goToday() { document.getElementById('ios-date').value = TODAY_STR; updateDateBadge(); runScan(); }
-function updateDateBadge() {
-    const d = document.getElementById('ios-date').value;
-    $('#date-badge').html(d === TODAY_STR
-        ? '<span class="dbadge live">&#11044; Live</span>'
-        : '<span class="dbadge hist">&#9724; Historical</span>');
+function pfToday() {
+    document.getElementById('pf-date').value = PF_TODAY;
+    pfUpdateDateBadge();
+    pfScan();
 }
 
-function toggleAuto() {
-    if (autoTimer) {
-        clearInterval(autoTimer); autoTimer = null;
-        $('#auto-btn').text('▶ Auto 60s').removeClass('on');
+function pfUpdateDateBadge() {
+    var d  = document.getElementById('pf-date').value;
+    var el = document.getElementById('pf-date-badge');
+    if (!el) return;
+    el.innerHTML = d === PF_TODAY
+        ? '<span class="pf-live-badge">&#11044; Live</span>'
+        : '<span class="pf-hist-badge">&#128197; Historical</span>';
+}
+
+// ── Auto refresh ──────────────────────────────────────────────
+function pfToggleAuto() {
+    var btn = document.getElementById('pf-auto-btn');
+    if (pfAutoTimer) {
+        clearInterval(pfAutoTimer); pfAutoTimer = null;
+        btn.textContent = '▶ Auto 60s';
+        btn.classList.remove('on');
     } else {
-        if (document.getElementById('ios-date').value !== TODAY_STR) return;
-        autoTimer = setInterval(runScan, 60000);
-        $('#auto-btn').text('■ Stop').addClass('on');
-        runScan();
+        if (document.getElementById('pf-date').value !== PF_TODAY) return;
+        pfAutoTimer = setInterval(pfScan, 60000);
+        btn.textContent = '■ Stop';
+        btn.classList.add('on');
+        pfScan();
     }
 }
 
-function setFilter(f, btn) {
-    curFilter = f;
-    document.querySelectorAll('#filter-pills .sp').forEach(b => {
-        b.classList.remove('active','active-call','active-put');
+// ── Filter ────────────────────────────────────────────────────
+function pfSetFilter(f, btn) {
+    pfFilter = f;
+    document.querySelectorAll('#pf-filter-pills .pf-fp').forEach(function (b) {
+        b.classList.remove('active', 'active-call', 'active-put');
     });
     btn.classList.add(f === 'CALL' ? 'active-call' : f === 'PUT' ? 'active-put' : 'active');
-    applyFilter();
+    pfApplyFilter();
 }
-function applyFilter() {
-    document.querySelectorAll('#ios-tbody tr[data-sig]').forEach(row => {
-        const sig = row.dataset.sig;
-        let show = curFilter === 'ALL'
-            || (curFilter === 'CALL'    && sig === 'BUY_CALL')
-            || (curFilter === 'PUT'     && sig === 'BUY_PUT')
-            || (curFilter === 'TRADE'   && (sig === 'BUY_CALL' || sig === 'BUY_PUT'))
-            || (curFilter === 'NOTRADE' && sig === 'NO TRADE');
+
+function pfApplyFilter() {
+    document.querySelectorAll('#pf-tbody tr[data-sig]').forEach(function (row) {
+        var sig  = row.dataset.sig;
+        var show = pfFilter === 'ALL'
+            || (pfFilter === 'CALL'    && sig === 'BUY_CALL')
+            || (pfFilter === 'PUT'     && sig === 'BUY_PUT')
+            || (pfFilter === 'TRADE'   && (sig === 'BUY_CALL' || sig === 'BUY_PUT'))
+            || (pfFilter === 'NOTRADE' && sig === 'NO TRADE');
         row.style.display = show ? '' : 'none';
     });
 }
 
-function runScan() {
-    const date = document.getElementById('ios-date').value;
-    if (autoTimer && date !== TODAY_STR) toggleAuto();
-    updateDateBadge();
-    showLoading();
+// ── Main scan ─────────────────────────────────────────────────
+function pfScan() {
+    var date = document.getElementById('pf-date').value;
 
-    $.ajax({
-        url: SCAN_URL, type: 'GET',
-        data: { timeframe: curTf, date: date },
-        success(res) {
-            if (res.no_config) { showWarn(res.message); emptyTable(); return; }
-            if (!res.success)  { emptyTable(res.message); return; }
-            hideWarn();
-            allResults = res.results || [];
-            renderStats(res);
-            renderTable(allResults);
-            applyFilter();
-            $('#ios-card-info').text(res.total_symbols + ' symbols · scanned at ' + res.scanned_at);
-            $('#ios-upd').text('Updated ' + new Date().toLocaleTimeString());
-        },
-        error(xhr) { emptyTable('&#9888; ' + ((xhr.responseJSON && xhr.responseJSON.message) || 'Server error')); }
+    if (pfAutoTimer && date !== PF_TODAY) {
+        clearInterval(pfAutoTimer); pfAutoTimer = null;
+        document.getElementById('pf-auto-btn').textContent = '▶ Auto 60s';
+        document.getElementById('pf-auto-btn').classList.remove('on');
+    }
+
+    pfUpdateDateBadge();
+    pfShowLoading();
+
+    var params = new URLSearchParams({ date: date });
+
+    fetch(PF_SCAN_URL + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function (res) {
+        if (res.no_config) {
+            pfShowWarn(res.message);
+            pfEmptyTable('');
+            return;
+        }
+        if (!res.success) {
+            pfHideWarn();
+            pfEmptyTable(res.message || 'No data available.');
+            return;
+        }
+
+        pfHideWarn();
+        pfResults = res.results || [];
+        pfRenderStats(res);
+        pfRenderTable(pfResults);
+        pfApplyFilter();
+
+        pfText('pf-card-info', res.total_symbols + ' symbols · scanned at ' + res.scanned_at);
+        pfText('pf-upd', 'Updated ' + new Date().toLocaleTimeString());
+    })
+    .catch(function (err) {
+        pfHideWarn();
+        pfEmptyTable('&#9888; ' + err.message);
     });
 }
 
-function renderTable(rows) {
-    if (!rows || !rows.length) { emptyTable('No data.'); return; }
+// ── Render stats ──────────────────────────────────────────────
+function pfRenderStats(res) {
+    var R     = res.results || [];
+    var calls = R.filter(function (r) { return r.signal === 'BUY_CALL'; }).length;
+    var puts  = R.filter(function (r) { return r.signal === 'BUY_PUT';  }).length;
+    var traps = R.filter(function (r) {
+        return r.signals && r.signals.mmTrap &&
+               (r.signals.mmTrap.call_trap || r.signals.mmTrap.put_trap);
+    }).length;
+    var waits = R.filter(function (r) { return r.signal === 'NO TRADE'; }).length;
+
+    pfText('st-total', res.total_symbols || 0);
+    pfText('st-call',  calls);
+    pfText('st-put',   puts);
+    pfText('st-trap',  traps);
+    pfText('st-wait',  waits);
+
+    document.getElementById('pf-stats').style.display = '';
+}
+
+// ── Render table ──────────────────────────────────────────────
+function pfRenderTable(rows) {
+    if (!rows || !rows.length) { pfEmptyTable('No data.'); return; }
+
     var html = '';
 
     rows.forEach(function (r, i) {
-        const sig     = r.signal || 'NO TRADE';
-        const isCall  = sig === 'BUY_CALL';
-        const isPut   = sig === 'BUY_PUT';
-        const isFired = isCall || isPut;
-        const rowCls  = isFired ? (isCall ? 'row-call' : 'row-put') : 'row-wait';
+        var sig     = r.signal || 'NO TRADE';
+        var isCall  = sig === 'BUY_CALL';
+        var isPut   = sig === 'BUY_PUT';
+        var isFired = isCall || isPut;
+        var rowCls  = isFired ? (isCall ? 'tr-call' : 'tr-put') : 'tr-wait';
+        var zebra   = i % 2 === 0 ? 'tr-even' : 'tr-odd';
 
-        const sigBadge = isCall ? '<span class="sig-call">&#8679; BUY CALL</span>'
-                       : isPut  ? '<span class="sig-put">&#8681; BUY PUT</span>'
-                       : (sig === 'NO DATA' || sig === 'ERROR') ? '<span class="sig-nd">— NO DATA</span>'
-                       : '<span class="sig-wait">WAIT</span>';
+        var sigBadge = isCall
+            ? '<span class="sig-call">&#8679; BUY CALL</span>'
+            : isPut
+            ? '<span class="sig-put">&#8681; BUY PUT</span>'
+            : (sig === 'NO DATA' || sig === 'ERROR')
+            ? '<span class="sig-nd">&#8212; ' + pfEsc(sig) + '</span>'
+            : '<span class="sig-wait">WAIT</span>';
 
-        const fd = r.futures_dir || (r.signals && r.signals.futuresDir ? r.signals.futuresDir.direction : null);
-        const futHtml = fd === 'BULLISH' ? '<span class="fd-bull">&#9650; BULL</span>'
-                      : fd === 'BEARISH' ? '<span class="fd-bear">&#9660; BEAR</span>'
-                      : '<span class="fd-side">&#9135; SIDE</span>';
+        var fd = r.futures_dir || (r.signals && r.signals.futuresDir ? r.signals.futuresDir.direction : null);
+        var futHtml = fd === 'BULLISH'
+            ? '<span class="fd-bull">&#9650; BULL</span>'
+            : fd === 'BEARISH'
+            ? '<span class="fd-bear">&#9660; BEAR</span>'
+            : '<span class="fd-side">&#9135; SIDE</span>';
 
-        const timeHtml   = isFired && r.entry_time  ? '<span style="color:var(--wait);font-weight:700;">'    + esc(r.entry_time)   + '</span>' : dash();
-        const strikeHtml = isFired && r.strike
-            ? '<span style="color:var(--wait);font-weight:700;">' + fmt(r.strike) + '</span>'
-            + (r.strike_sym ? '<br><span style="font-size:8px;color:var(--text-3);">' + esc(r.strike_sym) + '</span>' : '')
-            : dash();
-        const entryHtml  = isFired && r.entry_price ? '<span style="color:var(--text-1);font-weight:700;">&#8377;' + r.entry_price  + '</span>' : dash();
-        const tgtHtml    = isFired && r.target      ? '<span style="color:var(--call);font-weight:700;">&#8377;' + r.target       + '</span>' : dash();
-        const slHtml     = isFired && r.stoploss    ? '<span style="color:var(--put);font-weight:700;">&#8377;'  + r.stoploss     + '</span>' : dash();
+        var timeHtml = isFired && r.entry_time
+            ? '<span class="c-time">' + pfEsc(r.entry_time) + '</span>'
+            : pfDash();
 
-        const score    = isFired ? (r.score || 0) : (r.peak_score || 0);
-        const scorePct = Math.round((score / 17) * 100);
-        const scoreCol = isCall ? 'var(--call)' : isPut ? 'var(--put)' : 'rgba(255,255,255,0.3)';
-        const scoreHtml = `<div class="score-wrap">
-            <span class="score-num" style="color:${scoreCol}">${score}</span>
-            <div class="score-track"><div class="score-fill" style="width:${scorePct}%;background:${scoreCol};"></div></div>
-        </div>`;
+        var strikeHtml = isFired && r.strike
+            ? '<span class="c-strike">' + pfFmt(r.strike) + '</span>'
+              + (r.strike_sym ? '<span class="c-strsym">' + pfEsc(r.strike_sym) + '</span>' : '')
+            : pfDash();
 
-        const s        = r.signals || {};
-        const dotsHtml = buildDots(s, isCall, isPut);
-        const pcrHtml  = r.pcr != null ? '<span style="font-size:10px;color:var(--text-2);">' + r.pcr + '</span>' : dash();
+        var entryHtml  = isFired && r.entry_price ? '<span class="c-entry">&#8377;'  + r.entry_price  + '</span>' : pfDash();
+        var targetHtml = isFired && r.target      ? '<span class="c-target">&#8377;' + r.target       + '</span>' : pfDash();
+        var slHtml     = isFired && r.stoploss    ? '<span class="c-sl">&#8377;'     + r.stoploss     + '</span>' : pfDash();
 
-        html +=
-            '<tr class="' + rowCls + '" data-sig="' + esc(sig) + '">'
+        var score    = isFired ? (r.score || 0) : (r.peak_score || 0);
+        var scorePct = Math.round((score / 17) * 100);
+        var scoreCol = isCall ? '#059669' : isPut ? '#b91c1c' : '#ddd';
+        var scoreHtml = '<div class="score-wrap">'
+            + '<span class="score-num" style="color:' + scoreCol + '">' + score + '</span>'
+            + '<div class="score-track"><div class="score-fill" style="width:' + scorePct + '%;background:' + scoreCol + ';"></div></div>'
+            + '</div>';
+
+        var dotsHtml = pfBuildDots(r.signals || {}, isCall, isPut);
+        var pcrHtml  = r.pcr != null
+            ? '<span class="c-pcr">' + r.pcr + '</span>'
+            : pfDash();
+
+        html += '<tr class="' + rowCls + ' ' + zebra + '" data-sig="' + pfEsc(sig) + '">'
             + '<td class="c-num">' + (i + 1) + '</td>'
-            + '<td style="text-align:left;padding-left:14px;"><span class="sym-badge">' + esc(r.symbol) + '</span></td>'
+            + '<td style="text-align:left;padding-left:14px;"><span class="c-sym">' + pfEsc(r.symbol) + '</span></td>'
             + '<td>' + futHtml + '</td>'
             + '<td class="sep-trade">' + sigBadge + '</td>'
             + '<td>' + timeHtml + '</td>'
-            + '<td>' + strikeHtml + '</td>'
+            + '<td class="sep-entry">' + strikeHtml + '</td>'
             + '<td>' + entryHtml + '</td>'
-            + '<td>' + tgtHtml + '</td>'
+            + '<td>' + targetHtml + '</td>'
             + '<td>' + slHtml + '</td>'
-            + '<td class="sep-sig">' + scoreHtml + '</td>'
+            + '<td class="sep-signal">' + scoreHtml + '</td>'
             + '<td>' + dotsHtml + '</td>'
             + '<td>' + pcrHtml + '</td>'
             + '</tr>';
     });
 
-    $('#ios-tbody').html(html);
+    pfHtml('pf-tbody', html);
 }
 
-function buildDots(s, isCall, isPut) {
-    if (!s || !Object.keys(s).length) return dash();
-    const checks = [
-        { key: isCall ? 'cePremEx'  : 'pePremEx',  special: false },
-        { key: isCall ? 'ceOiBuild' : 'peOiBuild',  special: false },
-        { key: isCall ? 'ceVolSpike': 'peVolSpike', special: false },
-        { key: 'futuresDir', special: true  },
-        { key: 'gamma',      special2: true },
-        { key: isCall ? 'ceAccel' : 'peAccel', special: false },
-        { key: 'mmTrap', trap: true },
+// ── Signal dots ───────────────────────────────────────────────
+function pfBuildDots(s, isCall, isPut) {
+    if (!s || !Object.keys(s).length) return pfDash();
+
+    var checks = [
+        { key: isCall ? 'cePremEx'   : 'pePremEx',   type: 'std'     },
+        { key: isCall ? 'ceOiBuild'  : 'peOiBuild',  type: 'std'     },
+        { key: isCall ? 'ceVolSpike' : 'peVolSpike', type: 'std'     },
+        { key: 'futuresDir',                          type: 'futures' },
+        { key: 'gamma',                               type: 'gamma'   },
+        { key: isCall ? 'ceAccel' : 'peAccel',        type: 'std'     },
+        { key: 'mmTrap',                              type: 'trap'    },
     ];
-    return '<div class="sig-dots">' + checks.map(c => {
-        let on = false;
-        if (c.trap)    on = !!(s.mmTrap && (s.mmTrap.call_trap || s.mmTrap.put_trap));
-        else if (c.special)  on = !!(s.futuresDir && (s.futuresDir.bullish || s.futuresDir.bearish));
-        else if (c.special2) on = !!(s.gamma && s.gamma.active);
+
+    var dotColor = isCall ? 'sd-call' : isPut ? 'sd-put' : 'sd-call';
+
+    var inner = checks.map(function (c) {
+        var on = false;
+        if (c.type === 'trap')    on = !!(s.mmTrap && (s.mmTrap.call_trap || s.mmTrap.put_trap));
+        else if (c.type === 'futures') on = !!(s.futuresDir && (s.futuresDir.bullish || s.futuresDir.bearish));
+        else if (c.type === 'gamma')   on = !!(s.gamma && s.gamma.active);
         else on = !!(s[c.key] && s[c.key].triggered);
-        const cls = on ? (c.trap ? 'sd sd-on-trap' : (isCall ? 'sd sd-on-call' : (isPut ? 'sd sd-on-put' : 'sd sd-on-call'))) : 'sd sd-off';
+
+        var cls = on ? (c.type === 'trap' ? 'sd sd-trap' : 'sd ' + dotColor) : 'sd sd-off';
         return '<span class="' + cls + '"></span>';
-    }).join('') + '</div>';
+    }).join('');
+
+    return '<div class="sig-dots">' + inner + '</div>';
 }
 
-function renderStats(res) {
-    const R     = res.results || [];
-    const calls = R.filter(r => r.signal === 'BUY_CALL').length;
-    const puts  = R.filter(r => r.signal === 'BUY_PUT').length;
-    const traps = R.filter(r => r.signals && r.signals.mmTrap && (r.signals.mmTrap.call_trap || r.signals.mmTrap.put_trap)).length;
-    const waits = R.filter(r => r.signal === 'NO TRADE').length;
-    $('#st-total').text(res.total_symbols || 0);
-    $('#st-call').text(calls); $('#st-put').text(puts);
-    $('#st-trap').text(traps); $('#st-wait').text(waits);
-    $('#ios-stats').show();
+// ── Helpers ───────────────────────────────────────────────────
+function pfFmt(v) {
+    if (v == null || v === '') return '—';
+    return Number(v).toLocaleString('en-IN');
+}
+function pfDash() { return '<span style="color:#ddd;font-size:9px;">—</span>'; }
+function pfEsc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function fmt(v)  { return v != null ? Number(v).toLocaleString('en-IN') : '—'; }
-function dash()  { return '<span style="color:rgba(255,255,255,.15);font-size:9px;">—</span>'; }
-function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function pfShowLoading() {
+    pfHtml('pf-tbody',
+        '<tr><td colspan="12">'
+        + '<div class="pf-loading"><div class="pf-spinner"></div>'
+        + '<div class="pf-loading-txt">Scanning all symbols…</div></div>'
+        + '</td></tr>');
+    document.getElementById('pf-stats').style.display = 'none';
+}
 
-function showLoading() {
-    $('#ios-tbody').html('<tr><td colspan="12"><div class="ios-loading"><div class="ios-spinner"></div><div class="ios-spin-txt">Scanning all symbols…</div></div></td></tr>');
-    $('#ios-stats').hide();
+function pfEmptyTable(msg) {
+    pfHtml('pf-tbody',
+        '<tr><td colspan="12">'
+        + '<div class="pf-empty"><i class="las la-bolt"></i>'
+        + (msg || 'Select date and click Scan All')
+        + '</div></td></tr>');
+    document.getElementById('pf-stats').style.display = 'none';
 }
-function emptyTable(msg) {
-    $('#ios-tbody').html('<tr><td colspan="12"><div class="ios-empty"><i class="fas fa-bolt"></i>' + (msg || 'Select date and scan') + '</div></td></tr>');
-    $('#ios-stats').hide();
+
+function pfShowWarn(msg) {
+    var el = document.getElementById('pf-warn');
+    if (el) el.classList.add('show');
+    pfText('pf-warn-msg', msg || '');
 }
-function showWarn(msg) { $('#ios-warn').show(); $('#ios-warn-msg').text(msg||''); }
-function hideWarn()    { $('#ios-warn').hide(); }
+
+function pfHideWarn() {
+    var el = document.getElementById('pf-warn');
+    if (el) el.classList.remove('show');
+}
 </script>
 @endpush
