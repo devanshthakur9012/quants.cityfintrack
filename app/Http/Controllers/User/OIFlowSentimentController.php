@@ -92,6 +92,7 @@ class OIFlowSentimentController extends Controller
                 ->where('is_missing', false)
                 ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
                 ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')       
                 ->each(function($r) use (&$todayMap) {
                     $todayMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int)$r->total_oi;
                 });
@@ -107,6 +108,7 @@ class OIFlowSentimentController extends Controller
                 ->where('is_missing', false)
                 ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
                 ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')       
                 ->each(function($r) use (&$prevMap) {
                     $prevMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int)$r->total_oi;
                 });
@@ -120,6 +122,7 @@ class OIFlowSentimentController extends Controller
                 ->whereRaw("TIME(interval_time) = ?", [self::ANALYSIS_TIME])
                 ->where('instrument_type','CE')->where('strike_position','ATM')->where('is_missing',false)
                 ->select(['base_symbol',DB::raw('DATE(trade_date) as trade_day'),'atm_strike','future_price','expiry_date'])
+                ->orderBy('base_symbol')     
                 ->each(function($r) use (&$priceMap) {
                     $priceMap["{$r->base_symbol}|{$r->trade_day}"] = $r;
                 });

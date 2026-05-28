@@ -1396,7 +1396,6 @@ Route::controller('SiteController')->group(function () {
         Route::get('/scan',        [MomentumBreakoutController::class, 'scan'])->name('scan');
     });
  
-    // ERROR
     Route::middleware(['auth'])->prefix('oi-flow-sentiment')->name('oi-flow-sentiment.')->group(function () {
         Route::get('/index',          [OIFlowSentimentController::class, 'index'])->name('index');
         Route::get('/symbols',   [OIFlowSentimentController::class, 'getSymbols'])->name('symbols');
