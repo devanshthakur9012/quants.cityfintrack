@@ -86,6 +86,7 @@ class IntradayOISnapshotController extends Controller
                 ->where('is_missing', false)
                 ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
                 ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')
                 ->each(function($r) use (&$oiMap) {
                     $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|o"] = (int)$r->total_oi;
                 });
@@ -100,6 +101,7 @@ class IntradayOISnapshotController extends Controller
                 ->where('is_missing', false)
                 ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
                 ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')  
                 ->each(function($r) use (&$oiMap) {
                     $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|s"] = (int)$r->total_oi;
                 });
@@ -113,6 +115,7 @@ class IntradayOISnapshotController extends Controller
                 ->whereRaw("TIME(interval_time) = ?", [self::OPEN_TIME])
                 ->where('instrument_type','CE')->where('strike_position','ATM')->where('is_missing',false)
                 ->select(['base_symbol',DB::raw('DATE(trade_date) as trade_day'),'atm_strike','expiry_date','future_price'])
+                ->orderBy('base_symbol')     
                 ->each(function($r) use (&$infoMap) {
                     $infoMap["{$r->base_symbol}|{$r->trade_day}"] = $r;
                 });
