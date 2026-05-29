@@ -4,7 +4,7 @@
 @include($activeTemplate.'partials.auth-shell')
 
 <div class="ql-page">
-<div class="ql-card">
+<div class="ql-card" style="width:auto;">
 
     <div class="ql-left">
 
