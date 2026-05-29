@@ -7,7 +7,7 @@
     {{-- ── STAT CARDS ── --}}
     @php
         use App\Models\Course;
-        $total    = Course::count();
+        $total    = Course::where('status','!=',0)->count();
         $upcoming = Course::where('status','upcoming')->count();
         $ongoing  = Course::where('status','ongoing')->count();
         $recorded = Course::where('status','recorded')->count();
@@ -101,7 +101,7 @@
             {{-- ── TABLE ── --}}
             <div class="card-body p-0">
                 <div class="table-responsive--sm table-responsive">
-                    <table class="table table--light style--two">
+                    <table class="table table--light style--two" style="min-width:900px;">
                         <thead>
                             <tr>
                                 <th>@lang('#')</th>
@@ -119,22 +119,26 @@
                             @forelse($courses as $i => $course)
                             <tr>
                                 <td>{{ $courses->firstItem() + $i }}</td>
-                                <td>
+                                <td style="min-width:220px; max-width:260px;">
                                     <div class="d-flex align-items-center gap-2">
                                         <img src="{{ $course->thumbnail_url }}"
-                                             alt="{{ $course->title }}"
-                                             class="rounded" width="56" height="40"
-                                             style="object-fit:cover; flex-shrink:0;">
-                                        <div>
-                                            <strong class="d-block" style="font-size:13px;max-width:220px;white-space:normal;">
+                                            alt="{{ $course->title }}"
+                                            class="rounded flex-shrink-0" width="56" height="40"
+                                            style="object-fit:cover;">
+                                        <div style="min-width:0;">
+                                            <strong class="d-block text-truncate" title="{{ $course->title }}"
+                                                    style="font-size:13px; max-width:180px;">
                                                 {{ $course->title }}
                                             </strong>
                                             @if($course->batch_name)
-                                            <small class="text--muted">{{ $course->batch_name }}</small>
+                                            <small class="text--muted text-truncate d-block" style="max-width:180px;">
+                                                {{ $course->batch_name }}
+                                            </small>
                                             @endif
                                         </div>
                                     </div>
                                 </td>
+
                                 <td>
                                     <span class="badge badge--info">{{ $course->category->name ?? '—' }}</span>
                                 </td>
