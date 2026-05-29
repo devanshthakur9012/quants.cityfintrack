@@ -7,7 +7,7 @@
     {{-- ── STAT CARDS ── --}}
     @php
         use App\Models\Course;
-        $total    = Course::where('status','!=',0)->count();
+        $total    = Course::count();
         $upcoming = Course::where('status','upcoming')->count();
         $ongoing  = Course::where('status','ongoing')->count();
         $recorded = Course::where('status','recorded')->count();
