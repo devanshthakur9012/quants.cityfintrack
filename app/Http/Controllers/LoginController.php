@@ -121,14 +121,9 @@ class LoginController extends Controller
             'mobile'    => 'nullable|string|max:20',
         ]);
 
-        $token    = Str::random(64);
-        $userCode = 'CQ' . mt_rand(10000, 99999);
-
-        // Check if email already exists
         $existingUser = User::where('email', $request->email)->first();
 
         if ($existingUser) {
-            // Already verified → tell them to login
             if ($existingUser->ev == Status::VERIFIED) {
                 return response()->json([
                     'success' => false,
@@ -136,16 +131,16 @@ class LoginController extends Controller
                 ]);
             }
 
-            // Unverified → update their info and resend verification
+            // Unverified — update info and resend
             $existingUser->update([
                 'firstname'        => $request->firstname,
                 'lastname'         => $request->lastname,
                 'mobile'           => $request->mobile ?? $existingUser->mobile,
-                'ver_code'         => $token,
                 'ver_code_send_at' => now(),
             ]);
 
-            Mail::to($existingUser->email)->send(new EmailVerificationMail($existingUser, $token));
+            $encryptedEmail = encrypt($existingUser->email);
+            Mail::to($existingUser->email)->send(new EmailVerificationMail($existingUser, $encryptedEmail));
 
             return response()->json([
                 'success' => true,
@@ -153,18 +148,15 @@ class LoginController extends Controller
             ]);
         }
 
-        // Check mobile uniqueness only if provided
-        if ($request->mobile) {
-            $mobileTaken = User::where('mobile', $request->mobile)->exists();
-            if ($mobileTaken) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This mobile number is already in use.',
-                ]);
-            }
+        if ($request->mobile && User::where('mobile', $request->mobile)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This mobile number is already in use.',
+            ]);
         }
 
-        // Fresh registration
+        $userCode = 'CQ' . mt_rand(10000, 99999);
+
         $user = User::create([
             'firstname'        => $request->firstname,
             'lastname'         => $request->lastname,
@@ -177,11 +169,11 @@ class LoginController extends Controller
             'status'           => Status::USER_ACTIVE,
             'ev'               => Status::UNVERIFIED,
             'sv'               => Status::VERIFIED,
-            'ver_code'         => $token,
             'ver_code_send_at' => now(),
         ]);
 
-        Mail::to($user->email)->send(new EmailVerificationMail($user, $token));
+        $encryptedEmail = encrypt($user->email);
+        Mail::to($user->email)->send(new EmailVerificationMail($user, $encryptedEmail));
 
         return response()->json([
             'success' => true,
@@ -194,14 +186,26 @@ class LoginController extends Controller
     // ─────────────────────────────────────────────
     public function verifyEmail(Request $request, $token)
     {
-        $user = User::where('ver_code', $token)->first();
-        dd($user,$token);
+        try {
+            $email = decrypt($token);
+        } catch (\Exception $e) {
+            abort(404, 'Invalid verification link.');
+        }
+
+        $user = User::where('email', $email)->first();
+
         if (!$user) {
-            return redirect()->route('user.login')->with('error', 'Invalid or expired verification link.');
+            abort(404, 'User not found.');
         }
+
+        if ($user->ev == Status::VERIFIED) {
+            return redirect()->route('user.login')->with('success', 'Email already verified. Please login.');
+        }
+
         if (Carbon::parse($user->ver_code_send_at)->addHours(24)->isPast()) {
-            return redirect()->route('user.login')->with('error', 'Verification link has expired.');
+            return redirect()->route('user.login')->with('error', 'Verification link has expired. Please register again.');
         }
+
         $pageTitle = 'Set Your Password';
         return view($this->activeTemplate . 'set-password', compact('pageTitle', 'token', 'user'));
     }
@@ -209,15 +213,28 @@ class LoginController extends Controller
     public function setPassword(Request $request)
     {
         $request->validate(['token' => 'required', 'password' => 'required|min:8|confirmed']);
-        $user = User::where('ver_code', $request->token)->first();
-        if (!$user) {
+
+        try {
+            $email = decrypt($request->token);
+        } catch (\Exception $e) {
             return back()->withErrors(['token' => 'Invalid or expired link.']);
         }
-        $user->password          = Hash::make($request->password);
-        $user->ev                = Status::VERIFIED;
-        $user->ver_code          = null;
-        $user->ver_code_send_at  = null;
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['token' => 'User not found.']);
+        }
+
+        if (Carbon::parse($user->ver_code_send_at)->addHours(24)->isPast()) {
+            return back()->withErrors(['token' => 'Link has expired. Please register again.']);
+        }
+
+        $user->password         = Hash::make($request->password);
+        $user->ev               = Status::VERIFIED;
+        $user->ver_code_send_at = null;
         $user->save();
+
         Auth::login($user);
         return redirect()->route('user.dashboard')->with('success', 'Welcome to CityQuants!');
     }
@@ -237,26 +254,40 @@ class LoginController extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────────
+    //  FORGOT PASSWORD — no changes needed below
+    //  but also update sendResetLink to use encrypt
+    // ─────────────────────────────────────────────
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->first();
+
         if ($user && $user->ev) {
-            $token                  = Str::random(64);
-            $user->ver_code         = $token;
             $user->ver_code_send_at = now();
             $user->save();
-            Mail::to($user->email)->send(new ResetPasswordMail($user, $token));
+
+            $encryptedEmail = encrypt($user->email);
+            Mail::to($user->email)->send(new ResetPasswordMail($user, $encryptedEmail));
         }
+
         return response()->json(['success' => true, 'message' => 'If that email exists, a reset link has been sent.']);
     }
 
     public function showResetPassword($token)
     {
-        $user = User::where('ver_code', $token)->first();
+        try {
+            $email = decrypt($token);
+        } catch (\Exception $e) {
+            return redirect()->route('user.login')->with('error', 'Invalid reset link.');
+        }
+
+        $user = User::where('email', $email)->first();
+
         if (!$user || Carbon::parse($user->ver_code_send_at)->addHours(1)->isPast()) {
             return redirect()->route('user.login')->with('error', 'Reset link has expired or is invalid.');
         }
+
         $pageTitle = 'Reset Password';
         return view($this->activeTemplate . 'reset-password', compact('pageTitle', 'token'));
     }
@@ -264,14 +295,23 @@ class LoginController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate(['token' => 'required', 'password' => 'required|min:8|confirmed']);
-        $user = User::where('ver_code', $request->token)->first();
+
+        try {
+            $email = decrypt($request->token);
+        } catch (\Exception $e) {
+            return back()->withErrors(['token' => 'Invalid or expired link.']);
+        }
+
+        $user = User::where('email', $email)->first();
+
         if (!$user || Carbon::parse($user->ver_code_send_at)->addHours(1)->isPast()) {
             return back()->withErrors(['token' => 'Reset link is invalid or has expired.']);
         }
+
         $user->password         = Hash::make($request->password);
-        $user->ver_code         = null;
         $user->ver_code_send_at = null;
         $user->save();
+
         return redirect()->route('user.login')->with('success', 'Password reset successfully. Please login.');
     }
 
