@@ -65,8 +65,6 @@
 
     </div>
 
-    @include($activeTemplate.'partials.auth-right')
-
 </div>
 </div>
 
