@@ -143,7 +143,7 @@
                                     <span class="badge badge--info bg-dark">{{ $course->category->name ?? '—' }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge badge--secondary">{{ ucfirst($course->mode) }}</span><br>
+                                    <span class="badge badge--secondary text-dark">{{ ucfirst($course->mode) }}</span><br>
                                     <small class="text--muted">{{ ucfirst($course->level) }}</small>
                                 </td>
                                 <td>{!! $course->status_badge !!}</td>
