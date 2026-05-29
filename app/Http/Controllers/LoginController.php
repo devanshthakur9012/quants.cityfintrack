@@ -195,6 +195,7 @@ class LoginController extends Controller
     public function verifyEmail(Request $request, $token)
     {
         $user = User::where('ver_code', $token)->first();
+        dd($user,$token);
         if (!$user) {
             return redirect()->route('user.login')->with('error', 'Invalid or expired verification link.');
         }
