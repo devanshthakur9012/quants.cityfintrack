@@ -140,7 +140,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="badge badge--info">{{ $course->category->name ?? '—' }}</span>
+                                    <span class="badge badge--info bg-dark">{{ $course->category->name ?? '—' }}</span>
                                 </td>
                                 <td>
                                     <span class="badge badge--secondary">{{ ucfirst($course->mode) }}</span><br>
