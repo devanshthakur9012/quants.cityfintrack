@@ -25,7 +25,6 @@ class CourseController extends Controller
         $pageTitle = 'All Courses';
 
         $courses = Course::with('category')->withCount('lessons')
-            ->where('status', '!=', 'deleted')                                          // hide soft-deleted
             ->when($request->search,   fn($q) => $q->where('title', 'like', '%' . $request->search . '%'))
             ->when($request->status,   fn($q) => $q->where('status', $request->status))
             ->when($request->category, fn($q) => $q->where('course_category_id', $request->category))
@@ -130,10 +129,27 @@ class CourseController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function destroy(Course $course)
     {
-        // Soft-delete: hide from all listings by setting status to 0
-        $course->update(['status' => 'deleted']);
+        foreach ($course->lessons as $lesson) {
+            if ($lesson->video_type === 'upload' && $lesson->video_path) {
+                Storage::disk('course_videos')->delete($lesson->video_path);
+            }
+            // Also clean up lesson preview videos
+            if ($lesson->preview_video_type === 'upload' && $lesson->preview_video_path) {
+                Storage::disk('course_videos')->delete($lesson->preview_video_path);
+            }
+        }
+        // Clean up section preview videos
+        foreach ($course->sections as $section) {
+            if ($section->preview_video_type === 'upload' && $section->preview_video_path) {
+                Storage::disk('course_videos')->delete($section->preview_video_path);
+            }
+        }
+        if ($course->thumbnail) {
+            @unlink(public_path('assets/courses/thumbnails/' . $course->thumbnail));
+        }
+        $course->delete();
 
-        $notify[] = ['success', 'Course removed successfully'];
+        $notify[] = ['success', 'Course deleted successfully'];
         return back()->withNotify($notify);
     }
 

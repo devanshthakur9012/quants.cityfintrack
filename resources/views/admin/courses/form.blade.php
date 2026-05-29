@@ -72,7 +72,7 @@
     padding: 14px 16px; border: 2px solid #e5e9f2; border-radius: 9px;
     cursor: pointer; transition: all .2s; background: #fafbff;
 }
-.cert-toggle-label:has(input:checked) { border-color: #1a56db; background: #dbeafe; }
+.cert-toggle-label.cert-enabled { border-color: #1a56db; background: #dbeafe; }
 .cert-icon { font-size: 28px; color: #f5a623; }
 .cert-text-main { font-size: 14px; font-weight: 600; color: #0f1b2d; }
 .cert-text-sub  { font-size: 12px; color: #7a8499; }
@@ -85,6 +85,23 @@
     $editing          = isset($course);
     $selectedTrainers = $selectedTrainers ?? [];
     $faqs             = $faqs ?? collect();
+
+    // ── Discount back-calculation ──────────────────────────────────────────
+    // If discount_percent is 0/null but mrp+price both exist, derive it so
+    // the pricing preview renders correctly on the edit page.
+    $discVal = old('discount_percent', $course->discount_percent ?? '');
+    if (
+        (!$discVal || floatval($discVal) == 0) &&
+        $editing &&
+        ($course->mrp ?? 0) > 0 &&
+        ($course->price ?? 0) > 0 &&
+        $course->price < $course->mrp
+    ) {
+        $discVal = round((($course->mrp - $course->price) / $course->mrp) * 100, 2);
+    }
+
+    // ── Certificate state ──────────────────────────────────────────────────
+    $hasCert = (bool) old('has_certificate', $course->has_certificate ?? false);
 @endphp
 
 <form action="{{ $editing ? route('admin.courses.update', $course) : route('admin.courses.store') }}"
@@ -177,7 +194,7 @@
                             </div>
                         </div>
 
-                        {{-- Discount % --}}
+                        {{-- Discount % — uses back-calculated $discVal --}}
                         <div class="col-md-3 paidFields">
                             <label class="form-label">Discount %
                                 <small class="text-muted">(auto-calculates price)</small>
@@ -185,7 +202,7 @@
                             <div class="input-group">
                                 <input type="number" name="discount_percent" id="discountInput"
                                        class="form-control" step="0.5" min="0" max="100"
-                                       value="{{ old('discount_percent', $course->discount_percent ?? '') }}"
+                                       value="{{ $discVal }}"
                                        placeholder="e.g. 40">
                                 <span class="input-group-text">%</span>
                             </div>
@@ -233,7 +250,6 @@
                 <div class="card-body">
 
                     @if($employees->count())
-                    {{-- Hidden inputs built by JS when trainer is toggled --}}
                     <div id="trainerHiddenInputs">
                         @foreach($selectedTrainers as $tid)
                             <input type="hidden" name="trainer_ids[]" value="{{ $tid }}">
@@ -302,8 +318,7 @@
                         <i class="las la-question-circle me-1"></i> FAQs
                         <small class="text-muted fw-normal">(optional)</small>
                     </h5>
-                    <button type="button" class="btn btn--primary btn--sm" id="addFaqBtn"
-                            onclick="addFaqRow()">
+                    <button type="button" class="btn btn--primary btn--sm" onclick="addFaqRow()">
                         <i class="las la-plus"></i> Add FAQ
                     </button>
                 </div>
@@ -519,10 +534,22 @@
                     <h5 class="card-title mb-0"><i class="las la-certificate me-1"></i> Certificate</h5>
                 </div>
                 <div class="card-body">
-                    <label class="cert-toggle-label">
+                    {{--
+                        FIX: Do NOT use onclick on the <label> — the browser already
+                        toggles the checkbox when a <label> is clicked, so a manual
+                        toggle would double-fire and leave the state wrong.
+                        Instead: listen to 'change' on the checkbox itself (see JS below).
+                    --}}
+                    <label class="cert-toggle-label {{ $hasCert ? 'cert-enabled' : '' }}" id="certLabel" for="certToggle">
+                        {{--
+                            Hidden but still in the DOM so it submits with the form.
+                            pointer-events:none stops it from intercepting clicks that
+                            the <label for="certToggle"> already handles natively.
+                        --}}
                         <input type="checkbox" name="has_certificate" value="1"
-                               id="certToggle" style="display:none;"
-                               @checked(old('has_certificate', $course->has_certificate ?? false))>
+                               id="certToggle"
+                               style="position:absolute;opacity:0;pointer-events:none;"
+                               @checked($hasCert)>
                         <i class="las la-certificate cert-icon"></i>
                         <div>
                             <div class="cert-text-main">Certificate of Completion</div>
@@ -530,13 +557,9 @@
                         </div>
                         <div style="margin-left:auto;flex-shrink:0;">
                             <span class="badge badge--success" id="certBadgeOn"
-                                  style="{{ (old('has_certificate', $course->has_certificate ?? false)) ? '' : 'display:none;' }}">
-                                ✓ Enabled
-                            </span>
+                                  style="{{ $hasCert ? '' : 'display:none;' }}">✓ Enabled</span>
                             <span class="badge badge--secondary" id="certBadgeOff"
-                                  style="{{ (old('has_certificate', $course->has_certificate ?? false)) ? 'display:none;' : '' }}">
-                                Disabled
-                            </span>
+                                  style="{{ $hasCert ? 'display:none;' : '' }}">Disabled</span>
                         </div>
                     </label>
                     <small class="text-muted d-block mt-2">
@@ -563,7 +586,7 @@ document.getElementById('thumbnailInput').addEventListener('change', function ()
     reader.onload = function (e) {
         var img         = document.getElementById('thumbPreview');
         var placeholder = document.getElementById('thumbPlaceholder');
-        img.src          = e.target.result;
+        img.src           = e.target.result;
         img.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
     };
@@ -591,15 +614,15 @@ function recalcPrice() {
 
     if (disc > 0 && disc <= 100) {
         var price = Math.round(mrp * (1 - disc / 100));
-        priceInput.value = price;
-        ppPrice.textContent = '₹' + price.toLocaleString('en-IN');
-        ppMrp.textContent   = '₹' + mrp.toLocaleString('en-IN');
-        ppDisc.textContent  = Math.round(disc) + '% off';
-        ppDisc.style.display = 'inline-block';
+        priceInput.value           = price;
+        ppPrice.textContent        = '₹' + price.toLocaleString('en-IN');
+        ppMrp.textContent          = '₹' + mrp.toLocaleString('en-IN');
+        ppDisc.textContent         = Math.round(disc) + '% off';
+        ppDisc.style.display       = 'inline-block';
     } else {
-        priceInput.value = mrp;
-        ppPrice.textContent = '₹' + mrp.toLocaleString('en-IN');
-        ppMrp.textContent   = '';
+        priceInput.value     = mrp;
+        ppPrice.textContent  = '₹' + mrp.toLocaleString('en-IN');
+        ppMrp.textContent    = '';
         ppDisc.style.display = 'none';
     }
 
@@ -609,7 +632,7 @@ function recalcPrice() {
 if (mrpInput)      mrpInput.addEventListener('input', recalcPrice);
 if (discountInput) discountInput.addEventListener('input', recalcPrice);
 
-// Init on page load (edit mode)
+// Run immediately on page load so edit-mode shows correct preview
 recalcPrice();
 
 // ── 3. PAID / FREE TOGGLE ───────────────────────────────────────────────────
@@ -646,7 +669,7 @@ function rebuildTrainerInputs() {
     var container = document.getElementById('trainerHiddenInputs');
     container.innerHTML = '';
     selectedTrainerIds.forEach(function (id) {
-        var inp = document.createElement('input');
+        var inp   = document.createElement('input');
         inp.type  = 'hidden';
         inp.name  = 'trainer_ids[]';
         inp.value = id;
@@ -655,12 +678,23 @@ function rebuildTrainerInputs() {
 }
 
 // ── 5. CERTIFICATE TOGGLE ───────────────────────────────────────────────────
-document.querySelector('.cert-toggle-label').addEventListener('click', function () {
-    var cb  = document.getElementById('certToggle');
-    cb.checked = !cb.checked;
-    document.getElementById('certBadgeOn').style.display  = cb.checked ? '' : 'none';
-    document.getElementById('certBadgeOff').style.display = cb.checked ? 'none' : '';
-});
+// Listen on 'change' (not 'click' on the label) to avoid the double-fire bug
+// where label click + checkbox toggle both fire and cancel each other out.
+var certCheckbox = document.getElementById('certToggle');
+var certLabel    = document.getElementById('certLabel');
+var certBadgeOn  = document.getElementById('certBadgeOn');
+var certBadgeOff = document.getElementById('certBadgeOff');
+
+function syncCertUI() {
+    var checked = certCheckbox.checked;
+    certBadgeOn.style.display  = checked ? '' : 'none';
+    certBadgeOff.style.display = checked ? 'none' : '';
+    certLabel.classList.toggle('cert-enabled', checked);
+}
+
+certCheckbox.addEventListener('change', syncCertUI);
+// Sync on page load (handles edit mode where checkbox is pre-checked)
+syncCertUI();
 
 // ── 6. FAQ BUILDER ──────────────────────────────────────────────────────────
 var newFaqCounter = 0;
@@ -678,7 +712,7 @@ function addFaqRow() {
             '<i class="las la-grip-vertical faq-drag-handle"></i>' +
             '<span class="faq-question-text text-muted">New FAQ ' + idx + '</span>' +
             '<button type="button" class="btn btn--danger btn--sm" style="padding:3px 8px;" ' +
-                'onclick="event.stopPropagation(); this.closest(\'.faq-item\').remove(); updateFaqCounter();">' +
+                'onclick="event.stopPropagation(); this.closest(\'.faq-item\').remove();">' +
                 '<i class="las la-trash"></i>' +
             '</button>' +
             '<i class="las la-angle-down" style="color:#aaa;font-size:13px;"></i>' +
@@ -707,11 +741,7 @@ function toggleFaqBody(header) {
     if (body) body.classList.toggle('open');
 }
 
-function updateFaqCounter() {
-    // no-op, just for cleanup
-}
-
-// Save existing FAQ via AJAX (blur on input)
+// Save existing FAQ via AJAX (on blur)
 function saveFaq(inputEl, faqId) {
     if (!courseId || !faqId) return;
     var item     = inputEl.closest('.faq-item');
@@ -721,7 +751,10 @@ function saveFaq(inputEl, faqId) {
 
     fetch('/admin/courses/faqs/' + faqId, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
         body: JSON.stringify({ question: question, answer: answer })
     });
     item.querySelector('.faq-question-text').textContent = question;
@@ -739,10 +772,6 @@ function deleteFaq(btn, faqId) {
     btn.closest('.faq-item').remove();
 }
 
-// ── 7. SAVE new FAQs with form submit ──────────────────────────────────────
-// new_faqs[idx][question] and new_faqs[idx][answer] are submitted with form
-// Handle them in controller store/update
-
 // ── FAQ SORTABLE ────────────────────────────────────────────────────────────
 var faqContainer = document.getElementById('faqContainer');
 if (faqContainer && typeof Sortable !== 'undefined') {
@@ -757,7 +786,10 @@ if (faqContainer && typeof Sortable !== 'undefined') {
             if (order.length && courseId) {
                 fetch('/admin/courses/faqs/reorder', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
                     body: JSON.stringify({ order: order })
                 });
             }
@@ -765,21 +797,4 @@ if (faqContainer && typeof Sortable !== 'undefined') {
     });
 }
 </script>
-
-{{-- Handle new FAQs on form submit inside controller (store/update) --}}
-{{-- Add this to CourseController store() and update() after $course is saved: --}}
-{{--
-    if ($request->has('new_faqs')) {
-        $maxOrder = $course->faqs()->max('sort_order') ?? 0;
-        foreach ($request->new_faqs as $faq) {
-            if (!empty($faq['question']) && !empty($faq['answer'])) {
-                $course->faqs()->create([
-                    'question'   => $faq['question'],
-                    'answer'     => $faq['answer'],
-                    'sort_order' => ++$maxOrder,
-                ]);
-            }
-        }
-    }
---}}
 @endpush
