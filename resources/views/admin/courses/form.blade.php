@@ -97,7 +97,8 @@
         ($course->price ?? 0) > 0 &&
         $course->price < $course->mrp
     ) {
-        $discVal = round((($course->mrp - $course->price) / $course->mrp) * 100, 2);
+        // Round to nearest whole number to avoid float precision errors (e.g. 40.008 → 40)
+        $discVal = round((($course->mrp - $course->price) / $course->mrp) * 100);
     }
 
     // ── Certificate state ──────────────────────────────────────────────────
@@ -635,6 +636,13 @@ if (discountInput) discountInput.addEventListener('input', recalcPrice);
 // Run immediately on page load so edit-mode shows correct preview
 recalcPrice();
 
+// Normalize discount display: "40.00" → "40", "39.50" → "39.5"
+if (discountInput && discountInput.value) {
+    discountInput.value = parseFloat(discountInput.value) % 1 === 0
+        ? parseInt(discountInput.value)
+        : parseFloat(discountInput.value);
+}
+
 // ── 3. PAID / FREE TOGGLE ───────────────────────────────────────────────────
 function togglePriceFields() {
     var isFree = document.getElementById('priceType').value === 'free';
@@ -693,7 +701,13 @@ function syncCertUI() {
 }
 
 certCheckbox.addEventListener('change', syncCertUI);
-// Sync on page load (handles edit mode where checkbox is pre-checked)
+
+// Sync on page load — wrapped in DOMContentLoaded + setTimeout to guarantee
+// the checkbox checked state is fully applied before we read it.
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(syncCertUI, 0);
+});
+// Also fire immediately in case DOMContentLoaded already passed (script at bottom)
 syncCertUI();
 
 // ── 6. FAQ BUILDER ──────────────────────────────────────────────────────────
