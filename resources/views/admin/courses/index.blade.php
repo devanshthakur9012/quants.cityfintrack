@@ -215,6 +215,28 @@
         </div>
     </div>
 </div>
+{{-- Confirmation Modal --}}
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationQuestion"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--secondary btn--sm" data-bs-dismiss="modal">Cancel</button>
+                <form id="confirmationForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn--danger btn--sm">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- STATUS MODAL --}}
 <div class="modal fade" id="statusModal" tabindex="-1">
@@ -262,6 +284,20 @@ document.querySelectorAll('.statusBtn').forEach(function(btn) {
 
         var bsModal = new bootstrap.Modal(modal);
         bsModal.show();
+    });
+});
+</script>
+<script>
+document.querySelectorAll('.confirmationBtn').forEach(function(btn) {
+    btn.addEventListener('click', function () {
+        var modal    = document.getElementById('confirmationModal');
+        var form     = document.getElementById('confirmationForm');
+        var question = document.getElementById('confirmationQuestion');
+
+        form.action = this.dataset.action;
+        question.textContent = this.dataset.question || 'Are you sure you want to proceed?';
+
+        new bootstrap.Modal(modal).show();
     });
 });
 </script>
