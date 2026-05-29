@@ -117,27 +117,72 @@ class LoginController extends Controller
         $request->validate([
             'firstname' => 'required|string|max:100',
             'lastname'  => 'required|string|max:100',
-            'email'     => 'required|email|unique:users,email',
-            'mobile'    => 'nullable|string|max:20|unique:users,mobile',
+            'email'     => 'required|email',
+            'mobile'    => 'nullable|string|max:20',
         ]);
-        $userCode = 'CQ' . mt_rand(10000, 99999);
+
         $token    = Str::random(64);
+        $userCode = 'CQ' . mt_rand(10000, 99999);
+
+        // Check if email already exists
+        $existingUser = User::where('email', $request->email)->first();
+
+        if ($existingUser) {
+            // Already verified → tell them to login
+            if ($existingUser->ev == Status::VERIFIED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already registered. Please login or reset your password.',
+                ]);
+            }
+
+            // Unverified → update their info and resend verification
+            $existingUser->update([
+                'firstname'        => $request->firstname,
+                'lastname'         => $request->lastname,
+                'mobile'           => $request->mobile ?? $existingUser->mobile,
+                'ver_code'         => $token,
+                'ver_code_send_at' => now(),
+            ]);
+
+            Mail::to($existingUser->email)->send(new EmailVerificationMail($existingUser, $token));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification email resent! Please check your inbox.',
+            ]);
+        }
+
+        // Check mobile uniqueness only if provided
+        if ($request->mobile) {
+            $mobileTaken = User::where('mobile', $request->mobile)->exists();
+            if ($mobileTaken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This mobile number is already in use.',
+                ]);
+            }
+        }
+
+        // Fresh registration
         $user = User::create([
-            'firstname'         => $request->firstname,
-            'lastname'          => $request->lastname,
-            'email'             => $request->email,
-            'mobile'            => $request->mobile ?? null,
-            'country_code'      => 'IN',
-            'user_code'         => $userCode,
-            'username'          => $userCode,
-            'password'          => Hash::make(Str::random(16)),
-            'status'            => Status::USER_ACTIVE,
-            'ev'                => Status::UNVERIFIED,
-            'sv'                => Status::VERIFIED,
-            'ver_code'          => $token,
-            'ver_code_send_at'  => now(),
+            'firstname'        => $request->firstname,
+            'lastname'         => $request->lastname,
+            'email'            => $request->email,
+            'mobile'           => $request->mobile ?? null,
+            'country_code'     => 'IN',
+            'user_code'        => $userCode,
+            'username'         => $userCode,
+            'password'         => Hash::make(Str::random(16)),
+            'status'           => Status::USER_ACTIVE,
+            'ev'               => Status::UNVERIFIED,
+            'sv'               => Status::VERIFIED,
+            'ver_code'         => $token,
+            'ver_code_send_at' => now(),
         ]);
+
         Mail::to($user->email)->send(new EmailVerificationMail($user, $token));
+
         return response()->json([
             'success' => true,
             'message' => 'Account created! Please check your email to verify and set your password.',
