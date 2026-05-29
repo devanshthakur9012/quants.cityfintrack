@@ -151,6 +151,7 @@ class LoginController extends Controller
     {
         $user = User::where('ver_code', $token)->first();
         if (!$user) {
+            dd('dsfsdf');
             abort(404, 'Invalid or expired verification link.');
         }
         if (Carbon::parse($user->ver_code_send_at)->addHours(24)->isPast()) {
