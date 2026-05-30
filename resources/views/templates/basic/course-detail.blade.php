@@ -357,7 +357,7 @@
                                         ?? $course->lessons->sortBy('sort_order')->first();
                         @endphp
                         @if($firstLesson)
-                        <a href="{{ route('video.player', $firstLesson) }}" class="cd-buy-cta go-watch" style="text-decoration:none;">
+                        <a href="{{ route('video.player', ['lesson' => encrypt($firstLesson)]) }}" class="cd-buy-cta go-watch" style="text-decoration:none;">
                             <i class="fas fa-play-circle"></i> Go to Course
                         </a>
                         @endif

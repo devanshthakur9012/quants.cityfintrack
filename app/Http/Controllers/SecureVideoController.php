@@ -52,9 +52,12 @@ class SecureVideoController extends Controller
         $nextLesson = $currentIdx < $allLessons->count() - 1 ? $allLessons[$currentIdx + 1] : null;
         $pageTitle  = $lesson->title . ' — ' . $course->title;
 
+        $hasVideo   = ($lesson->video_type === 'upload' && $lesson->video_path)
+               || ($lesson->video_type === 'youtube' && $lesson->video_url);
+
         return view(activeTemplate() . 'lesson-player', compact(
             'pageTitle', 'lesson', 'course', 'section',
-            'prevLesson', 'nextLesson', 'allLessons'
+            'prevLesson', 'nextLesson', 'allLessons', 'hasVideo'
         ));
     }
 
