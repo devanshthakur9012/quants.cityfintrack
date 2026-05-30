@@ -508,9 +508,9 @@
                                 <span class="cd-spill duration"><i class="fas fa-clock"></i> {{ $sDuration }}</span>
                                 @endif
                                 @if($sHasPreview)
-                                <span class="cd-spill preview" onclick="openPreviewVideo('{{ $section->preview_embed_id }}', '{{ addslashes($section->title) }}', 'Section Overview')">
+                                {{-- <span class="cd-spill preview" onclick="openPreviewVideo('{{ $section->preview_embed_id }}', '{{ addslashes($section->title) }}', 'Section Overview')">
                                     <i class="fas fa-play"></i> Overview
-                                </span>
+                                </span> --}}
                                 @endif
                             </div>
                         </div>
@@ -519,7 +519,7 @@
                         @if($sHasPreview)
                         <div class="cd-section-preview-strip" onclick="openPreviewVideo('{{ $section->preview_embed_id }}', '{{ addslashes($section->title) }}', 'Section Overview')">
                             <div class="ps-icon"><i class="fab fa-youtube"></i></div>
-                            <div class="ps-text">
+                            <div class="ps-text" style="line-height: 14px;">
                                 <strong>Watch Section Overview</strong>
                                 <span>Free preview — see what's covered in this section</span>
                             </div>

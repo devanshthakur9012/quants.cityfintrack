@@ -305,9 +305,9 @@
                         </span>
                         @endif
                         @if($section->has_preview)
-                        <span class="section-meta-pill pill-preview">
+                        {{-- <span class="section-meta-pill pill-preview">
                             <i class="las la-play-circle me-1"></i>Overview
-                        </span>
+                        </span> --}}
                         @endif
                     </div>
 
