@@ -3,14 +3,27 @@
 
 @section('content')
 <meta http-equiv="Content-Security-Policy"
-      content="media-src 'self'; object-src 'none';">
+      content="media-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none';">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+
+@php
+    // ── Parse YouTube embed ID from URL ──────────────────────────────────────
+    // Handles: youtube.com/watch?v=XXX, youtu.be/XXX, youtube.com/embed/XXX
+    $ytEmbedId = null;
+    if ($lesson->video_type === 'youtube' && $lesson->video_url) {
+        $url = $lesson->video_url;
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_\-]{11})/', $url, $m)) {
+            $ytEmbedId = $m[1];
+        }
+    }
+    $isUpload  = $lesson->video_type === 'upload' && $lesson->video_path;
+    $isYoutube = $lesson->video_type === 'youtube' && $ytEmbedId;
+    $hasVideo  = $isUpload || $isYoutube;
+@endphp
 
 <style>
 *{box-sizing:border-box;}
 body{background:#0a0f1a;margin:0;}
-
-/* ── LAYOUT ── */
 .lp{font-family:'Exo 2',sans-serif;background:#0a0f1a;min-height:100vh;color:#e0e6f0;display:flex;flex-direction:column;}
 .lp h1,.lp h2,.lp h3,.lp h4{font-family:'Rajdhani',sans-serif;}
 
@@ -32,40 +45,39 @@ body{background:#0a0f1a;margin:0;}
 .lp-main{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;}
 
 /* ── VIDEO AREA ── */
-.lp-video-area{position:relative;width:100%;background:#000;aspect-ratio:16/9;max-height:70vh;}
+.lp-video-area{position:relative;width:100%;background:#000;aspect-ratio:16/9;max-height:70vh;flex-shrink:0;}
 
-/* Security: overlay stops right-click on video */
-.lp-shield{
-    position:absolute;inset:0;z-index:5;
-    /* pointer-events none = clicks pass through to video controls */
-    pointer-events:none;
-    background:transparent;
-}
-/* When paused: enable shield so right-click hits the div not the video */
+/* Upload video: shield blocks right-click save when paused */
+.lp-shield{position:absolute;inset:0;z-index:5;pointer-events:none;background:transparent;}
 .lp-video-area.paused .lp-shield{pointer-events:all;}
 
-.lp-video-area video{
-    width:100%;height:100%;display:block;background:#000;
-    /* browser-level: hides download button in controls */
-    -webkit-media-controls-overflow-button:none;
-}
+.lp-video-area video{width:100%;height:100%;display:block;background:#000;object-fit:contain;}
 
-/* ── STATE OVERLAY (loading / error) ── */
+/* YouTube iframe */
+.lp-yt-wrap{position:absolute;inset:0;width:100%;height:100%;}
+.lp-yt-wrap iframe{width:100%;height:100%;border:none;display:block;}
+
+/* ── STATE OVERLAY ── */
 .lp-state{position:absolute;inset:0;z-index:10;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .lp-state.gone{display:none;}
 .lp-spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.08);border-top-color:#f5a623;border-radius:50%;animation:lspin .8s linear infinite;}
 @keyframes lspin{to{transform:rotate(360deg);}}
-.lp-state-txt{font-size:13px;color:rgba(255,255,255,.5);}
+.lp-state-txt{font-size:13px;color:rgba(255,255,255,.5);text-align:center;padding:0 20px;}
 .lp-state-icon{font-size:48px;opacity:.25;}
 
+/* ── VIDEO TYPE BADGE ── */
+.lp-type-badge{position:absolute;top:10px;left:10px;z-index:20;font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:4px;}
+.lp-type-badge.yt{background:rgba(229,57,53,.85);color:#fff;}
+.lp-type-badge.upload{background:rgba(26,86,219,.85);color:#fff;}
+
 /* ── CONTROLS STRIP ── */
-.lp-controls{background:#0f1b2d;border-top:1px solid rgba(255,255,255,.06);padding:12px 20px;display:flex;align-items:center;gap:14px;}
+.lp-controls{background:#0f1b2d;border-top:1px solid rgba(255,255,255,.06);padding:12px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
 .lp-prog-wrap{flex:1;}
 .lp-prog-lbl{font-size:11px;color:rgba(255,255,255,.3);margin-bottom:5px;}
 .lp-prog-track{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
 .lp-prog-fill{height:100%;background:#f5a623;border-radius:2px;transition:width .4s linear;width:0%;}
 
-/* ── LESSON META ── */
+/* ── META ── */
 .lp-meta{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.05);}
 .lp-meta h2{font-size:20px;color:#fff;margin:0 0 8px;}
 .lp-meta-row{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:rgba(255,255,255,.4);}
@@ -73,16 +85,10 @@ body{background:#0a0f1a;margin:0;}
 .lp-meta-row i{color:#f5a623;}
 .lp-desc{padding:14px 24px 24px;font-size:13px;color:rgba(255,255,255,.45);line-height:1.8;}
 
-/* ── YOUTUBE EMBED ── */
-.lp-yt{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;}
-.lp-yt iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
-
 /* ── SIDEBAR ── */
 .lp-sidebar{width:320px;flex-shrink:0;background:#0d1626;border-left:1px solid rgba(255,255,255,.05);overflow-y:auto;display:flex;flex-direction:column;}
 .lp-sb-head{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;}
 .lp-sb-head i{color:#f5a623;}
-
-/* Section */
 .lp-sec{border-bottom:1px solid rgba(255,255,255,.03);}
 .lp-sec-hd{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;background:rgba(255,255,255,.02);user-select:none;}
 .lp-sec-hd:hover{background:rgba(255,255,255,.04);}
@@ -92,8 +98,6 @@ body{background:#0a0f1a;margin:0;}
 .lp-sec-cnt{font-size:10px;color:rgba(255,255,255,.2);white-space:nowrap;}
 .lp-sec-body{display:none;}
 .lp-sec-body.open{display:block;}
-
-/* Lesson row */
 .lp-lrow{display:flex;align-items:center;gap:10px;padding:9px 16px 9px 26px;text-decoration:none;color:inherit;transition:background .15s;}
 .lp-lrow:hover{background:rgba(255,255,255,.03);}
 .lp-lrow.active{background:rgba(245,166,35,.07);border-left:3px solid #f5a623;padding-left:23px;}
@@ -106,7 +110,7 @@ body{background:#0a0f1a;margin:0;}
 .lp-lrow-title{font-size:12px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
 .lp-lrow-dur{font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;}
 
-/* ── DEVTOOLS WARNING OVERLAY ── */
+/* ── DEVTOOLS WARNING ── */
 .lp-dt-warn{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:30px;}
 .lp-dt-warn.show{display:flex;}
 .lp-dt-warn i{font-size:56px;color:#f5a623;opacity:.8;}
@@ -123,11 +127,11 @@ body{background:#0a0f1a;margin:0;}
 }
 </style>
 
-{{-- DevTools warning overlay --}}
+{{-- DevTools warning --}}
 <div class="lp-dt-warn" id="lpDtWarn">
     <i class="fas fa-shield-alt"></i>
     <h3>Developer Tools Detected</h3>
-    <p>Please close Developer Tools to continue watching. Video playback is paused for security.</p>
+    <p>Please close Developer Tools to continue watching.</p>
 </div>
 
 <div class="lp">
@@ -160,9 +164,15 @@ body{background:#0a0f1a;margin:0;}
         <div class="lp-main">
 
             {{-- VIDEO AREA --}}
-            <div class="lp-video-area paused" id="lpArea">
+            <div class="lp-video-area {{ $isUpload ? 'paused' : '' }}" id="lpArea">
 
-                @if($lesson->video_type === 'upload')
+                @if($isUpload)
+                {{-- ══ UPLOADED VIDEO — secure token-based stream ══ --}}
+
+                {{-- Badge --}}
+                <div class="lp-type-badge upload">
+                    <i class="fas fa-video"></i> Uploaded Video
+                </div>
 
                 {{-- Loading state --}}
                 <div class="lp-state" id="lpState">
@@ -170,39 +180,45 @@ body{background:#0a0f1a;margin:0;}
                     <div class="lp-state-txt">Preparing secure stream…</div>
                 </div>
 
-                {{-- Shield div — blocks right-click when paused --}}
-                <div class="lp-shield" id="lpShield"
-                     oncontextmenu="return false"></div>
+                {{-- Shield blocks right-click on pause --}}
+                <div class="lp-shield" id="lpShield" oncontextmenu="return false"></div>
 
                 <video id="lpVideo"
                        playsinline
-                       controlsList="nodownload noremoteplayback nofullscreen"
+                       controlsList="nodownload noremoteplayback"
                        disablePictureInPicture
                        oncontextmenu="return false"
                        style="width:100%;height:100%;object-fit:contain;">
                 </video>
 
-                @elseif($lesson->video_type === 'youtube')
+                @elseif($isYoutube)
+                {{-- ══ YOUTUBE VIDEO — embedded iframe ══ --}}
 
-                <div class="lp-yt" style="width:100%;height:100%;padding-bottom:0;position:absolute;inset:0;">
+                {{-- Badge --}}
+                <div class="lp-type-badge yt">
+                    <i class="fab fa-youtube"></i> YouTube
+                </div>
+
+                <div class="lp-yt-wrap">
                     <iframe
-                        src="https://www.youtube.com/embed/{{ $lesson->youtube_embed_id }}?rel=0&modestbranding=1"
-                        allow="accelerometer; autoplay; encrypted-media; gyroscope"
+                        src="https://www.youtube-nocookie.com/embed/{{ $ytEmbedId }}?rel=0&modestbranding=1&autoplay=0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowfullscreen
-                        style="position:absolute;inset:0;width:100%;height:100%;border:none;">
+                        title="{{ $lesson->title }}">
                     </iframe>
                 </div>
 
                 @else
+                {{-- ══ NO VIDEO ══ --}}
                 <div class="lp-state">
                     <i class="fas fa-video-slash lp-state-icon"></i>
-                    <div class="lp-state-txt">No video for this lesson.</div>
+                    <div class="lp-state-txt">No video has been added to this lesson yet.</div>
                 </div>
                 @endif
 
             </div>
 
-            {{-- CONTROLS --}}
+            {{-- CONTROLS (only meaningful for upload type) --}}
             <div class="lp-controls">
                 @if($prevLesson)
                 <a href="{{ route('video.player', $prevLesson) }}" class="lp-nav-btn">
@@ -210,10 +226,19 @@ body{background:#0a0f1a;margin:0;}
                 </a>
                 @endif
                 <div class="lp-prog-wrap">
+                    @if($isUpload)
                     <div class="lp-prog-lbl" id="lpLbl">Loading…</div>
                     <div class="lp-prog-track">
                         <div class="lp-prog-fill" id="lpFill"></div>
                     </div>
+                    @elseif($isYoutube)
+                    <div class="lp-prog-lbl" style="color:rgba(255,255,255,.3);">
+                        <i class="fab fa-youtube" style="color:#e53935;margin-right:5px;"></i>
+                        Playing via YouTube
+                    </div>
+                    @else
+                    <div class="lp-prog-lbl" style="color:rgba(255,255,255,.3);">No video</div>
+                    @endif
                 </div>
                 @if($nextLesson)
                 <a href="{{ route('video.player', $nextLesson) }}" class="lp-nav-btn next">
@@ -233,6 +258,12 @@ body{background:#0a0f1a;margin:0;}
                     <span><i class="fas fa-layer-group"></i> {{ $section->title }}</span>
                     @endif
                     <span><i class="fas fa-book-open"></i> {{ $course->title }}</span>
+                    {{-- Video type indicator --}}
+                    @if($isUpload)
+                    <span><i class="fas fa-hdd" style="color:#5c9aff;"></i> Uploaded Video</span>
+                    @elseif($isYoutube)
+                    <span><i class="fab fa-youtube" style="color:#e53935;"></i> YouTube Video</span>
+                    @endif
                 </div>
             </div>
 
@@ -257,16 +288,29 @@ body{background:#0a0f1a;margin:0;}
                 </div>
                 <div class="lp-sec-body {{ $isCurrent ? 'open' : '' }}">
                     @foreach($sec->lessons->sortBy('sort_order') as $l)
+                    @php
+                        // Determine icon class per lesson type
+                        $lIco = $l->id === $lesson->id ? 'cur' : ($l->video_type === 'youtube' ? 'yt' : 'up');
+                        $lIcon = $l->id === $lesson->id ? 'fas fa-play' : ($l->video_type === 'youtube' ? 'fab fa-youtube' : 'fas fa-play');
+                    @endphp
                     <a href="{{ route('video.player', $l) }}"
                        class="lp-lrow {{ $l->id === $lesson->id ? 'active' : '' }}">
-                        <div class="lp-lrow-ico {{ $l->id === $lesson->id ? 'cur' : ($l->video_type === 'youtube' ? 'yt' : 'up') }}">
-                            <i class="{{ $l->id === $lesson->id ? 'fas fa-play' : ($l->video_type === 'youtube' ? 'fab fa-youtube' : 'fas fa-play') }}"></i>
+                        <div class="lp-lrow-ico {{ $lIco }}">
+                            <i class="{{ $lIcon }}"></i>
                         </div>
                         <div class="lp-lrow-info">
                             <div class="lp-lrow-title">{{ $l->title }}</div>
-                            @if($l->duration_seconds)
-                            <div class="lp-lrow-dur">{{ $l->formatted_duration }}</div>
-                            @endif
+                            <div class="lp-lrow-dur" style="display:flex;align-items:center;gap:6px;">
+                                @if($l->duration_seconds)
+                                <span>{{ $l->formatted_duration }}</span>
+                                @endif
+                                {{-- Small type indicator --}}
+                                @if($l->video_type === 'youtube')
+                                <span style="background:rgba(229,57,53,.15);color:#e53935;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;">YT</span>
+                                @elseif($l->video_type === 'upload' && $l->video_path)
+                                <span style="background:rgba(26,86,219,.15);color:#5c9aff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;">MP4</span>
+                                @endif
+                            </div>
                         </div>
                     </a>
                     @endforeach
@@ -282,27 +326,27 @@ body{background:#0a0f1a;margin:0;}
 (function(){
 'use strict';
 
-// ── 1. Disable right-click everywhere on this page ───────────────────────
+// ── Disable right-click (upload videos only — YT iframe handles its own) ─
+@if($isUpload)
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+@endif
 
-// ── 2. Block keyboard shortcuts used to save / inspect ───────────────────
+// ── Block inspect shortcuts ──────────────────────────────────────────────
 document.addEventListener('keydown', function(e){
     var k = e.key ? e.key.toLowerCase() : '';
-    // Ctrl+S, Ctrl+U, Ctrl+P (print/save), Ctrl+Shift+I/J/C (devtools)
     if(e.ctrlKey && ['s','u','p'].includes(k)){ e.preventDefault(); return false; }
     if(e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)){ e.preventDefault(); return false; }
     if(k === 'f12'){ e.preventDefault(); return false; }
 });
 
-// ── 3. DevTools size heuristic — pause video if open ─────────────────────
-var dtOpen   = false;
-var dtWarn   = document.getElementById('lpDtWarn');
-var lpVideo  = document.getElementById('lpVideo');
+// ── DevTools detection (upload only — no point pausing YT embed) ─────────
+@if($isUpload)
+var dtOpen  = false;
+var dtWarn  = document.getElementById('lpDtWarn');
+var lpVideo = document.getElementById('lpVideo');
 
-function checkDevTools(){
-    var wDiff = window.outerWidth  - window.innerWidth;
-    var hDiff = window.outerHeight - window.innerHeight;
-    var open  = (wDiff > 150 || hDiff > 150);
+function checkDt(){
+    var open = (window.outerWidth - window.innerWidth > 150 || window.outerHeight - window.innerHeight > 150);
     if(open && !dtOpen){
         dtOpen = true;
         if(lpVideo && !lpVideo.paused) lpVideo.pause();
@@ -312,27 +356,27 @@ function checkDevTools(){
         if(dtWarn) dtWarn.classList.remove('show');
     }
 }
-setInterval(checkDevTools, 800);
+setInterval(checkDt, 800);
 
-// ── 4. Debugger trap — makes devtools console unusable ───────────────────
-// When someone opens devtools console, this runs continuously
-// making the console freeze. Doesn't affect normal users at all.
-(function devTrap(){
-    try{
-        (function(){ var d = new Date(); debugger; if(new Date()-d > 100){ dtOpen = true; if(lpVideo && !lpVideo.paused) lpVideo.pause(); } })();
-    } catch(e){}
-    setTimeout(devTrap, 3000);
+// Debugger trap
+(function trap(){
+    try{ (function(){ var d=new Date(); debugger; if(new Date()-d>100){ dtOpen=true; if(lpVideo&&!lpVideo.paused)lpVideo.pause(); } })(); }catch(e){}
+    setTimeout(trap, 3000);
 })();
+@endif
 
-// ── 5. Sidebar toggle ────────────────────────────────────────────────────
+// ── Sidebar section toggle ────────────────────────────────────────────────
 window.lpSec = function(hd){
     hd.classList.toggle('open');
-    var body = hd.nextElementSibling;
-    if(body) body.classList.toggle('open');
+    var b = hd.nextElementSibling;
+    if(b) b.classList.toggle('open');
 };
 
-@if($lesson->video_type === 'upload')
-// ── 6. Secure video player ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// UPLOADED VIDEO PLAYER (secure token stream)
+// Only runs when video_type = 'upload'
+// ═══════════════════════════════════════════════════════════════
+@if($isUpload)
 var lpArea  = document.getElementById('lpArea');
 var lpState = document.getElementById('lpState');
 var lpFill  = document.getElementById('lpFill');
@@ -344,48 +388,43 @@ function showState(html){
 function hideState(){
     if(lpState) lpState.classList.add('gone');
 }
+window.hideState = hideState;
 
-// STEP 1: Get a signed stream token from server
 function initPlayer(){
     showState('<div class="lp-spinner"></div><div class="lp-state-txt">Securing stream…</div>');
 
     fetch('{{ route("video.token", $lesson) }}', {
-        method : 'POST',
-        headers: {
-            'Content-Type' : 'application/json',
-            'X-CSRF-TOKEN' : '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest',
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRF-TOKEN':'{{ csrf_token() }}',
+            'X-Requested-With':'XMLHttpRequest',
         },
-        credentials: 'same-origin',
+        credentials:'same-origin',
     })
     .then(function(r){
-        if(r.status === 401){ window.location.href = '{{ route("user.login") }}'; return null; }
-        if(!r.ok) return r.json().then(function(d){ throw new Error(d.error || 'Failed'); });
+        if(r.status===401){ window.location.href='{{ route("user.login") }}'; return null; }
+        if(!r.ok) return r.json().then(function(d){ throw new Error(d.error||'Failed to load video'); });
         return r.json();
     })
     .then(function(data){
         if(!data) return;
-        // STEP 2: Feed the signed stream URL to the video element
-        // The URL contains our token — no real file path ever visible
-        loadVideo(data.stream_url, data.duration);
+        loadVideo(data.stream_url);
     })
     .catch(function(err){
         showState(
-            '<i class="fas fa-exclamation-triangle lp-state-icon" style="color:#e53935;"></i>' +
-            '<div class="lp-state-txt">' + (err.message || 'Could not load video.') + '</div>' +
-            '<button onclick="initPlayer()" style="margin-top:10px;padding:8px 20px;background:#f5a623;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;">Retry</button>'
+            '<i class="fas fa-exclamation-triangle" style="font-size:38px;color:#e53935;opacity:.7;display:block;margin-bottom:12px;"></i>'+
+            '<div class="lp-state-txt">'+(err.message||'Could not load video.')+'</div>'+
+            '<button onclick="initPlayer()" style="margin-top:14px;padding:9px 22px;background:#f5a623;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;font-size:13px;">Retry</button>'
         );
     });
 }
+window.initPlayer = initPlayer;
 
-// STEP 2: Attach stream URL to <video> element
-// Browser will automatically use byte-range requests (206 responses)
-// Each range request hits our controller which re-verifies token + IP
-function loadVideo(streamUrl, duration){
+function loadVideo(streamUrl){
     var video = document.getElementById('lpVideo');
     if(!video) return;
 
-    // Set source — browser sends Range: bytes=X-Y requests automatically
     video.src = streamUrl;
     video.load();
 
@@ -393,70 +432,58 @@ function loadVideo(streamUrl, duration){
         hideState();
         video.removeEventListener('canplay', onReady);
         video.play().catch(function(){
-            // Autoplay blocked — show play button
+            // Autoplay blocked
             showState(
                 '<div onclick="document.getElementById(\'lpVideo\').play();hideState();" '+
-                'style="cursor:pointer;width:68px;height:68px;border-radius:50%;background:#f5a623;display:flex;align-items:center;justify-content:center;">' +
-                '<i class="fas fa-play" style="font-size:24px;color:#0f1b2d;margin-left:3px;"></i></div>' +
+                'style="cursor:pointer;width:68px;height:68px;border-radius:50%;background:#f5a623;display:flex;align-items:center;justify-content:center;">'+
+                '<i class="fas fa-play" style="font-size:24px;color:#0f1b2d;margin-left:3px;"></i></div>'+
                 '<div class="lp-state-txt" style="margin-top:10px;">Click to play</div>'
             );
         });
-    }, {once: true});
+    }, {once:true});
 
     video.addEventListener('error', function(){
         showState(
-            '<i class="fas fa-exclamation-triangle lp-state-icon" style="color:#e53935;"></i>'+
-            '<div class="lp-state-txt">Stream error. <button onclick="initPlayer()" '+
-            'style="background:none;border:none;color:#f5a623;cursor:pointer;font-weight:700;">Retry</button></div>'
+            '<i class="fas fa-exclamation-triangle" style="font-size:38px;color:#e53935;opacity:.7;display:block;margin-bottom:12px;"></i>'+
+            '<div class="lp-state-txt">Stream error. <button onclick="initPlayer()" style="background:none;border:none;color:#f5a623;cursor:pointer;font-weight:700;font-size:13px;">Retry</button></div>'
         );
     });
 
-    // ── Play/pause shield toggle ─────────────────────────────────────────
     video.addEventListener('play',  function(){ lpArea.classList.remove('paused'); });
     video.addEventListener('pause', function(){ lpArea.classList.add('paused'); });
 
-    // ── Progress bar ─────────────────────────────────────────────────────
     video.addEventListener('timeupdate', function(){
         if(!video.duration) return;
-        var pct = (video.currentTime / video.duration) * 100;
-        if(lpFill) lpFill.style.width = pct.toFixed(1) + '%';
-        if(lpLbl)  lpLbl.textContent  = fmt(video.currentTime) + ' / ' + fmt(video.duration);
+        var pct = (video.currentTime/video.duration)*100;
+        if(lpFill) lpFill.style.width = pct.toFixed(1)+'%';
+        if(lpLbl)  lpLbl.textContent  = fmt(video.currentTime)+' / '+fmt(video.duration);
     });
 
-    // ── Auto-advance ─────────────────────────────────────────────────────
     video.addEventListener('ended', function(){
         @if($nextLesson)
         if(lpLbl) lpLbl.textContent = 'Loading next lesson…';
-        setTimeout(function(){ window.location.href = '{{ route("video.player", $nextLesson) }}'; }, 1500);
+        setTimeout(function(){ window.location.href='{{ route("video.player", $nextLesson) }}'; }, 1500);
         @endif
-    });
-
-    // ── Token refresh: if 403 during playback, re-issue token ────────────
-    // This handles the edge case where token expires mid-long-video
-    video.addEventListener('stalled', function(){
-        var savedTime = video.currentTime;
-        fetch('{{ route("video.token", $lesson) }}', {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'X-Requested-With':'XMLHttpRequest' },
-            credentials: 'same-origin',
-        })
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-            if(data && data.stream_url){
-                video.src = data.stream_url;
-                video.load();
-                video.currentTime = savedTime;
-                video.play().catch(function(){});
-            }
-        }).catch(function(){});
     });
 }
 
-window.initPlayer = initPlayer;
-window.hideState  = function(){ if(lpState) lpState.classList.add('gone'); };
+function fmt(s){
+    var m=Math.floor(s/60), sec=Math.floor(s%60);
+    return m+':'+(sec<10?'0':'')+sec;
+}
 
-// Start player
+// Start
 initPlayer();
+@endif
+
+// ═══════════════════════════════════════════════════════════════
+// YOUTUBE VIDEO — nothing special needed, iframe handles it
+// Just auto-advance on next lesson if possible
+// ═══════════════════════════════════════════════════════════════
+@if($isYoutube)
+// YouTube iframe API for auto-advance (optional, non-critical)
+// The iframe will play normally without any JS
+console.log('YouTube lesson loaded: {{ $ytEmbedId }}');
 @endif
 
 })();
