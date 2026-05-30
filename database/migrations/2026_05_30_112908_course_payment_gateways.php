@@ -12,6 +12,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE course_payment_gateways MODIFY COLUMN credentials TEXT NULL');
     }
  
+    
     public function down(): void
     {
         DB::statement('ALTER TABLE course_payment_gateways MODIFY COLUMN credentials TEXT NOT NULL');
