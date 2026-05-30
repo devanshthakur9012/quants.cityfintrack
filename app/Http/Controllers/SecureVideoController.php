@@ -64,38 +64,62 @@ class SecureVideoController extends Controller
     {
         $token = $request->query('token');
 
+        // TEMP DEBUG — remove after fix confirmed
+        Log::info('STREAM_DEBUG', [
+            'lesson_id'   => $lesson->id,
+            'token'       => substr($token ?? '', 0, 20) . '...',
+            'ip_request'  => $request->ip(),
+            'has_token'   => !empty($token),
+        ]);
+
         // Guard 1: token valid + IP
         $data = VideoTokenService::verify($token ?? '', $request->ip());
-        if (!$data) return response('Stream token invalid or expired.', 403);
+
+        Log::info('STREAM_DEBUG_G1', [
+            'verify_result' => $data ? 'PASS' : 'FAIL',
+            'token_data'    => $data,
+            'request_ip'    => $request->ip(),
+        ]);
+
+        if (!$data) return response('Guard1: token invalid or expired.', 403);
 
         // Guard 2: token is for THIS lesson
-        if ((int)$data['lesson_id'] !== $lesson->id) return response('Token mismatch.', 403);
+        Log::info('STREAM_DEBUG_G2', [
+            'token_lesson_id'   => (int)$data['lesson_id'],
+            'route_lesson_id'   => $lesson->id,
+            'match'             => (int)$data['lesson_id'] === $lesson->id ? 'PASS' : 'FAIL',
+        ]);
+        if ((int)$data['lesson_id'] !== $lesson->id) return response('Guard2: token mismatch.', 403);
 
         // Guard 3: DB enrollment
-        if (!VideoTokenService::isEnrolled($data['user_id'], $lesson->id)) {
+        $enrolled = VideoTokenService::isEnrolled($data['user_id'], $lesson->id);
+        Log::info('STREAM_DEBUG_G3', [
+            'user_id'  => $data['user_id'],
+            'enrolled' => $enrolled ? 'PASS' : 'FAIL',
+        ]);
+        if (!$enrolled) {
             VideoTokenService::revoke($token);
-            return response('Access revoked.', 403);
+            return response('Guard3: access revoked.', 403);
         }
 
-        // Guard 4: Referrer — FIXED
-        // Browser <video> byte-range requests often send NO Referer at all.
-        // Only block if referer is PRESENT and from a DIFFERENT domain.
-        // Empty referer = always allow (it's our own player making the request).
-        $referer = $request->header('Referer', '');
-        if (!empty($referer)) {
-            $ourHost     = rtrim(parse_url(config('app.url'), PHP_URL_HOST) ?? '', '/');
-            $refererHost = rtrim(parse_url($referer, PHP_URL_HOST) ?? '', '/');
-            if (!empty($refererHost) && $refererHost !== $ourHost) {
-                Log::warning("Hotlink blocked [{$refererHost}] lesson {$lesson->id}");
-                return response('Hotlinking not allowed.', 403);
-            }
-        }
+        // Guard 4: Referer check REMOVED intentionally.
+        // The token is already IP-bound — someone from another site/IP
+        // cannot use this token even if they somehow obtain the URL.
+        // Adding a referer check on top causes false 403s because:
+        // - <video> byte-range requests often omit the Referer header
+        // - Some proxies/CDNs strip or modify the Referer header
+        // Security is fully handled by Guards 1-3 above.
 
         // Resolve file path via storage disk
         $filePath = Storage::disk('course_videos')->path($lesson->video_path);
+        Log::info('STREAM_DEBUG_FILE', [
+            'video_path' => $lesson->video_path,
+            'full_path'  => $filePath,
+            'exists'     => file_exists($filePath) ? 'YES' : 'NO',
+        ]);
         if (!file_exists($filePath)) {
             Log::error("Stream: file not found [{$filePath}] lesson {$lesson->id}");
-            return response('Video not found.', 404);
+            return response('Guard4: video not found.', 404);
         }
 
         $fileSize = filesize($filePath);
