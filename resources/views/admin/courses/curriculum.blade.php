@@ -123,7 +123,6 @@
     border-radius: 50%;
     background: #f59e0b;
     flex-shrink: 0;
-    title: "Has overview video";
 }
 .lesson-video-type {
     font-size: 10px;
@@ -347,6 +346,7 @@
                             @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
+                                {{-- Changed from confirmationBtn anchor to a proper delete button --}}
                                 <a class="dropdown-item text-danger confirmationBtn" href="#"
                                    data-action="{{ route('admin.courses.sections.destroy', $section) }}"
                                    data-question="Delete this section and all its lessons?">
@@ -576,10 +576,8 @@
                         <textarea name="description" class="form-control" rows="2"
                                   placeholder="Brief overview of what this section covers"></textarea>
                     </div>
-
-                    {{-- Section overview video --}}
                     <div class="mb-3">
-                        <label class="form-label">Section Overview Video <small class="text-muted">(optional — shown to students before purchase)</small></label>
+                        <label class="form-label">Section Overview Video <small class="text-muted">(optional)</small></label>
                         <div class="d-flex gap-3 mb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="preview_video_type" value="none" id="addSecNone" checked>
@@ -595,7 +593,7 @@
                         <div id="addSecYTUrl" style="display:none;">
                             <input type="text" name="preview_video_url" class="form-control"
                                    placeholder="https://www.youtube.com/watch?v=...">
-                            <small class="text-muted">Free preview shown to non-enrolled students. Unlisted/public URL works.</small>
+                            <small class="text-muted">Free preview shown to non-enrolled students.</small>
                         </div>
                     </div>
                 </div>
@@ -663,11 +661,39 @@
                 <h5 class="modal-title" id="sectionPreviewModalTitle">
                     <i class="las la-play-circle me-1"></i> Section Overview
                 </h5>
-                <button class="btn-close" data-bs-dismiss="modal"
-                        onclick="clearSectionPreview()"></button>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-3">
                 <div id="sectionPreviewContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ── CONFIRMATION MODAL (for section + lesson deletes) ────────────────── --}}
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="las la-exclamation-triangle text-danger me-1"></i> Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationQuestion" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--secondary btn--sm" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <form id="confirmationForm" method="POST" style="display:inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn--danger btn--sm">
+                        <i class="las la-trash me-1"></i> Yes, Delete
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -678,6 +704,17 @@
 @push('script')
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+// ── Confirmation modal (section & lesson deletes) ────────────────────────────
+document.querySelectorAll('.confirmationBtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.getElementById('confirmationForm').action  = this.dataset.action;
+        document.getElementById('confirmationQuestion').textContent =
+            this.dataset.question || 'Are you sure you want to delete this?';
+        new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+    });
+});
+
 // ── Section drag-and-drop reorder ────────────────────────────────────────────
 var sectionList = document.getElementById('sectionList');
 if (sectionList) {
@@ -685,9 +722,9 @@ if (sectionList) {
         handle: '.section-drag-handle',
         animation: 150,
         ghostClass: 'dragging',
-        onEnd: function() {
+        onEnd: function () {
             var order = [];
-            document.querySelectorAll('.curriculum-section').forEach(function(el) {
+            document.querySelectorAll('.curriculum-section').forEach(function (el) {
                 order.push(el.dataset.sectionId);
             });
             fetch('{{ route('admin.courses.sections.reorder') }}', {
@@ -700,14 +737,14 @@ if (sectionList) {
 }
 
 // ── Lesson drag-and-drop reorder (per section) ───────────────────────────────
-document.querySelectorAll('.sortable-lessons').forEach(function(container) {
+document.querySelectorAll('.sortable-lessons').forEach(function (container) {
     Sortable.create(container, {
         handle: '.lesson-drag-handle',
         animation: 150,
         ghostClass: 'dragging',
-        onEnd: function() {
+        onEnd: function () {
             var order = [];
-            container.querySelectorAll('.lesson-item').forEach(function(el) {
+            container.querySelectorAll('.lesson-item').forEach(function (el) {
                 order.push(el.dataset.lessonId);
             });
             fetch('{{ route('admin.courses.lessons.reorder') }}', {
@@ -720,8 +757,8 @@ document.querySelectorAll('.sortable-lessons').forEach(function(container) {
 });
 
 // ── Add Section modal: toggle YT URL field ───────────────────────────────────
-document.querySelectorAll('input[name="preview_video_type"]').forEach(function(r) {
-    r.addEventListener('change', function() {
+document.querySelectorAll('input[name="preview_video_type"]').forEach(function (r) {
+    r.addEventListener('change', function () {
         document.getElementById('addSecYTUrl').style.display =
             this.value === 'youtube' ? '' : 'none';
     });
@@ -730,14 +767,13 @@ document.querySelectorAll('input[name="preview_video_type"]').forEach(function(r
 // ── Edit Section modal ───────────────────────────────────────────────────────
 var currentSectionId = null;
 
-document.querySelectorAll('.editSectionBtn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
+document.querySelectorAll('.editSectionBtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
         e.preventDefault();
         currentSectionId = this.dataset.id;
-
-        document.getElementById('editSectionTitle').value        = this.dataset.title;
-        document.getElementById('editSectionDesc').value         = this.dataset.description || '';
-        document.getElementById('editSectionPreviewUrl').value   = this.dataset.previewUrl || '';
+        document.getElementById('editSectionTitle').value       = this.dataset.title;
+        document.getElementById('editSectionDesc').value        = this.dataset.description || '';
+        document.getElementById('editSectionPreviewUrl').value  = this.dataset.previewUrl || '';
 
         var type = this.dataset.previewType || 'none';
         document.querySelector('input[name="editPreviewType"][value="' + type + '"]').checked = true;
@@ -747,18 +783,18 @@ document.querySelectorAll('.editSectionBtn').forEach(function(btn) {
     });
 });
 
-document.querySelectorAll('input[name="editPreviewType"]').forEach(function(r) {
-    r.addEventListener('change', function() {
+document.querySelectorAll('input[name="editPreviewType"]').forEach(function (r) {
+    r.addEventListener('change', function () {
         document.getElementById('editSecYTUrl').style.display =
             this.value === 'youtube' ? '' : 'none';
     });
 });
 
-document.getElementById('saveSectionEditBtn').addEventListener('click', function() {
-    var title   = document.getElementById('editSectionTitle').value.trim();
-    var desc    = document.getElementById('editSectionDesc').value.trim();
-    var pvType  = document.querySelector('input[name="editPreviewType"]:checked').value;
-    var pvUrl   = document.getElementById('editSectionPreviewUrl').value.trim();
+document.getElementById('saveSectionEditBtn').addEventListener('click', function () {
+    var title  = document.getElementById('editSectionTitle').value.trim();
+    var desc   = document.getElementById('editSectionDesc').value.trim();
+    var pvType = document.querySelector('input[name="editPreviewType"]:checked').value;
+    var pvUrl  = document.getElementById('editSectionPreviewUrl').value.trim();
 
     if (!title) { alert('Title is required'); return; }
 
@@ -769,18 +805,18 @@ document.getElementById('saveSectionEditBtn').addEventListener('click', function
             title: title,
             description: desc,
             preview_video_type: pvType,
-            preview_video_url:  pvUrl,
+            preview_video_url: pvUrl,
         })
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
         if (data.success) location.reload();
     });
 });
 
 // ── Section preview video modal ──────────────────────────────────────────────
-document.querySelectorAll('.previewSectionVideoBtn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
+document.querySelectorAll('.previewSectionVideoBtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
         e.preventDefault();
         var embedId = this.dataset.embed;
         var title   = this.dataset.title;
@@ -801,12 +837,8 @@ document.querySelectorAll('.previewSectionVideoBtn').forEach(function(btn) {
 });
 
 // Clear YT iframe when modal closes (stop autoplay)
-document.getElementById('sectionPreviewModal').addEventListener('hide.bs.modal', function() {
+document.getElementById('sectionPreviewModal').addEventListener('hide.bs.modal', function () {
     document.getElementById('sectionPreviewContent').innerHTML = '';
 });
-
-function clearSectionPreview() {
-    document.getElementById('sectionPreviewContent').innerHTML = '';
-}
 </script>
 @endpush
