@@ -2,7 +2,6 @@
 @extends($activeTemplate.'layouts.frontend')
 
 @section('content')
-      content="media-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none';">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
 
 @php
