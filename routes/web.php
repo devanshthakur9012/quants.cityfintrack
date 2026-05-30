@@ -146,18 +146,9 @@ Route::middleware('auth:web')->group(function () {
 });
  
 Route::middleware('auth:web')->group(function () {
- 
-    // Lesson player page (enrolled users only)
-    Route::get('/watch/{lesson}', [SecureVideoController::class, 'player'])
-         ->name('video.player');
- 
-    // Issue a signed stream token (POST — CSRF protected)
-    Route::post('/watch/{lesson}/token', [SecureVideoController::class, 'issueToken'])
-         ->name('video.token');
- 
-    // Serve the video bytes (chunked, token-verified, IP-bound)
-    Route::get('/watch/{lesson}/stream', [SecureVideoController::class, 'stream'])
-         ->name('video.stream');
+    Route::get('/watch/{lesson}',       [SecureVideoController::class, 'player'])   ->name('video.player');
+    Route::post('/watch/{lesson}/token',[SecureVideoController::class, 'issueToken'])->name('video.token');
+    Route::get('/watch/{lesson}/stream',[SecureVideoController::class, 'stream'])   ->name('video.stream');
 });
 
 Route::middleware('auth:web')->group(function () {

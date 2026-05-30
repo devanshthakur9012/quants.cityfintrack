@@ -564,7 +564,7 @@
                                              && $lesson->preview_video_type === 'youtube'
                                              && $lesson->preview_embed_id;
                                 $isWatchable  = $isEnrolled;
-                                $playerRoute  = $isWatchable ? route('video.player', $lesson) : null;
+                                $playerRoute  = $isWatchable ? route('video.player', ['lesson' => encrypt($lesson->id)]) : null;
                             @endphp
                             <div class="cd-lesson {{ $isWatchable ? 'clickable' : '' }}"
                                  @if($isWatchable) onclick="window.location='{{ $playerRoute }}'" @endif>
