@@ -121,6 +121,7 @@ use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\CpAnalysisController;
+use App\Http\Controllers\SecureVideoController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
@@ -142,6 +143,21 @@ Route::get('/courses/{slug}', [CourseController::class, 'detail'])->name('course
 Route::middleware('auth:web')->group(function () {
     Route::post('/courses/{course}/pay',      [CourseController::class, 'initiatePayment'])->name('courses.payment.initiate');
     Route::post('/courses/payment/verify',    [CourseController::class, 'verifyPayment'])->name('courses.payment.verify');
+});
+ 
+Route::middleware('auth:web')->group(function () {
+ 
+    // Lesson player page (enrolled users only)
+    Route::get('/watch/{lesson}', [SecureVideoController::class, 'player'])
+         ->name('video.player');
+ 
+    // Issue a signed stream token (POST — CSRF protected)
+    Route::post('/watch/{lesson}/token', [SecureVideoController::class, 'issueToken'])
+         ->name('video.token');
+ 
+    // Serve the video bytes (chunked, token-verified, IP-bound)
+    Route::get('/watch/{lesson}/stream', [SecureVideoController::class, 'stream'])
+         ->name('video.stream');
 });
 
 Route::middleware('auth:web')->group(function () {
