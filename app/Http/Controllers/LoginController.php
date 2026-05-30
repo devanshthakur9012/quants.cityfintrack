@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use App\Mail\OtpMail;
 use App\Mail\EmailVerificationMail;
 use App\Mail\ResetPasswordMail;
+use Spatie\Permission\Models\Role;
 
 class LoginController extends Controller
 {
@@ -41,7 +42,9 @@ class LoginController extends Controller
     public function sendLoginOtp(Request $request)
     {
         $request->validate(['email' => 'required|email']);
+
         $user = User::where('email', $request->email)->first();
+
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'No account found with this email.']);
         }
@@ -51,8 +54,18 @@ class LoginController extends Controller
         if (!$user->ev) {
             return response()->json(['success' => false, 'message' => 'Please verify your email first.']);
         }
+
+        // Only users with the "user" role can log in via this portal
+        if (!$user->hasRole('user')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This portal is for registered members only. Please use the appropriate login page.',
+            ]);
+        }
+
         $otp = $this->generateOtp($user);
         Mail::to($user->email)->send(new OtpMail($user, $otp, 'Login OTP'));
+
         return response()->json(['success' => true, 'message' => 'OTP sent to your email.']);
     }
 
@@ -62,12 +75,32 @@ class LoginController extends Controller
     public function verifyLoginOtp(Request $request)
     {
         $request->validate(['email' => 'required|email', 'otp' => 'required|digits:4']);
+
         $user = User::where('email', $request->email)->first();
+
         if (!$user || !$this->isOtpValid($user, $request->otp)) {
             return response()->json(['success' => false, 'message' => 'Invalid or expired OTP.']);
         }
+
+        // Double-check role before completing login
+        if (!$user->hasRole('user')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access denied. This portal is for registered members only.',
+            ]);
+        }
+
         $this->clearOtp($user);
-        Auth::login($user);
+
+        // Login WITHOUT "remember me" so session expires when browser closes
+        Auth::login($user, false);
+
+        // Set session lifetime to 24 hours (1440 minutes)
+        // The session will expire after 24h of inactivity OR on browser close
+        config(['session.lifetime' => 1440]);
+        session()->regenerate();
+        session(['login_at' => now()->toDateTimeString()]);
+
         return response()->json(['success' => true, 'redirect' => route('user.dashboard')]);
     }
 
@@ -77,7 +110,9 @@ class LoginController extends Controller
     public function loginWithPassword(Request $request)
     {
         $request->validate(['email' => 'required|email', 'password' => 'required']);
+
         $user = User::where('email', $request->email)->first();
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->withInput();
         }
@@ -87,7 +122,22 @@ class LoginController extends Controller
         if (!$user->ev) {
             return back()->withErrors(['email' => 'Please verify your email address first.']);
         }
-        Auth::login($user, $request->remember);
+
+        // Only "user" role can log in here
+        if (!$user->hasRole('user')) {
+            return back()->withErrors([
+                'email' => 'Access denied. This portal is for registered members only.',
+            ])->withInput();
+        }
+
+        // Login WITHOUT remember-me so session dies on browser close
+        Auth::login($user, false);
+
+        // 24-hour max session lifetime
+        config(['session.lifetime' => 1440]);
+        session()->regenerate();
+        session(['login_at' => now()->toDateTimeString()]);
+
         return redirect()->route('user.dashboard');
     }
 
@@ -131,13 +181,16 @@ class LoginController extends Controller
                 ]);
             }
 
-            // Unverified — update info and resend
+            // Unverified — update info and resend verification
             $existingUser->update([
                 'firstname'        => $request->firstname,
                 'lastname'         => $request->lastname,
                 'mobile'           => $request->mobile ?? $existingUser->mobile,
                 'ver_code_send_at' => now(),
             ]);
+
+            // Ensure "user" role is assigned even on resend
+            $this->assignUserRole($existingUser);
 
             $encryptedEmail = encrypt($existingUser->email);
             Mail::to($existingUser->email)->send(new EmailVerificationMail($existingUser, $encryptedEmail));
@@ -171,6 +224,9 @@ class LoginController extends Controller
             'sv'               => Status::VERIFIED,
             'ver_code_send_at' => now(),
         ]);
+
+        // ── Assign "user" role immediately on registration ──
+        $this->assignUserRole($user);
 
         $encryptedEmail = encrypt($user->email);
         Mail::to($user->email)->send(new EmailVerificationMail($user, $encryptedEmail));
@@ -235,7 +291,15 @@ class LoginController extends Controller
         $user->ver_code_send_at = null;
         $user->save();
 
-        Auth::login($user);
+        // Ensure role is assigned (safety net in case it was missed at registration)
+        $this->assignUserRole($user);
+
+        // Log them in — no remember-me, 24h max session
+        Auth::login($user, false);
+        config(['session.lifetime' => 1440]);
+        session()->regenerate();
+        session(['login_at' => now()->toDateTimeString()]);
+
         return redirect()->route('user.dashboard')->with('success', 'Welcome to CityQuants!');
     }
 
@@ -254,10 +318,6 @@ class LoginController extends Controller
         ]);
     }
 
-    // ─────────────────────────────────────────────
-    //  FORGOT PASSWORD — no changes needed below
-    //  but also update sendResetLink to use encrypt
-    // ─────────────────────────────────────────────
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -318,12 +378,30 @@ class LoginController extends Controller
     public function logout()
     {
         Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
         return redirect()->route('user.login');
     }
 
     // ─────────────────────────────────────────────
     //  HELPERS
     // ─────────────────────────────────────────────
+
+    /**
+     * Assign the "user" role to a newly registered user.
+     * Creates the role if it doesn't exist yet (safe for fresh installs).
+     */
+    protected function assignUserRole(User $user): void
+    {
+        $role = Role::firstOrCreate(
+            ['name' => 'user', 'guard_name' => 'web'],
+        );
+
+        if (!$user->hasRole('user')) {
+            $user->assignRole($role);
+        }
+    }
+
     protected function generateOtp(User $user): string
     {
         $otp                    = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
