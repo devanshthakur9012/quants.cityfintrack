@@ -3,33 +3,20 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Index-Driven Signal Scanner — 15min only
+ * Index-Driven Signal Scanner — 15min only (internal — not shown to users)
  *
  * Detects intraday breakout signals using NIFTY FUT candles.
  *   Day Open = 09:15 candle OPEN
  *   CE signal: any candle HIGH >= open + threshold → BUY ATM CE at NEXT candle OPEN
  *   PE signal: any candle LOW  <= open − threshold → BUY ATM PE at NEXT candle OPEN
  *   First occurrence per direction per day only.
- *
- * Tables:
- *   cp_fut_ohlc_15min    — NIFTY FUT candles
- *   cp_option_ohlc_15min — ATM option candles
- *   zerodha_instruments  — lot_size source (joined on trading_symbol)
- *
- * lot_size JOIN logic:
- *   zerodha_instruments.trading_symbol is like "NIFTY2551522500CE"
- *   We match on:
- *     name            = base_symbol   (e.g. NIFTY)
- *     strike          = strike        (e.g. 22500)
- *     expiry          = expiry_date   (e.g. 2025-05-15)
- *     instrument_type = CE / PE
- *     exchange        = NFO
  */
 class IndexDrivenSignalController extends Controller
 {
@@ -47,6 +34,42 @@ class IndexDrivenSignalController extends Controller
         return view(activeTemplate() . 'user.index-driven-signal.index', compact('pageTitle'));
     }
 
+    // ── Last Available Date ────────────────────────────────────────────────────
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $lastDate = DB::table('cp_fut_ohlc_15min')
+                ->where('base_symbol', self::INDEX_SYMBOL)
+                ->whereRaw("TIME(interval_time) = ?", [self::OPEN_TIME])
+                ->max('trade_date');
+
+            // Fall back: any NIFTY FUT data
+            if (!$lastDate) {
+                $lastDate = DB::table('cp_fut_ohlc_15min')
+                    ->where('base_symbol', self::INDEX_SYMBOL)
+                    ->max('trade_date');
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('IndexDrivenSignal lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
     // ── Symbols API ───────────────────────────────────────────────────────────
 
     public function getSymbols(Request $request): JsonResponse
@@ -57,25 +80,29 @@ class IndexDrivenSignalController extends Controller
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => 'No active 15min Analysis Config. Go to Admin → Analysis Config.',
+                'message'   => 'No active Analysis Config. Go to Admin → Analysis Config.',
             ]);
         }
         return response()->json(['success' => true, 'symbols' => $this->getConfigSymbols($config->id)]);
     }
 
     // ── Main Analyze API ──────────────────────────────────────────────────────
+    //   Accepts single `date` param (preferred) OR `from_date`/`to_date` range.
 
     public function analyze(Request $request): JsonResponse
     {
         try {
-            $fromDate     = $request->get('from_date');
-            $toDate       = $request->get('to_date');
+            // Single date (preferred) — fall back to from/to if sent
+            $date      = $request->get('date');
+            $fromDate  = $date ?? $request->get('from_date');
+            $toDate    = $date ?? $request->get('to_date');
+
             $threshold    = (float) $request->get('threshold', 30);
-            $signalFilter = strtoupper($request->get('filter', 'BOTH'));   // CE | PE | BOTH
+            $signalFilter = strtoupper($request->get('filter', 'BOTH'));
             $symbolReq    = array_filter((array) $request->get('symbols', []));
 
             if (!$fromDate || !$toDate) {
-                return response()->json(['success' => false, 'message' => 'Please select both dates.', 'data' => []]);
+                return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
             $config = $this->getActiveConfig();
@@ -83,7 +110,7 @@ class IndexDrivenSignalController extends Controller
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => 'No active 15min Analysis Config. Go to Admin → Analysis Config.',
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -93,7 +120,7 @@ class IndexDrivenSignalController extends Controller
                 return response()->json(['success' => false, 'message' => 'No symbols configured.', 'data' => []]);
             }
 
-            $symbols = !empty($symbolReq)
+            $symbols  = !empty($symbolReq)
                 ? array_values(array_intersect($symbolReq, $configSymbols))
                 : $configSymbols;
 
@@ -101,7 +128,6 @@ class IndexDrivenSignalController extends Controller
             $optTable = 'cp_option_ohlc_15min';
             $ziTable  = 'zerodha_instruments';
 
-            // ── Trade dates in range ──────────────────────────────────────
             $tradeDates = DB::table($futTable)
                 ->where('base_symbol', self::INDEX_SYMBOL)
                 ->whereBetween('trade_date', [$fromDate, $toDate])
@@ -110,12 +136,15 @@ class IndexDrivenSignalController extends Controller
 
             if (empty($tradeDates)) {
                 return response()->json([
-                    'success' => true, 'data' => [],
-                    'message' => 'No NIFTY data for this date range.',
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $configSymbols,
+                    'message'           => 'No NIFTY data found for this date.',
                 ]);
             }
 
-            // ── Load all NIFTY FUT candles ────────────────────────────────
             $niftyCandles = DB::table($futTable)
                 ->where('base_symbol', self::INDEX_SYMBOL)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
@@ -128,11 +157,8 @@ class IndexDrivenSignalController extends Controller
                 ->get();
 
             $candlesByDate = [];
-            foreach ($niftyCandles as $c) {
-                $candlesByDate[$c->trade_day][] = $c;
-            }
+            foreach ($niftyCandles as $c) $candlesByDate[$c->trade_day][] = $c;
 
-            // ── Detect triggers ───────────────────────────────────────────
             $triggers = [];
 
             foreach ($tradeDates as $date) {
@@ -193,12 +219,15 @@ class IndexDrivenSignalController extends Controller
 
             if (empty($triggers)) {
                 return response()->json([
-                    'success' => true, 'data' => [],
-                    'message' => 'No breakout signals found for this date range and threshold.',
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $configSymbols,
+                    'message'           => 'No breakout signals found for this date and threshold.',
                 ]);
             }
 
-            // ── Fetch ATM option data per trigger ─────────────────────────
             $results = [];
             $ceCount = 0;
             $peCount = 0;
@@ -209,7 +238,6 @@ class IndexDrivenSignalController extends Controller
                 $buyTimeRaw = $trig['buy_time_raw'];
 
                 foreach ($symbols as $symbol) {
-                    // Get ATM option row (without lot_size — it's not in this table)
                     $optRow = DB::table($optTable)
                         ->where('analysis_config_id', $config->id)
                         ->where('base_symbol', $symbol)
@@ -227,34 +255,22 @@ class IndexDrivenSignalController extends Controller
                     $expiry    = substr($optRow->expiry_date ?? '', 0, 10);
                     $strikeVal = $optRow->strike;
 
-                    // ── Get lot_size from zerodha_instruments ─────────────
-                    // Match: name = base_symbol, strike = strike, expiry = expiry_date,
-                    //        instrument_type = CE/PE, exchange = NFO
                     $lotSize = DB::table($ziTable)
-                        ->where('name', $symbol)
-                        ->where('strike', $strikeVal)
-                        ->where('expiry', $expiry)
-                        ->where('instrument_type', $sigType)
-                        ->where('exchange', 'NFO')
-                        ->value('lot_size');
+                        ->where('name', $symbol)->where('strike', $strikeVal)
+                        ->where('expiry', $expiry)->where('instrument_type', $sigType)
+                        ->where('exchange', 'NFO')->value('lot_size');
 
-                    // Fallback: match only name + instrument_type + expiry if strike not found
                     if (!$lotSize) {
                         $lotSize = DB::table($ziTable)
-                            ->where('name', $symbol)
-                            ->where('expiry', $expiry)
-                            ->where('instrument_type', $sigType)
-                            ->where('exchange', 'NFO')
+                            ->where('name', $symbol)->where('expiry', $expiry)
+                            ->where('instrument_type', $sigType)->where('exchange', 'NFO')
                             ->value('lot_size');
                     }
 
-                    // Final fallback: any NFO option for this symbol
                     if (!$lotSize) {
                         $lotSize = DB::table($ziTable)
-                            ->where('name', $symbol)
-                            ->where('exchange', 'NFO')
-                            ->whereIn('instrument_type', ['CE', 'PE'])
-                            ->value('lot_size');
+                            ->where('name', $symbol)->where('exchange', 'NFO')
+                            ->whereIn('instrument_type', ['CE', 'PE'])->value('lot_size');
                     }
 
                     $lotSize = (int) ($lotSize ?? 1);
@@ -289,9 +305,11 @@ class IndexDrivenSignalController extends Controller
                 'trigger_count'     => count($triggers),
                 'symbol_count'      => count($symbols),
                 'total_investment'  => round(array_sum(array_column($results, 'investment')), 2),
-                'message'           => count($results) . ' trade(s) found across ' . count($triggers) . ' signal(s)',
+                'message'           => count($results) . ' trade(s) across ' . count($triggers) . ' signal(s)',
                 'threshold'         => $threshold,
                 'available_symbols' => $configSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
@@ -301,14 +319,16 @@ class IndexDrivenSignalController extends Controller
     }
 
     // ── Exit P&L API ──────────────────────────────────────────────────────────
+    //   Also accepts single `date` param.
 
     public function exitPnl(Request $request): JsonResponse
     {
         try {
-            $fromDate   = $request->get('from_date');
-            $toDate     = $request->get('to_date');
+            $date       = $request->get('date');
+            $fromDate   = $date ?? $request->get('from_date');
+            $toDate     = $date ?? $request->get('to_date');
             $threshold  = (float) $request->get('threshold', 30);
-            $filterType = strtoupper($request->get('filter', 'CE'));  // CE | PE
+            $filterType = strtoupper($request->get('filter', 'CE'));
             $symbolReq  = array_filter((array) $request->get('symbols', []));
 
             $config = $this->getActiveConfig();
@@ -350,7 +370,6 @@ class IndexDrivenSignalController extends Controller
             $candlesByDate = [];
             foreach ($niftyCandles as $c) $candlesByDate[$c->trade_day][] = $c;
 
-            // ── Collect entries ───────────────────────────────────────────
             $entries = [];
 
             foreach ($tradeDates as $date) {
@@ -366,8 +385,8 @@ class IndexDrivenSignalController extends Controller
                     if ($done) break;
 
                     $triggered = match($filterType) {
-                        'CE'    => (float)$candle->high >= $dayOpen + $threshold,
-                        'PE'    => (float)$candle->low  <= $dayOpen - $threshold,
+                        'CE'    => (float) $candle->high >= $dayOpen + $threshold,
+                        'PE'    => (float) $candle->low  <= $dayOpen - $threshold,
                         default => false,
                     };
 
@@ -393,34 +412,25 @@ class IndexDrivenSignalController extends Controller
                             $expiry = substr($opt->expiry_date ?? '', 0, 10);
                             $strike = $opt->strike;
 
-                            // ── Get lot_size from zerodha_instruments ─────
                             $lotSize = DB::table($ziTable)
-                                ->where('name', $sym)
-                                ->where('strike', $strike)
-                                ->where('expiry', $expiry)
-                                ->where('instrument_type', $filterType)
-                                ->where('exchange', 'NFO')
-                                ->value('lot_size');
+                                ->where('name', $sym)->where('strike', $strike)
+                                ->where('expiry', $expiry)->where('instrument_type', $filterType)
+                                ->where('exchange', 'NFO')->value('lot_size');
 
                             if (!$lotSize) {
                                 $lotSize = DB::table($ziTable)
-                                    ->where('name', $sym)
-                                    ->where('expiry', $expiry)
-                                    ->where('instrument_type', $filterType)
-                                    ->where('exchange', 'NFO')
+                                    ->where('name', $sym)->where('expiry', $expiry)
+                                    ->where('instrument_type', $filterType)->where('exchange', 'NFO')
                                     ->value('lot_size');
                             }
 
                             if (!$lotSize) {
                                 $lotSize = DB::table($ziTable)
-                                    ->where('name', $sym)
-                                    ->where('exchange', 'NFO')
-                                    ->whereIn('instrument_type', ['CE', 'PE'])
-                                    ->value('lot_size');
+                                    ->where('name', $sym)->where('exchange', 'NFO')
+                                    ->whereIn('instrument_type', ['CE', 'PE'])->value('lot_size');
                             }
 
-                            $lotSize = (int) ($lotSize ?? 1);
-
+                            $lotSize  = (int) ($lotSize ?? 1);
                             $entries[] = [
                                 'date'         => $date,
                                 'type'         => $filterType,
@@ -442,7 +452,6 @@ class IndexDrivenSignalController extends Controller
                 return response()->json(['success' => true, $key => []]);
             }
 
-            // ── Build exit P&L for every candle time ──────────────────────
             $exitTimes = $this->getCandleTimes();
             $slots     = [];
 
@@ -466,7 +475,7 @@ class IndexDrivenSignalController extends Controller
 
                     if ($exitPrice === null) continue;
 
-                    $totalSell += (float)$exitPrice * $e['lot_size'];
+                    $totalSell += (float) $exitPrice * $e['lot_size'];
                     $totalInv  += $e['investment'];
                     $tradeCount++;
                 }
