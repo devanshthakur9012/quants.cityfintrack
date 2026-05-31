@@ -417,8 +417,8 @@
 //  Open=High / Open=Low — JS (no jQuery)
 // ═══════════════════════════════════════════════════════════════
 
-var OHL_ANALYZE = '{{ route("open-hl.analyze") }}';
-var OHL_SYMBOLS = '{{ route("open-hl.symbols") }}';
+var OHL_ANALYZE = '{{ route("open-high-low.analyze") }}';
+var OHL_SYMBOLS = '{{ route("open-high-low.symbols") }}';
 var OHL_TODAY   = '{{ now()->toDateString() }}';
 
 var ohlInst     = 'stock';

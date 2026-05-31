@@ -16,7 +16,7 @@
                         <ul class="navbar-nav main-menu ms-auto">
                             <li><a href="{{ route('user.home') }}">@lang('Dashboard')</a></li>
                             <li><a href="{{ route('pivot-analysis.index') }}">@lang('Pivot Analysis')</a></li>
-                            <li><a href="{{ route('open-hl.index') }}">@lang('OpenRange Signal')</a></li>
+                            <li><a href="{{ route('open-high-low.index') }}">@lang('OpenRange Signal')</a></li>
                             <li><a href="{{ route('momentum-breakout.index') }}">@lang('Momentum Scanner')</a></li>
                             <li><a href="{{ route('oi-flow-sentiment.index') }}">@lang('EOD OI Signal')</a></li>
                             <li><a href="{{ route('intraday-oi-snapshot.index') }}">@lang('Intraday OI Signal')</a></li>
