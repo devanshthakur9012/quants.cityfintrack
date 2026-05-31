@@ -191,6 +191,8 @@ class CpAnalysisController extends Controller
         $plans              = CpSubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
         $accessibleAnalyses = CpAnalysis::active()->forTier($userTier)->orderBy('sort_order')->get();
 
+        $pageTitle = "My Subscription";
+
         return view(activeTemplate() . 'cp.subscription.my-subscription',
             compact('userSubscription', 'userTier', 'payments', 'plans', 'accessibleAnalyses'));
     }
