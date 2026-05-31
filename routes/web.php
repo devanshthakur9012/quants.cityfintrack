@@ -1428,6 +1428,7 @@ Route::controller('SiteController')->group(function () {
 
     Route::middleware(['auth'])->prefix('nifty-breakout-analyzer')->name('nifty-breakout-analyzer.')->group(function () {
         Route::get('/index',       [NiftyDrivenBreakoutAnalysisController::class, 'index'])->name('index');
+        Route::get('/last-date',   [NiftyDrivenBreakoutAnalysisController::class, 'lastDate'])->name('last.date');  // ← ADD
         Route::get('/get-symbols', [NiftyDrivenBreakoutAnalysisController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',     [NiftyDrivenBreakoutAnalysisController::class, 'analyze'])->name('analyze');
     });

@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * NIFTY-Driven Multi-Symbol Breakout Analyzer — 15min only
+ * NIFTY-Driven Multi-Symbol Breakout Analyzer — 15min only (internal — not shown to users)
  *
  * Signal source : NIFTY FUT 15min candles
  *   CE signal   : any candle HIGH  >= 09:15 open + threshold
@@ -32,6 +33,49 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
         return view(activeTemplate() . 'user.nifty-breakout-analyzer.index', compact('pageTitle'));
     }
 
+    // ── Last Available Date ────────────────────────────────────────────────────
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+
+            // Try config-scoped query first
+            $lastDate = null;
+            if ($config) {
+                $lastDate = DB::table('cp_fut_ohlc_15min')
+                    ->where('analysis_config_id', $config->id)
+                    ->where('base_symbol', self::NIFTY_SYMBOL)
+                    ->where('is_missing', false)
+                    ->max('trade_date');
+            }
+
+            // Fall back: any NIFTY FUT data regardless of config
+            if (!$lastDate) {
+                $lastDate = DB::table('cp_fut_ohlc_15min')
+                    ->where('base_symbol', self::NIFTY_SYMBOL)
+                    ->max('trade_date');
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('NiftyDrivenBreakout lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
     // ── Symbols API ───────────────────────────────────────────────────────────
 
     public function getSymbols(Request $request): JsonResponse
@@ -42,7 +86,7 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => 'No active 15min Analysis Config. Go to Admin → Analysis Config.',
+                'message'   => 'No active Analysis Config. Go to Admin → Analysis Config.',
             ]);
         }
         return response()->json([
@@ -52,18 +96,22 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
     }
 
     // ── Main Analyze API ──────────────────────────────────────────────────────
+    //   Accepts single `date` param (preferred) OR `from_date`/`to_date` range.
 
     public function analyze(Request $request): JsonResponse
     {
         try {
-            $fromDate     = $request->get('from_date');
-            $toDate       = $request->get('to_date');
+            // Single date (preferred) — fall back to from/to if sent
+            $date      = $request->get('date');
+            $fromDate  = $date ?? $request->get('from_date');
+            $toDate    = $date ?? $request->get('to_date');
+
             $threshold    = (float) $request->get('threshold', 30);
-            $signalFilter = strtoupper($request->get('filter', 'BOTH'));    // CE | PE | BOTH
+            $signalFilter = strtoupper($request->get('filter', 'BOTH'));
             $symbolFilter = strtoupper($request->get('symbol_filter', 'ALL'));
 
             if (!$fromDate || !$toDate) {
-                return response()->json(['success' => false, 'message' => 'Please select both dates.', 'data' => []]);
+                return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
             $config = $this->getActiveConfig();
@@ -71,7 +119,7 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => 'No active 15min Analysis Config.',
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -88,7 +136,6 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
             $futTable = 'cp_fut_ohlc_15min';
             $optTable = 'cp_option_ohlc_15min';
 
-            // ── Trading dates ─────────────────────────────────────────────
             $tradeDates = DB::table($futTable)
                 ->where('analysis_config_id', $config->id)
                 ->where('base_symbol', self::NIFTY_SYMBOL)
@@ -100,12 +147,15 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
 
             if (empty($tradeDates)) {
                 return response()->json([
-                    'success' => true, 'data' => [],
-                    'message' => 'No NIFTY FUT data for this range.',
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $allSymbols,
+                    'message'           => 'No NIFTY FUT data for this date.',
                 ]);
             }
 
-            // ── NIFTY FUT candles ─────────────────────────────────────────
             $futRows = DB::table($futTable)
                 ->where('analysis_config_id', $config->id)
                 ->where('base_symbol', self::NIFTY_SYMBOL)
@@ -122,7 +172,7 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 $futByDate[$date][$timeKey] = $row;
             }
 
-            // ── Detect signals ────────────────────────────────────────────
+            // Detect signals
             $signals = [];
             foreach ($tradeDates as $date) {
                 $candles = $futByDate[$date] ?? [];
@@ -136,8 +186,8 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 foreach ($times as $i => $t) {
                     $c = $candles[$t];
                     if (!$ceFired && in_array($signalFilter, ['CE', 'BOTH']) && (float)$c->high >= $dayOpen + $threshold) {
-                        $ceFired  = true;
-                        $buyTime  = $times[$i + 1] ?? null;
+                        $ceFired = true;
+                        $buyTime = $times[$i + 1] ?? null;
                         if ($buyTime) {
                             $signals[] = [
                                 'date'          => $date,
@@ -151,8 +201,8 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                         }
                     }
                     if (!$peFired && in_array($signalFilter, ['PE', 'BOTH']) && (float)$c->low <= $dayOpen - $threshold) {
-                        $peFired  = true;
-                        $buyTime  = $times[$i + 1] ?? null;
+                        $peFired = true;
+                        $buyTime = $times[$i + 1] ?? null;
                         if ($buyTime) {
                             $signals[] = [
                                 'date'          => $date,
@@ -171,14 +221,17 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
 
             if (empty($signals)) {
                 return response()->json([
-                    'success' => true, 'data' => [],
-                    'message' => "No signals found. Try a lower threshold (current: {$threshold} pts).",
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $allSymbols,
+                    'message'           => "No signals found. Try a lower threshold (current: {$threshold} pts).",
                 ]);
             }
 
             $optDates = array_unique(array_column($signals, 'date'));
 
-            // ── Option rows (highest-OI per slot) ─────────────────────────
             $optRows = DB::table($optTable)
                 ->where('analysis_config_id', $config->id)
                 ->whereIn('base_symbol', $symbols)
@@ -195,23 +248,18 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 ->orderByDesc('oi')
                 ->get();
 
-            // ── Lot sizes from zerodha_instruments ────────────────────────
             $tradingSymbols = $optRows->pluck('trading_symbol')->unique()->values()->toArray();
             $lotSizeMap = DB::table('zerodha_instruments')
                 ->whereIn('trading_symbol', $tradingSymbols)
                 ->pluck('lot_size', 'trading_symbol')
                 ->toArray();
 
-            // ── Index: date|symbol|type|slot → highest-OI row ─────────────
             $optMap = [];
             foreach ($optRows as $r) {
                 $key = $r->trade_day . '|' . $r->base_symbol . '|' . $r->instrument_type . '|' . $r->slot_time;
-                if (!isset($optMap[$key])) {
-                    $optMap[$key] = $r;
-                }
+                if (!isset($optMap[$key])) $optMap[$key] = $r;
             }
 
-            // ── Build results ─────────────────────────────────────────────
             $results = [];
             foreach ($signals as $sig) {
                 foreach ($symbols as $symbol) {
@@ -254,8 +302,10 @@ class NiftyDrivenBreakoutAnalysisController extends Controller
                 'total_investment'  => round(array_sum(array_column($results, 'investment')), 2),
                 'signal_count'      => count($signals),
                 'threshold'         => $threshold,
-                'message'           => count($results) . ' trade(s) found',
+                'message'           => count($results) . ' trade(s) found for ' . $fromDate,
                 'available_symbols' => $allSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
