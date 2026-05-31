@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Momentum Breakout Scanner
  * Instruments : Stock EQ | FUT | Option (ATM CE proxy)
- * Timeframe   : 15min ONLY
+ * Timeframe   : 15min ONLY (internal — not shown to users)
  *
  * LOGIC:
  *   Day Open = first candle open (09:15)
@@ -39,6 +39,57 @@ class MomentumBreakoutController extends Controller
         return view(activeTemplate() . 'user.momentum-breakout.index', compact('pageTitle'));
     }
 
+    // ── Last Available Date ────────────────────────────────────────────────────
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'last_date' => Carbon::today()->toDateString(),
+                    'is_today'  => true,
+                ]);
+            }
+
+            $instrument = $this->resolveInstrument($request);
+            $table      = self::TABLES[$instrument];
+
+            $lastDate = DB::table($table)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->max('trade_date');
+
+            if (!$lastDate) {
+                foreach (self::TABLES as $tbl) {
+                    $lastDate = DB::table($tbl)
+                        ->where('analysis_config_id', $config->id)
+                        ->where('is_missing', false)
+                        ->max('trade_date');
+                    if ($lastDate) break;
+                }
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('MomentumBreakout lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
     // ── Symbols API ───────────────────────────────────────────────────────────
 
     public function getSymbols(Request $request): JsonResponse
@@ -49,7 +100,7 @@ class MomentumBreakoutController extends Controller
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => 'No active 15min config found.',
+                'message'   => 'No active analysis config found.',
             ]);
         }
 
@@ -63,16 +114,19 @@ class MomentumBreakoutController extends Controller
     {
         try {
             $instrument  = $this->resolveInstrument($request);
-            $fromDate    = $request->get('from_date');
-            $toDate      = $request->get('to_date');
-            $symbolReq   = array_filter((array) $request->get('symbols', []));
             $threshold   = max(0.1, (float) $request->get('threshold', 1.0));
             $showNoTrade = (bool) $request->get('show_no_trade', false);
+            $symbolReq   = array_filter((array) $request->get('symbols', []));
+
+            // Single date (preferred) — fall back to from/to if sent
+            $date     = $request->get('date');
+            $fromDate = $date ?? $request->get('from_date');
+            $toDate   = $date ?? $request->get('to_date');
 
             if (!$fromDate || !$toDate) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Please select both From and To dates.',
+                    'message' => 'Please select a date.',
                     'data'    => [],
                 ]);
             }
@@ -82,7 +136,7 @@ class MomentumBreakoutController extends Controller
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => 'No active 15min Analysis Config. Go to Admin → Analysis Config.',
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -106,7 +160,6 @@ class MomentumBreakoutController extends Controller
                 'option' => $this->scanOption($config->id, $fromDate, $toDate, $symbols, $threshold, $showNoTrade),
             };
 
-            // Sort: date ASC, signal time ASC, NO_TRADE last
             usort($results, function ($a, $b) {
                 $d = strcmp($a['date'], $b['date']);
                 if ($d !== 0) return $d;
@@ -126,10 +179,12 @@ class MomentumBreakoutController extends Controller
                 'buy_ce_count'      => count(array_filter($signals, fn($r) => $r['signal'] === 'BUY_CE')),
                 'buy_pe_count'      => count(array_filter($signals, fn($r) => $r['signal'] === 'BUY_PE')),
                 'no_trade_count'    => count($noTrades),
-                'message'           => count($signals) . ' signal(s) across ' . count($results) . ' records',
+                'message'           => count($signals) . ' signal(s) found for ' . $fromDate,
                 'instrument'        => strtoupper($instrument),
                 'threshold'         => $threshold,
                 'available_symbols' => $configSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
@@ -178,7 +233,6 @@ class MomentumBreakoutController extends Controller
 
     private function scanOption(int $configId, string $from, string $to, array $symbols, float $threshold, bool $showNT): array
     {
-        // Use ATM CE future_price as underlying proxy for breakout detection
         $allCandles = DB::table(self::TABLES['option'])
             ->where('analysis_config_id', $configId)
             ->whereIn('base_symbol', $symbols)
@@ -201,7 +255,6 @@ class MomentumBreakoutController extends Controller
 
     private function processCandles(array $allCandles, string $symKey, string $instrument, float $threshold, bool $showNT): array
     {
-        // Group by [symbol][date]
         $grouped = [];
         foreach ($allCandles as $c) {
             $date = substr($c->trade_date, 0, 10);
@@ -229,9 +282,9 @@ class MomentumBreakoutController extends Controller
         $dayOpen = (float) $candles[0]->open;
         if ($dayOpen <= 0) return $this->noTrade($symbol, $date, $instrument);
 
-        $dayHigh  = max(array_map(fn($c) => (float) $c->high, $candles));
-        $dayLow   = min(array_map(fn($c) => (float) $c->low,  $candles));
-        $lastClose= (float) end($candles)->close;
+        $dayHigh   = max(array_map(fn($c) => (float) $c->high, $candles));
+        $dayLow    = min(array_map(fn($c) => (float) $c->low,  $candles));
+        $lastClose = (float) end($candles)->close;
 
         foreach ($candles as $c) {
             $close  = (float) $c->close;
@@ -318,12 +371,12 @@ class MomentumBreakoutController extends Controller
             'atm_strike'   => null,
             'signal'       => 'NO_TRADE',
             'signal_time'  => null,
-            'day_open'     => $dayOpen  ? round($dayOpen,  2) : null,
+            'day_open'     => $dayOpen   ? round($dayOpen,   2) : null,
             'signal_price' => null,
             'change_pct'   => null,
-            'day_high'     => $dayHigh  ? round($dayHigh,  2) : null,
-            'day_low'      => $dayLow   ? round($dayLow,   2) : null,
-            'last_close'   => $lastClose? round($lastClose, 2) : null,
+            'day_high'     => $dayHigh   ? round($dayHigh,   2) : null,
+            'day_low'      => $dayLow    ? round($dayLow,    2) : null,
+            'last_close'   => $lastClose ? round($lastClose, 2) : null,
             'volume'       => null,
             'oi'           => null,
         ];

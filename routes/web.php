@@ -1398,9 +1398,10 @@ Route::controller('SiteController')->group(function () {
     });
  
     Route::middleware(['auth'])->prefix('momentum-breakout')->name('momentum-breakout.')->group(function () {
-        Route::get('/index',       [MomentumBreakoutController::class, 'index'])->name('index');
-        Route::get('/symbols',     [MomentumBreakoutController::class, 'getSymbols'])->name('symbols');
-        Route::get('/scan',        [MomentumBreakoutController::class, 'scan'])->name('scan');
+        Route::get('/index',      [MomentumBreakoutController::class, 'index'])->name('index');
+        Route::get('/last-date',  [MomentumBreakoutController::class, 'lastDate'])->name('last.date');  // ← ADD
+        Route::get('/symbols',    [MomentumBreakoutController::class, 'getSymbols'])->name('symbols');
+        Route::get('/scan',       [MomentumBreakoutController::class, 'scan'])->name('scan');
     });
  
     Route::middleware(['auth'])->prefix('oi-flow-sentiment')->name('oi-flow-sentiment.')->group(function () {

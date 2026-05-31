@@ -252,13 +252,9 @@
     <div class="ohl-hero-left">
         <h1>Open=High / <span>Open=Low</span></h1>
         <p>
-            Identify stocks where the opening candle (09:15) has Open equal (or near equal)
+            Identify stocks where the opening candle has Open equal (or near equal)
             to its High or Low — a classic reversal signal in intraday trading.
         </p>
-        <div class="ohl-logic-pills">
-            <span class="ohl-pill ohl-pill-oh">Open ≈ High → Bearish → BUY PE</span>
-            <span class="ohl-pill ohl-pill-ol">Open ≈ Low  → Bullish → BUY CE</span>
-        </div>
     </div>
     <div class="ohl-hero-icon">
         <i class="las la-exchange-alt"></i>
