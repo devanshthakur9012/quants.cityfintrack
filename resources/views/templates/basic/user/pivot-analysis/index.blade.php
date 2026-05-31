@@ -269,6 +269,13 @@
             Real-time pivot levels for Stock EQ, Futures, and ATM Options —
             calculated on live candle data during market hours.
         </p>
+        <div class="pv-hero-formulas">
+            <span class="pv-pill pv-pill-pp">PP = (H+L+C) / 3</span>
+            <span class="pv-pill pv-pill-r">R1 = 2×PP − L</span>
+            <span class="pv-pill pv-pill-r">R2 = PP + (H−L)</span>
+            <span class="pv-pill pv-pill-s">S1 = 2×PP − H</span>
+            <span class="pv-pill pv-pill-s">S2 = PP − (H−L)</span>
+        </div>
     </div>
     <div class="pv-hero-icon">
         <i class="las la-chart-bar"></i>
@@ -355,7 +362,7 @@
                     <span class="pv-inst-label pv-il-stock" id="pv-il">STOCK EQ</span>
                     Pivot Point Signals
                 </div>
-                <span class="pv-card-subtitle" id="pv-subtitle">Today</span>
+                <span class="pv-card-subtitle" id="pv-subtitle">Loading…</span>
             </div>
             <div class="pv-table-scroll">
                 <table class="pv-table sf-table" id="pv-sf-table">
@@ -394,7 +401,7 @@
                         <tr><td colspan="17">
                             <div class="pv-loading">
                                 <div class="pv-spinner"></div>
-                                <div class="pv-loading-text">Loading pivot data…</div>
+                                <div class="pv-loading-text">Detecting last available date…</div>
                             </div>
                         </td></tr>
                     </tbody>
@@ -450,7 +457,7 @@
                         <tr><td colspan="20">
                             <div class="pv-loading">
                                 <div class="pv-spinner"></div>
-                                <div class="pv-loading-text">Loading option pivot data…</div>
+                                <div class="pv-loading-text">Detecting last available date…</div>
                             </div>
                         </td></tr>
                     </tbody>
@@ -472,15 +479,16 @@
 
 var PV_TODAY   = '{{ now()->toDateString() }}';
 var PV_ROUTES  = {
-    stock : '{{ route("pivot-analysis.stock.signals") }}',
-    fut   : '{{ route("pivot-analysis.fut.signals") }}',
-    option: '{{ route("pivot-analysis.option.signals") }}'
+    stock    : '{{ route("pivot-analysis.stock.signals") }}',
+    fut      : '{{ route("pivot-analysis.fut.signals") }}',
+    option   : '{{ route("pivot-analysis.option.signals") }}',
+    lastDate : '{{ route("pivot-analysis.last.date") }}'
 };
 var pvInst     = 'stock';
 var pvTimer    = null;
 var pvSymCache = {};
 
-// Helper: set innerHTML of element by id
+// Helper: set innerHTML / textContent of element by id
 function pvHtml(id, html) {
     var el = document.getElementById(id);
     if (el) el.innerHTML = html;
@@ -490,7 +498,35 @@ function pvText(id, txt) {
     if (el) el.textContent = txt;
 }
 
-document.addEventListener('DOMContentLoaded', function(){ pvLoad(); });
+// ═══════════════════════════════════════════════════════════════
+//  BOOT — resolve last available date then auto-load
+// ═══════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function () {
+    pvResolveLastDateAndLoad();
+});
+
+/**
+ * Ask the backend for the latest trade_date that has real data for the
+ * current instrument, then set the date picker and fire pvLoad().
+ * Falls back to today if the request fails.
+ */
+function pvResolveLastDateAndLoad() {
+    fetch(PV_ROUTES.lastDate + '?instrument=' + pvInst, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        if (res.last_date) {
+            document.getElementById('pv-date').value = res.last_date;
+        }
+        pvLoad();
+    })
+    .catch(function () {
+        // Network error — just load with whatever date is in the picker
+        pvLoad();
+    });
+}
 
 // ── Instrument switcher ───────────────────────────────────────
 
@@ -521,7 +557,8 @@ function pvSetInst(inst, btn) {
         pvRebuildSym([]);
     }
 
-    pvLoad();
+    // When switching instruments, re-detect the last date for that instrument
+    pvResolveLastDateAndLoad();
 }
 
 // ── Date ─────────────────────────────────────────────────────

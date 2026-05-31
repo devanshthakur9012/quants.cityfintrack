@@ -1381,11 +1381,10 @@ Route::controller('SiteController')->group(function () {
         Route::get('/order-book/{orderId}', [FutContrarianConfigController::class, 'viewOrderBook'])->name('order-book');
     });
 
-
-
     // Pivot Analysis
     Route::middleware(['auth'])->prefix('pivot-analysis')->name('pivot-analysis.')->group(function () {
-        Route::get('/index',       [PivotAnalysisController::class, 'index'])->name('index');
+        Route::get('/index',          [PivotAnalysisController::class, 'index'])->name('index');
+        Route::get('/last-date',      [PivotAnalysisController::class, 'lastDate'])->name('last.date');  // ← ADD THIS
         Route::get('/stock/signals',  [PivotAnalysisController::class, 'stockSignals'])->name('stock.signals');
         Route::get('/fut/signals',    [PivotAnalysisController::class, 'futSignals'])->name('fut.signals');
         Route::get('/option/signals', [PivotAnalysisController::class, 'optionSignals'])->name('option.signals');

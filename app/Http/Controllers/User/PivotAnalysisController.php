@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Pivot Point Analysis — Stock | FUT | Option
- * Timeframe : 15min ONLY
+ * Timeframe : 15min ONLY (internal — not shown to users)
  *
  * Pivot Math:
  *   PP = (H + L + C) / 3
@@ -35,6 +35,65 @@ class PivotAnalysisController extends Controller
     {
         $pageTitle = 'Pivot Point Analysis';
         return view(activeTemplate() . 'user.pivot-analysis.index', compact('pageTitle'));
+    }
+
+    // ── Last Available Date ───────────────────────────────────────────────────
+    //   Returns the most recent trade_date that actually has data across any table.
+    //   Called by the frontend on page load so the date picker defaults to a
+    //   date with real data instead of always showing today.
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'last_date' => Carbon::today()->toDateString(),
+                    'is_today'  => true,
+                ]);
+            }
+
+            $instrument = strtolower($request->get('instrument', 'stock'));
+            $table      = self::TABLES[$instrument] ?? self::TABLES['stock'];
+
+            // Try the requested instrument table first, fall back to others
+            $lastDate = DB::table($table)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->max('trade_date');
+
+            // If nothing found in requested table, check the other tables
+            if (!$lastDate) {
+                foreach (self::TABLES as $key => $tbl) {
+                    if ($tbl === $table) continue;
+                    $lastDate = DB::table($tbl)
+                        ->where('analysis_config_id', $config->id)
+                        ->where('is_missing', false)
+                        ->max('trade_date');
+                    if ($lastDate) break;
+                }
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate
+                ? Carbon::parse($lastDate)->toDateString()
+                : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('PivotAnalysis lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
     }
 
     // ── Stock signals ─────────────────────────────────────────────────────────
@@ -357,7 +416,7 @@ class PivotAnalysisController extends Controller
             'success'    => false,
             'no_config'  => true,
             'data'       => [],
-            'message'    => 'No active 15min analysis config found. Go to Admin → Analysis Config to create one.',
+            'message'    => 'No active analysis config found. Go to Admin → Analysis Config to create one.',
             'instrument' => $instrument,
         ]);
     }
