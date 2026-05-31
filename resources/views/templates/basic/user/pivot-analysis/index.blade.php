@@ -264,22 +264,15 @@
 {{-- ══ HERO ══ --}}
 <div class="pv-hero pv-anim">
     <div class="pv-hero-left">
-        <h1>Pivot Point <span>Analysis</span></h1>
-        {{-- <p>
+        <h1 class="mb-0">Pivot Point <span>Analysis</span></h1>
+        <p>
             Real-time pivot levels for Stock EQ, Futures, and ATM Options —
-            calculated on live 15min candle data during market hours.
+            calculated on live candle data during market hours.
         </p>
-        <div class="pv-hero-formulas">
-            <span class="pv-pill pv-pill-pp">PP = (H+L+C) ÷ 3</span>
-            <span class="pv-pill pv-pill-s">S1 = 2×PP − H</span>
-            <span class="pv-pill pv-pill-s">S2 = PP − Range</span>
-            <span class="pv-pill pv-pill-r">R1 = 2×PP − L</span>
-            <span class="pv-pill pv-pill-r">R2 = PP + Range</span>
-        </div> --}}
     </div>
-    {{-- <div class="pv-hero-icon">
+    <div class="pv-hero-icon">
         <i class="las la-chart-bar"></i>
-    </div> --}}
+    </div>
 </div>
 
 {{-- ══ FILTER BAR ══ --}}
@@ -349,7 +342,7 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="pv-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config with symbols.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
@@ -362,7 +355,7 @@
                     <span class="pv-inst-label pv-il-stock" id="pv-il">STOCK EQ</span>
                     Pivot Point Signals
                 </div>
-                <span class="pv-card-subtitle" id="pv-subtitle">15min · Today</span>
+                <span class="pv-card-subtitle" id="pv-subtitle">Today</span>
             </div>
             <div class="pv-table-scroll">
                 <table class="pv-table sf-table" id="pv-sf-table">
@@ -418,7 +411,7 @@
                     <span class="pv-inst-label pv-il-option">OPTIONS</span>
                     ATM CE / PE Pivot Signals
                 </div>
-                <span class="pv-card-subtitle" id="pv-opt-subtitle">15min · ATM Strike</span>
+                <span class="pv-card-subtitle" id="pv-opt-subtitle">ATM Strike</span>
             </div>
             <div class="pv-table-scroll">
                 <table class="pv-table opt-table">
@@ -642,7 +635,7 @@ function pvLoad() {
 
         var total = res.data.reduce(function(a,d){ return a + (d.total_candles||0); }, 0);
         pvText('pv-info',     total + ' candles · ' + res.data.length + ' symbol(s)');
-        pvText('pv-subtitle', '15min · ' + date + ' · ' + (res.data[0].mode === 'detail' ? 'Full Day' : 'Latest'));
+        pvText('pv-subtitle', date + ' · ' + (res.data[0].mode === 'detail' ? 'Full Day' : 'Latest'));
         pvText('pv-upd',      'Updated ' + new Date().toLocaleTimeString());
 
         if (isOpt) pvRenderOption(res.data);
