@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * OI Flow Sentiment Analyzer — 15min only
+ * OI Flow Sentiment Analyzer — 15min only (internal — not shown to users)
  * T = today 14:45 | T-1 = prev day 15:00
  * CE↑+PE↓ → BEARISH  CE↓+PE↑ → BULLISH
  */
@@ -19,6 +19,7 @@ class OIFlowSentimentController extends Controller
     private const TF            = '15min';
     private const ANALYSIS_TIME = '14:45:00';
     private const PREV_DAY_TIME = '15:00:00';
+    private const OPT_TABLE     = 'cp_option_ohlc_15min';
 
     public function index()
     {
@@ -26,43 +27,106 @@ class OIFlowSentimentController extends Controller
         return view(activeTemplate() . 'user.oi-flow-sentiment.index', compact('pageTitle'));
     }
 
+    // ── Last Available Date ────────────────────────────────────────────────────
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'last_date' => Carbon::today()->toDateString(),
+                    'is_today'  => true,
+                ]);
+            }
+
+            $lastDate = DB::table(self::OPT_TABLE)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->whereRaw("TIME(interval_time) = ?", [self::ANALYSIS_TIME])
+                ->max('trade_date');
+
+            // Fall back: any data at all
+            if (!$lastDate) {
+                $lastDate = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('is_missing', false)
+                    ->max('trade_date');
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('OIFlowSentiment lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
+    // ── Symbols API ───────────────────────────────────────────────────────────
+
     public function getSymbols(Request $request): JsonResponse
     {
         $config = $this->getActiveConfig();
         if (!$config) {
-            return response()->json(['success'=>true,'symbols'=>[],'no_config'=>true,
-                'message'=>'No active 15min config found.']);
+            return response()->json([
+                'success'   => true,
+                'symbols'   => [],
+                'no_config' => true,
+                'message'   => 'No active analysis config found.',
+            ]);
         }
-        return response()->json(['success'=>true,'symbols'=>$this->getConfigSymbols($config->id)]);
+        return response()->json(['success' => true, 'symbols' => $this->getConfigSymbols($config->id)]);
     }
+
+    // ── Analyze API ───────────────────────────────────────────────────────────
+    //   Accepts single `date` param (preferred) OR `from_date`/`to_date` range.
 
     public function analyze(Request $request): JsonResponse
     {
         try {
-            $fromDate     = $request->get('from_date');
-            $toDate       = $request->get('to_date');
-            $symbolReq    = array_filter((array)$request->get('symbols', []));
+            // Single date (preferred) — fall back to from/to if sent
+            $date      = $request->get('date');
+            $fromDate  = $date ?? $request->get('from_date');
+            $toDate    = $date ?? $request->get('to_date');
+
+            $symbolReq    = array_filter((array) $request->get('symbols', []));
             $actionFilter = $request->get('filter_action', '');
 
             if (!$fromDate || !$toDate) {
-                return response()->json(['success'=>false,'message'=>'Please select both dates.','data'=>[]]);
+                return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
             $config = $this->getActiveConfig();
             if (!$config) {
-                return response()->json(['success'=>false,'no_config'=>true,
-                    'message'=>'No active 15min Analysis Config. Go to Admin → Analysis Config.','data'=>[]]);
+                return response()->json([
+                    'success'   => false,
+                    'no_config' => true,
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
+                    'data'      => [],
+                ]);
             }
 
             $configSymbols = $this->getConfigSymbols($config->id);
             if (empty($configSymbols)) {
-                return response()->json(['success'=>false,'message'=>'No symbols configured.','data'=>[]]);
+                return response()->json(['success' => false, 'message' => 'No symbols configured.', 'data' => []]);
             }
 
-            $symbols   = !empty($symbolReq)
+            $symbols  = !empty($symbolReq)
                 ? array_values(array_intersect($symbolReq, $configSymbols))
                 : $configSymbols;
-            $optTable  = 'cp_option_ohlc_15min';
+            $optTable = self::OPT_TABLE;
 
             // Trading dates with data
             $tradeDates = DB::table($optTable)
@@ -73,12 +137,19 @@ class OIFlowSentimentController extends Controller
                 ->distinct()->orderBy('d')->pluck('d')->toArray();
 
             if (empty($tradeDates)) {
-                return response()->json(['success'=>true,'data'=>[],'message'=>'No data found for selected dates.']);
+                return response()->json([
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $configSymbols,
+                    'message'           => 'No data found for the selected date.',
+                ]);
             }
 
             // Prev date map
             $prevDateMap = [];
-            foreach ($tradeDates as $date) $prevDateMap[$date] = $this->getPreviousTradingDate($date);
+            foreach ($tradeDates as $d) $prevDateMap[$d] = $this->getPreviousTradingDate($d);
             $prevDates = array_values(array_unique(array_values($prevDateMap)));
 
             // Today OI at 14:45
@@ -88,13 +159,15 @@ class OIFlowSentimentController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::ANALYSIS_TIME])
-                ->whereIn('instrument_type', ['CE','PE'])
+                ->whereIn('instrument_type', ['CE', 'PE'])
                 ->where('is_missing', false)
-                ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
-                ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
-                ->orderBy('base_symbol')       
-                ->each(function($r) use (&$todayMap) {
-                    $todayMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int)$r->total_oi;
+                ->select(['base_symbol', 'instrument_type',
+                          DB::raw('DATE(trade_date) as trade_day'),
+                          DB::raw('SUM(oi) as total_oi')])
+                ->groupBy('base_symbol', 'instrument_type', DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$todayMap) {
+                    $todayMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int) $r->total_oi;
                 });
 
             // Prev day OI at 15:00
@@ -104,13 +177,15 @@ class OIFlowSentimentController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $prevDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::PREV_DAY_TIME])
-                ->whereIn('instrument_type', ['CE','PE'])
+                ->whereIn('instrument_type', ['CE', 'PE'])
                 ->where('is_missing', false)
-                ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
-                ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
-                ->orderBy('base_symbol')       
-                ->each(function($r) use (&$prevMap) {
-                    $prevMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int)$r->total_oi;
+                ->select(['base_symbol', 'instrument_type',
+                          DB::raw('DATE(trade_date) as trade_day'),
+                          DB::raw('SUM(oi) as total_oi')])
+                ->groupBy('base_symbol', 'instrument_type', DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$prevMap) {
+                    $prevMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int) $r->total_oi;
                 });
 
             // Price / ATM info
@@ -120,20 +195,23 @@ class OIFlowSentimentController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::ANALYSIS_TIME])
-                ->where('instrument_type','CE')->where('strike_position','ATM')->where('is_missing',false)
-                ->select(['base_symbol',DB::raw('DATE(trade_date) as trade_day'),'atm_strike','future_price','expiry_date'])
-                ->orderBy('base_symbol')     
-                ->each(function($r) use (&$priceMap) {
+                ->where('instrument_type', 'CE')
+                ->where('strike_position', 'ATM')
+                ->where('is_missing', false)
+                ->select(['base_symbol', DB::raw('DATE(trade_date) as trade_day'),
+                          'atm_strike', 'future_price', 'expiry_date'])
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$priceMap) {
                     $priceMap["{$r->base_symbol}|{$r->trade_day}"] = $r;
                 });
 
             // Build results
             $results = [];
-            foreach ($tradeDates as $date) {
-                $prevDate = $prevDateMap[$date];
+            foreach ($tradeDates as $d) {
+                $prevDate = $prevDateMap[$d];
                 foreach ($symbols as $symbol) {
-                    $ceToday = $todayMap["{$symbol}|{$date}|CE"] ?? 0;
-                    $peToday = $todayMap["{$symbol}|{$date}|PE"] ?? 0;
+                    $ceToday = $todayMap["{$symbol}|{$d}|CE"] ?? 0;
+                    $peToday = $todayMap["{$symbol}|{$d}|PE"] ?? 0;
                     if ($ceToday === 0 && $peToday === 0) continue;
 
                     $cePrev = $prevMap["{$symbol}|{$prevDate}|CE"] ?? 0;
@@ -155,14 +233,14 @@ class OIFlowSentimentController extends Controller
                         $diff > 10 => 'Rank 3', $diff > 5  => 'Rank 4', default => 'Normal'
                     };
 
-                    $priceRow = $priceMap["{$symbol}|{$date}"] ?? null;
+                    $priceRow = $priceMap["{$symbol}|{$d}"] ?? null;
 
                     $results[] = [
-                        'date'          => $date,
+                        'date'          => $d,
                         'symbol'        => $symbol,
                         'expiry'        => $priceRow ? substr($priceRow->expiry_date, 0, 10) : null,
                         'atm_strike'    => $priceRow?->atm_strike,
-                        'fut_price'     => $priceRow ? round((float)$priceRow->future_price, 2) : null,
+                        'fut_price'     => $priceRow ? round((float) $priceRow->future_price, 2) : null,
                         'ce_oi'         => $ceToday,
                         'pe_oi'         => $peToday,
                         'ce_oi_prev'    => $cePrev,
@@ -180,26 +258,30 @@ class OIFlowSentimentController extends Controller
                 }
             }
 
-            usort($results, fn($a,$b) => strcmp($b['date'],$a['date']) ?: strcmp($a['symbol'],$b['symbol']));
+            usort($results, fn($a, $b) => strcmp($b['date'], $a['date']) ?: strcmp($a['symbol'], $b['symbol']));
 
             return response()->json([
                 'success'           => true,
                 'data'              => $results,
                 'total_records'     => count($results),
-                'buy_ce_count'      => count(array_filter($results, fn($r) => $r['trade_action']==='BUY CE')),
-                'buy_pe_count'      => count(array_filter($results, fn($r) => $r['trade_action']==='BUY PE')),
-                'wait_count'        => count(array_filter($results, fn($r) => $r['trade_action']==='WAIT')),
-                'bullish_count'     => count(array_filter($results, fn($r) => $r['sentiment']==='BULLISH')),
-                'bearish_count'     => count(array_filter($results, fn($r) => $r['sentiment']==='BEARISH')),
-                'message'           => count($results) . ' record(s) found',
+                'buy_ce_count'      => count(array_filter($results, fn($r) => $r['trade_action'] === 'BUY CE')),
+                'buy_pe_count'      => count(array_filter($results, fn($r) => $r['trade_action'] === 'BUY PE')),
+                'wait_count'        => count(array_filter($results, fn($r) => $r['trade_action'] === 'WAIT')),
+                'bullish_count'     => count(array_filter($results, fn($r) => $r['sentiment'] === 'BULLISH')),
+                'bearish_count'     => count(array_filter($results, fn($r) => $r['sentiment'] === 'BEARISH')),
+                'message'           => count($results) . ' record(s) found for ' . $fromDate,
                 'available_symbols' => $configSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
             Log::error('OIFlowSentiment analyze: ' . $e->getMessage());
-            return response()->json(['success'=>false,'message'=>$e->getMessage(),'data'=>[]], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
     }
+
+    // ── Signal logic ──────────────────────────────────────────────────────────
 
     private function calcOISignal(float $cePct, float $pePct): array
     {
@@ -207,33 +289,39 @@ class OIFlowSentimentController extends Controller
         $peUp = $pePct > 0; $peDown = $pePct < 0;
 
         if ($ceUp && $peDown)
-            return ['sentiment'=>'BEARISH','condition'=>'CE ↑ + PE ↓','reason'=>'Call buildup + Put unwinding → Resistance forming'];
+            return ['sentiment' => 'BEARISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Resistance forming'];
         if ($ceDown && $peUp)
-            return ['sentiment'=>'BULLISH','condition'=>'CE ↓ + PE ↑','reason'=>'Call unwinding + Put buildup → Support forming'];
+            return ['sentiment' => 'BULLISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Support forming'];
         if ($ceUp && $peUp) {
             if ($cePct > $pePct)
-                return ['sentiment'=>'BEARISH','condition'=>'Both ↑ (CE > PE)','reason'=>"Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"];
-            return ['sentiment'=>'BULLISH','condition'=>'Both ↑ (PE > CE)','reason'=>"Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
+                return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"];
+            return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
         }
         if ($ceDown && $peDown) {
             if ($cePct < $pePct)
-                return ['sentiment'=>'BULLISH','condition'=>'Both ↓ (CE < PE)','reason'=>"Call unwinding larger ({$cePct}% vs {$pePct}%) → Short covering"];
-            return ['sentiment'=>'BEARISH','condition'=>'Both ↓ (PE < CE)','reason'=>"Put unwinding larger ({$pePct}% vs {$cePct}%) → Long covering"];
+                return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Short covering"];
+            return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Long covering"];
         }
-        return ['sentiment'=>'NEUTRAL','condition'=>'Flat','reason'=>'No clear OI direction'];
+        return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }
+
+    // ── Config helpers ────────────────────────────────────────────────────────
 
     private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', self::TF)->where('is_active',1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
     {
         return DB::table('analysis_config_symbols')
-            ->join('symbol_lists','symbol_lists.id','=','analysis_config_symbols.symbol_list_id')
+            ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
-            ->pluck('symbol_lists.symbol')->toArray();
+            ->pluck('symbol_lists.symbol')
+            ->toArray();
     }
 
     private function getPreviousTradingDate(string $date): string
@@ -248,6 +336,6 @@ class OIFlowSentimentController extends Controller
 
     private function isHoliday(string $date): bool
     {
-        return DB::table('market_holidays')->where('market_name','NSE')->where('holiday_date',$date)->exists();
+        return DB::table('market_holidays')->where('market_name', 'NSE')->where('holiday_date', $date)->exists();
     }
 }

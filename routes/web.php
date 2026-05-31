@@ -1405,9 +1405,10 @@ Route::controller('SiteController')->group(function () {
     });
  
     Route::middleware(['auth'])->prefix('oi-flow-sentiment')->name('oi-flow-sentiment.')->group(function () {
-        Route::get('/index',          [OIFlowSentimentController::class, 'index'])->name('index');
-        Route::get('/symbols',   [OIFlowSentimentController::class, 'getSymbols'])->name('symbols');
-        Route::get('/analyze',   [OIFlowSentimentController::class, 'analyze'])->name('analyze');
+        Route::get('/index',      [OIFlowSentimentController::class, 'index'])->name('index');
+        Route::get('/last-date',  [OIFlowSentimentController::class, 'lastDate'])->name('last.date');  // ← ADD
+        Route::get('/symbols',    [OIFlowSentimentController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [OIFlowSentimentController::class, 'analyze'])->name('analyze');
     });
  
     Route::middleware(['auth'])->prefix('intraday-oi-snapshot')->name('intraday-oi-snapshot.')->group(function () {

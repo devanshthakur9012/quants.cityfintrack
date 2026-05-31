@@ -20,12 +20,7 @@
 }
 .ofs-hero-left h1 { font-size:clamp(24px,3.5vw,40px); font-weight:700; color:#1a1a2e; margin:0 0 8px; line-height:1.1; }
 .ofs-hero-left h1 span { color:#F5A623; }
-.ofs-hero-left p { font-size:13px; color:#666; margin:0 0 10px; line-height:1.7; max-width:640px; }
-.ofs-hero-pills { display:flex; flex-wrap:wrap; gap:6px; }
-.ofs-pill { display:inline-block; padding:3px 10px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; }
-.ofs-pill-bull { background:rgba(5,150,105,.08); color:#047857; border:1px solid rgba(5,150,105,.25); }
-.ofs-pill-bear { background:rgba(220,38,38,.07); color:#b91c1c; border:1px solid rgba(220,38,38,.22); }
-.ofs-pill-note { background:rgba(26,86,219,.07); color:#1d4ed8; border:1px solid rgba(26,86,219,.2);  }
+.ofs-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:640px; }
 .ofs-hero-icon {
     width:76px; height:76px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
@@ -34,7 +29,6 @@
 }
 @media(max-width:768px){
     .ofs-hero { flex-direction:column; padding:24px 16px; text-align:center; }
-    .ofs-hero-pills { justify-content:center; }
     .ofs-hero-icon { display:none; }
 }
 
@@ -48,12 +42,36 @@
 .ofs-filter-label { font-size:10.5px; color:#999; font-weight:700; text-transform:uppercase; letter-spacing:.07em; flex-shrink:0; }
 .ofs-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
 
-.ofs-date-input { border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:#333; outline:none; }
-.ofs-date-input:focus { border-color:#F5A623; }
-
-.ofs-sym-select { border:1.5px solid #e5e9f2; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif; background:#fff; cursor:pointer; outline:none; min-width:120px; }
+/* Symbol select — single like pivot */
+.ofs-sym-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; cursor:pointer; outline:none; min-width:140px;
+}
 .ofs-sym-select:focus { border-color:#F5A623; }
 
+/* Date controls — same as pivot */
+.ofs-date-wrap { display:flex; align-items:center; gap:4px; }
+.ofs-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
+}
+.ofs-date-input:focus { border-color:#F5A623; }
+.ofs-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.ofs-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.ofs-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
+
+/* Status badge */
+.ofs-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.ofs-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+
+/* Action filter */
 .ofs-action-select {
     border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 28px 7px 10px;
     font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
@@ -62,6 +80,7 @@
 }
 .ofs-action-select:focus { border-color:#F5A623; }
 
+/* Buttons */
 .ofs-analyze-btn {
     background:#F5A623; color:#000; border:none; border-radius:8px;
     padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px;
@@ -73,17 +92,20 @@
     padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; font-family:'Exo 2',sans-serif;
 }
 .ofs-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+
 .ofs-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 .ofs-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
 .ofs-upd-text  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
-@media(max-width:768px){ .ofs-filter-bar { padding:0 12px; } .ofs-filter-right { margin-left:0;width:100%; } }
+@media(max-width:768px){ .ofs-filter-bar { padding:0 12px; } .ofs-filter-inner { gap:8px; } .ofs-filter-right { margin-left:0;width:100%; } }
 
 /* ── CONTENT ── */
 .ofs-content { padding:28px 48px 64px; }
 @media(max-width:768px){ .ofs-content { padding:16px 12px 48px; } }
 
+/* Warning */
 .ofs-warn { background:#fff3e0; border:1px solid #ffcc80; border-radius:10px; padding:14px 20px; margin-bottom:20px; display:none; align-items:center; gap:12px; font-size:13px; color:#e65100; }
 .ofs-warn.show { display:flex; }
+.ofs-warn i { font-size:18px; flex-shrink:0; }
 
 /* ── STATS ── */
 .ofs-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:24px; }
@@ -146,13 +168,13 @@
 .tr-bear { background:rgba(220,38,38,.03) !important; }
 
 /* Cells */
-.c-num  { font-size:9px; color:#ccc; }
-.c-date { font-size:11px; font-weight:700; color:#F5A623; }
-.c-sym  { font-size:12px; font-weight:800; color:#1a56db; }
-.c-atm  { font-size:10px; color:#c97f00; font-weight:700; }
-.c-fut  { font-size:10px; color:#1a56db; }
-.c-expiry { font-size:10px; color:#aab; }
-.c-oi   { font-size:11px; font-weight:700; color:#1a1a2e; }
+.c-num   { font-size:9px; color:#ccc; }
+.c-date  { font-size:11px; font-weight:700; color:#F5A623; }
+.c-sym   { font-size:12px; font-weight:800; color:#1a56db; }
+.c-atm   { font-size:10px; color:#c97f00; font-weight:700; }
+.c-fut   { font-size:10px; color:#1a56db; }
+.c-expiry{ font-size:10px; color:#aab; }
+.c-oi    { font-size:11px; font-weight:700; color:#1a1a2e; }
 .c-oi small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
 .pct-up   { color:#059669; font-weight:700; }
 .pct-down { color:#dc2626; font-weight:700; }
@@ -182,8 +204,8 @@
 .rank-3 { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
 .rank-4 { background:#f0fdf4; color:#047857; border:1px solid #bbf7d0; }
 .rank-n { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
-.rank-diff { font-size:8px; color:#aab; margin-top:1px; }
-.reason-tip { font-size:9px; color:#aab; margin-top:3px; line-height:1.4; max-width:200px; white-space:normal; }
+.rank-diff   { font-size:8px; color:#aab; margin-top:1px; }
+.reason-tip  { font-size:9px; color:#aab; margin-top:3px; line-height:1.4; max-width:200px; white-space:normal; }
 
 /* Empty / Loading */
 .ofs-empty { text-align:center; padding:56px 20px; color:#ccc; }
@@ -195,44 +217,48 @@
 
 <div class="ofs-wrap">
 
-{{-- HERO --}}
+{{-- ══ HERO ══ --}}
 <div class="ofs-hero ofs-anim">
     <div class="ofs-hero-left">
         <h1>OI Flow <span>Sentiment</span> Analyzer</h1>
         <p>
-            Compares today's CE/PE Open Interest (at 14:45) vs previous day's OI (at 15:00)
-            to determine market sentiment — bullish or bearish — based on option writing activity.
+            Analyzes CE and PE Open Interest changes to determine overall market sentiment —
+            helping you identify whether smart money is positioned bullish or bearish.
         </p>
-        <div class="ofs-hero-pills">
-            <span class="ofs-pill ofs-pill-bull">CE↓ + PE↑ → BULLISH → BUY CE</span>
-            <span class="ofs-pill ofs-pill-bear">CE↑ + PE↓ → BEARISH → BUY PE</span>
-            <span class="ofs-pill ofs-pill-note">Both ↑/↓ → stronger side wins</span>
-        </div>
     </div>
     <div class="ofs-hero-icon"><i class="las la-wave-square"></i></div>
 </div>
 
-{{-- FILTER BAR --}}
+{{-- ══ FILTER BAR ══ --}}
 <div class="ofs-filter-bar">
     <div class="ofs-filter-inner">
 
-        <span class="ofs-filter-label">From</span>
-        <input type="date" id="ofs-from" class="ofs-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
-
-        <span class="ofs-filter-label">To</span>
-        <input type="date" id="ofs-to" class="ofs-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+        {{-- Symbol — single select like pivot --}}
+        <span class="ofs-filter-label">Symbol</span>
+        <select id="ofs-sym" class="ofs-sym-select" onchange="ofsAnalyze()">
+            <option value="ALL">— All —</option>
+        </select>
 
         <div class="ofs-sep"></div>
 
-        <span class="ofs-filter-label">Symbol</span>
-        <select id="ofs-sym" class="ofs-sym-select" multiple size="1">
-            <option value="">Loading…</option>
-        </select>
+        {{-- Single date with nav buttons — same as pivot --}}
+        <span class="ofs-filter-label">Date</span>
+        <div class="ofs-date-wrap">
+            <button class="ofs-date-nav" onclick="ofsShiftDate(-1)">‹</button>
+            <input type="date" id="ofs-date" class="ofs-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="ofsAnalyze()">
+            <button class="ofs-date-nav" onclick="ofsShiftDate(1)">›</button>
+            <button class="ofs-date-nav ofs-today-btn" onclick="ofsGoToday()">TODAY</button>
+            <span id="ofs-date-badge"></span>
+        </div>
 
+        <div class="ofs-sep"></div>
+
+        {{-- Action filter --}}
         <span class="ofs-filter-label">Action</span>
-        <select id="ofs-action" class="ofs-action-select">
+        <select id="ofs-action" class="ofs-action-select" onchange="ofsAnalyze()">
             <option value="">All Actions</option>
             <option value="BUY CE">BUY CE Only</option>
             <option value="BUY PE">BUY PE Only</option>
@@ -251,7 +277,7 @@
     </div>
 </div>
 
-{{-- CONTENT --}}
+{{-- ══ CONTENT ══ --}}
 <div class="ofs-content">
 
     <div class="ofs-warn" id="ofs-warn">
@@ -259,46 +285,26 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="ofs-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
 
     {{-- Stats --}}
     <div class="ofs-stats ofs-anim">
-        <div class="ofs-stat-card s-total">
-            <div class="ofs-stat-label">Total</div>
-            <div class="ofs-stat-val" id="st-total">—</div>
-        </div>
-        <div class="ofs-stat-card s-ce">
-            <div class="ofs-stat-label">BUY CE</div>
-            <div class="ofs-stat-val" id="st-ce">—</div>
-        </div>
-        <div class="ofs-stat-card s-pe">
-            <div class="ofs-stat-label">BUY PE</div>
-            <div class="ofs-stat-val" id="st-pe">—</div>
-        </div>
-        <div class="ofs-stat-card s-wait">
-            <div class="ofs-stat-label">WAIT</div>
-            <div class="ofs-stat-val" id="st-wait">—</div>
-        </div>
-        <div class="ofs-stat-card s-bull">
-            <div class="ofs-stat-label">Bullish</div>
-            <div class="ofs-stat-val" id="st-bull">—</div>
-        </div>
-        <div class="ofs-stat-card s-bear">
-            <div class="ofs-stat-label">Bearish</div>
-            <div class="ofs-stat-val" id="st-bear">—</div>
-        </div>
+        <div class="ofs-stat-card s-total"><div class="ofs-stat-label">Total</div><div class="ofs-stat-val" id="st-total">—</div></div>
+        <div class="ofs-stat-card s-ce">  <div class="ofs-stat-label">BUY CE</div><div class="ofs-stat-val" id="st-ce">—</div></div>
+        <div class="ofs-stat-card s-pe">  <div class="ofs-stat-label">BUY PE</div><div class="ofs-stat-val" id="st-pe">—</div></div>
+        <div class="ofs-stat-card s-wait"><div class="ofs-stat-label">WAIT</div>  <div class="ofs-stat-val" id="st-wait">—</div></div>
+        <div class="ofs-stat-card s-bull"><div class="ofs-stat-label">Bullish</div><div class="ofs-stat-val" id="st-bull">—</div></div>
+        <div class="ofs-stat-card s-bear"><div class="ofs-stat-label">Bearish</div><div class="ofs-stat-val" id="st-bear">—</div></div>
     </div>
 
     {{-- Table --}}
     <div class="ofs-card ofs-anim">
         <div class="ofs-card-header">
-            <div class="ofs-card-title">⊙ OI Flow Sentiment — 15min</div>
-            <span class="ofs-card-subtitle" id="ofs-subtitle">
-                Select dates and click Analyze
-            </span>
+            <div class="ofs-card-title">⊙ OI Flow Sentiment</div>
+            <span class="ofs-card-subtitle" id="ofs-subtitle">Detecting last available date…</span>
         </div>
         <div class="ofs-tscroll">
             <table class="ofs-table">
@@ -314,12 +320,10 @@
                         <th>Symbol</th>
                         <th>ATM / FUT</th>
                         <th>Expiry</th>
-
                         <th class="sep-oi">CE OI<br><span style="font-size:7px;font-weight:400;opacity:.6;">Today / Prev</span></th>
                         <th>CE Chg %</th>
                         <th>PE OI<br><span style="font-size:7px;font-weight:400;opacity:.6;">Today / Prev</span></th>
                         <th>PE Chg %</th>
-
                         <th class="sep-signal">Sentiment</th>
                         <th>Condition</th>
                         <th>Strength</th>
@@ -328,9 +332,9 @@
                 </thead>
                 <tbody id="ofs-tbody">
                     <tr><td colspan="13">
-                        <div class="ofs-empty">
-                            <i class="las la-chart-bar"></i>
-                            <p>Select a date range and click <strong>Analyze</strong></p>
+                        <div class="ofs-spinner-row">
+                            <div class="ofs-spinner"></div>
+                            Detecting last available date…
                         </div>
                     </td></tr>
                 </tbody>
@@ -338,8 +342,8 @@
         </div>
     </div>
 
-</div>
-</div>
+</div>{{-- /.ofs-content --}}
+</div>{{-- /.ofs-wrap --}}
 
 @endsection
 
@@ -349,77 +353,154 @@
 //  OI Flow Sentiment — JS (no jQuery)
 // ═══════════════════════════════════════════════════════════
 
-var OFS_ANALYZE = '{{ route("oi-flow-sentiment.analyze") }}';
-var OFS_SYMBOLS = '{{ route("oi-flow-sentiment.symbols") }}';
-var OFS_TODAY   = '{{ now()->toDateString() }}';
+var OFS_ANALYZE  = '{{ route("oi-flow-sentiment.analyze") }}';
+var OFS_SYMBOLS  = '{{ route("oi-flow-sentiment.symbols") }}';
+var OFS_LASTDATE = '{{ route("oi-flow-sentiment.last.date") }}';
+var OFS_TODAY    = '{{ now()->toDateString() }}';
+
 var ofsSymCache = null;
 
 function el(id)      { return document.getElementById(id); }
 function html(id, h) { var e = el(id); if (e) e.innerHTML = h; }
 function txt(id, t)  { var e = el(id); if (e) e.textContent = t; }
 
-document.addEventListener('DOMContentLoaded', function() { ofsLoadSymbols(); });
+// ═══════════════════════════════════════════════════════════
+//  BOOT — detect last available date then auto-analyze
+// ═══════════════════════════════════════════════════════════
 
-// ── Symbols ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    ofsResolveLastDateAndLoad();
+});
 
-function ofsLoadSymbols() {
-    if (ofsSymCache !== null) { ofsRebuildSym(ofsSymCache); return; }
+function ofsResolveLastDateAndLoad() {
+    fetch(OFS_LASTDATE, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.last_date) el('ofs-date').value = res.last_date;
+            ofsLoadSymbols(function () { ofsAnalyze(); });
+        })
+        .catch(function () {
+            ofsLoadSymbols(function () { ofsAnalyze(); });
+        });
+}
+
+// ── Date helpers ──────────────────────────────────────────
+
+function ofsGetDate() { return el('ofs-date').value; }
+
+function ofsShiftDate(d) {
+    var picker = el('ofs-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
+    var s = dt.toISOString().split('T')[0];
+    if (s > OFS_TODAY) return;
+    picker.value = s;
+    ofsAnalyze();
+}
+
+function ofsGoToday() {
+    el('ofs-date').value = OFS_TODAY;
+    ofsAnalyze();
+}
+
+function ofsUpdateDateBadge(isToday) {
+    el('ofs-date-badge').innerHTML = isToday
+        ? '<span class="ofs-live-badge">● Live</span>'
+        : '<span class="ofs-hist-badge">📅 Historical</span>';
+}
+
+// ── Symbols — single select like pivot ───────────────────
+
+function ofsLoadSymbols(callback) {
+    if (ofsSymCache !== null) {
+        ofsRebuildSym(ofsSymCache);
+        if (callback) callback();
+        return;
+    }
 
     fetch(OFS_SYMBOLS, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            if (res.no_config) { ofsShowWarn(res.message || ''); ofsRebuildSym([]); return; }
-            ofsHideWarn();
-            ofsSymCache = res.symbols || [];
-            ofsRebuildSym(ofsSymCache);
-        });
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.no_config) {
+                ofsShowWarn(res.message || '');
+                ofsSymCache = [];
+                ofsRebuildSym([]);
+            } else {
+                ofsHideWarn();
+                ofsSymCache = res.symbols || [];
+                ofsRebuildSym(ofsSymCache);
+            }
+            if (callback) callback();
+        })
+        .catch(function () { if (callback) callback(); });
 }
 
 function ofsRebuildSym(syms) {
     var sel  = el('ofs-sym');
-    var prev = Array.from(sel.selectedOptions || []).map(function(o) { return o.value; });
-    if (!syms.length) { sel.innerHTML = '<option value="" disabled>No symbols</option>'; sel.size = 1; return; }
-    sel.innerHTML = syms.map(function(s) {
-        return '<option value="' + s + '"' + (prev.indexOf(s) > -1 ? ' selected' : '') + '>' + s + '</option>';
-    }).join('');
-    sel.size = Math.min(3, Math.max(1, syms.length));
+    var prev = sel.value;
+    var opts = '<option value="ALL">— All Symbols —</option>';
+    syms.forEach(function (s) {
+        opts += '<option value="' + s + '"' + (s === prev ? ' selected' : '') + '>' + s + '</option>';
+    });
+    sel.innerHTML = opts;
+    if (prev && prev !== 'ALL') {
+        sel.value = prev;
+        if (sel.value !== prev) sel.value = 'ALL';
+    }
 }
 
 // ── Analyze ───────────────────────────────────────────────
 
 function ofsAnalyze() {
-    var from   = el('ofs-from').value;
-    var to     = el('ofs-to').value;
+    var date   = ofsGetDate();
     var action = el('ofs-action').value;
-    var symSel = el('ofs-sym');
-    var syms   = Array.from(symSel.selectedOptions || []).map(function(o) { return o.value; }).filter(Boolean);
+    var sym    = el('ofs-sym').value;
 
-    if (!from || !to) { alert('Please select both dates.'); return; }
+    if (!date) return;
 
     ofsHideWarn();
     ofsResetStats();
 
     html('ofs-tbody', '<tr><td colspan="13"><div class="ofs-spinner-row">'
         + '<div class="ofs-spinner"></div>'
-        + 'Calculating CE/PE OI flow for ' + from + ' → ' + to + '…'
+        + 'Calculating CE/PE OI flow for ' + date + '…'
         + '</div></td></tr>');
-    txt('ofs-subtitle', 'Loading…');
+    txt('ofs-subtitle', date + ' · Loading…');
 
-    var params = new URLSearchParams({ from_date: from, to_date: to, filter_action: action });
-    syms.forEach(function(s) { params.append('symbols[]', s); });
+    var params = new URLSearchParams({ date: date, filter_action: action });
+    if (sym && sym !== 'ALL') {
+        params.append('symbols[]', sym);
+    }
 
     fetch(OFS_ANALYZE + '?' + params.toString(), {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(function(r) {
+    .then(function (r) {
         if (!r.ok) throw new Error('Server error ' + r.status);
         return r.json();
     })
-    .then(function(res) {
-        if (res.no_config) { ofsShowWarn(res.message); ofsEmptyTable('No active config.'); return; }
+    .then(function (res) {
+        if (typeof res.is_today !== 'undefined') {
+            ofsUpdateDateBadge(res.is_today);
+        }
+
+        // Rebuild symbol list if server sends available_symbols
+        if (res.available_symbols && res.available_symbols.length) {
+            ofsSymCache = res.available_symbols;
+            ofsRebuildSym(ofsSymCache);
+            if (sym && sym !== 'ALL') el('ofs-sym').value = sym;
+        }
+
+        if (res.no_config) {
+            ofsShowWarn(res.message);
+            ofsEmptyTable('No active config.');
+            return;
+        }
 
         if (!res.success || !res.data || !res.data.length) {
-            ofsEmptyTable(res.message || 'No signals found.');
+            ofsEmptyTable(res.message || 'No signals found for this date.');
+            ofsResetStats();
+            txt('ofs-subtitle', date + ' · No data found');
             return;
         }
 
@@ -429,12 +510,11 @@ function ofsAnalyze() {
         el('ofs-info').innerHTML =
             '<span style="color:#047857;">CE: ' + res.buy_ce_count + '</span>'
             + ' &nbsp;·&nbsp; '
-            + '<span style="color:#b91c1c;">PE: ' + res.buy_pe_count + '</span>'
-            + ' &nbsp;·&nbsp; 15min';
-        txt('ofs-subtitle', '15min · ' + from + ' → ' + to + ' · ' + res.message);
+            + '<span style="color:#b91c1c;">PE: ' + res.buy_pe_count + '</span>';
+        txt('ofs-subtitle', date + ' · ' + res.message);
         txt('ofs-upd', 'Updated ' + new Date().toLocaleTimeString());
     })
-    .catch(function(err) {
+    .catch(function (err) {
         ofsEmptyTable('⚠ ' + err.message);
     });
 }
@@ -442,10 +522,10 @@ function ofsAnalyze() {
 // ── Render ────────────────────────────────────────────────
 
 function ofsRenderTable(data) {
-    var h = '';
+    var h   = '';
     var num = 1;
 
-    data.forEach(function(r, i) {
+    data.forEach(function (r, i) {
         var isBull = r.sentiment === 'BULLISH';
         var isBear = r.sentiment === 'BEARISH';
         var rowCls = isBull ? 'tr-bull' : isBear ? 'tr-bear' : '';
@@ -463,22 +543,23 @@ function ofsRenderTable(data) {
                 ? '<span class="act-pe">📉 BUY PE</span>'
                 : '<span class="act-wt">⏸ WAIT</span>';
 
-        // Condition badge class
         var condCls = 'cond-base cond-flat';
-        var cond = r.condition || '';
+        var cond    = r.condition || '';
         if (cond.includes('CE ↑') && cond.includes('PE ↓')) condCls = 'cond-base cond-ce-pe';
         else if (cond.includes('CE ↓') && cond.includes('PE ↑')) condCls = 'cond-base cond-pe-ce';
         else if (cond.includes('Both')) condCls = 'cond-base cond-both';
 
-        // Strength rank
-        var rankCls = { 'Rank 1':'rank-badge rank-1','Rank 2':'rank-badge rank-2',
-                        'Rank 3':'rank-badge rank-3','Rank 4':'rank-badge rank-4',
-                        'Normal':'rank-badge rank-n' }[r.strength_rank] || 'rank-badge rank-n';
+        var rankMap = {
+            'Rank 1': 'rank-badge rank-1', 'Rank 2': 'rank-badge rank-2',
+            'Rank 3': 'rank-badge rank-3', 'Rank 4': 'rank-badge rank-4',
+            'Normal': 'rank-badge rank-n'
+        };
+        var rankCls = rankMap[r.strength_rank] || 'rank-badge rank-n';
 
         h += '<tr class="' + rowCls + ' ' + zebra + '">'
-            + '<td class="c-num">' + num++ + '</td>'
+            + '<td class="c-num">'  + num++ + '</td>'
             + '<td class="c-date">' + r.date + '</td>'
-            + '<td class="c-sym">' + esc(r.symbol) + '</td>'
+            + '<td class="c-sym">'  + esc(r.symbol) + '</td>'
             + '<td>'
                 + (r.atm_strike ? '<span class="c-atm">₹' + nInt(r.atm_strike) + '</span>' : '—')
                 + (r.fut_price  ? '<br><span class="c-fut">F:₹' + f(r.fut_price) + '</span>' : '')
@@ -486,7 +567,7 @@ function ofsRenderTable(data) {
             + '<td class="c-expiry">' + (r.expiry || '—') + '</td>'
             + '<td class="sep-oi c-oi">' + nInt(r.ce_oi) + '<small>prev: ' + nInt(r.ce_oi_prev) + '</small></td>'
             + '<td>' + pctCell(r.ce_oi_pct) + '</td>'
-            + '<td class="c-oi">' + nInt(r.pe_oi) + '<small>prev: ' + nInt(r.pe_oi_prev) + '</small></td>'
+            + '<td class="c-oi">'   + nInt(r.pe_oi) + '<small>prev: ' + nInt(r.pe_oi_prev) + '</small></td>'
             + '<td>' + pctCell(r.pe_oi_pct) + '</td>'
             + '<td class="sep-signal">' + sentBadge + '</td>'
             + '<td>'
@@ -507,19 +588,19 @@ function ofsRenderTable(data) {
 // ── Stats / helpers ───────────────────────────────────────
 
 function ofsUpdateStats(res) {
-    txt('st-total', res.total_records  || '0');
-    txt('st-ce',   res.buy_ce_count   || '0');
-    txt('st-pe',   res.buy_pe_count   || '0');
-    txt('st-wait', res.wait_count     || '0');
-    txt('st-bull', res.bullish_count  || '0');
-    txt('st-bear', res.bearish_count  || '0');
+    txt('st-total', res.total_records || '0');
+    txt('st-ce',   res.buy_ce_count  || '0');
+    txt('st-pe',   res.buy_pe_count  || '0');
+    txt('st-wait', res.wait_count    || '0');
+    txt('st-bull', res.bullish_count || '0');
+    txt('st-bear', res.bearish_count || '0');
 }
 
 function ofsResetStats() {
-    ['st-total','st-ce','st-pe','st-wait','st-bull','st-bear'].forEach(function(id){ txt(id,'—'); });
+    ['st-total','st-ce','st-pe','st-wait','st-bull','st-bear'].forEach(function (id) { txt(id, '—'); });
 }
 
-function ofsShowWarn(msg) { el('ofs-warn').classList.add('show'); txt('ofs-warn-msg', msg||''); }
+function ofsShowWarn(msg) { el('ofs-warn').classList.add('show'); txt('ofs-warn-msg', msg || ''); }
 function ofsHideWarn()    { el('ofs-warn').classList.remove('show'); }
 
 function ofsEmptyTable(msg) { html('ofs-tbody', ofsEmptyHtml(msg)); }
@@ -529,25 +610,32 @@ function ofsEmptyHtml(msg) {
 }
 
 function ofsReset() {
-    el('ofs-from').value = OFS_TODAY;
-    el('ofs-to').value   = OFS_TODAY;
-    el('ofs-action').value = '';
-    Array.from(el('ofs-sym').options).forEach(function(o){ o.selected = false; });
-    ofsResetStats();
-    ofsEmptyTable('Reset — select dates and click Analyze.');
-    txt('ofs-info',''); txt('ofs-upd','');
-    txt('ofs-subtitle','Select dates and click Analyze');
-    ofsHideWarn();
+    fetch(OFS_LASTDATE, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            el('ofs-date').value   = res.last_date || OFS_TODAY;
+            el('ofs-action').value = '';
+            el('ofs-sym').value    = 'ALL';
+            ofsHideWarn();
+            ofsAnalyze();
+        })
+        .catch(function () {
+            el('ofs-date').value   = OFS_TODAY;
+            el('ofs-action').value = '';
+            el('ofs-sym').value    = 'ALL';
+            ofsHideWarn();
+            ofsAnalyze();
+        });
 }
 
 function pctCell(v) {
     if (v == null) return '<span class="pct-neu">—</span>';
-    var n = parseFloat(v) || 0;
+    var n   = parseFloat(v) || 0;
     var cls = n > 0 ? 'pct-up' : n < 0 ? 'pct-down' : 'pct-neu';
     return '<span class="' + cls + '">' + (n > 0 ? '+' : '') + n.toFixed(2) + '%</span>';
 }
 
-function f(v)   { return parseFloat(v || 0).toFixed(2); }
+function f(v)    { return parseFloat(v || 0).toFixed(2); }
 function nInt(v) {
     var n = Number(v) || 0;
     if (n >= 1e7) return (n/1e7).toFixed(2) + 'Cr';
@@ -556,7 +644,7 @@ function nInt(v) {
     return n.toLocaleString('en-IN');
 }
 function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 </script>
 @endpush
