@@ -1391,9 +1391,10 @@ Route::controller('SiteController')->group(function () {
     });
  
     Route::middleware(['auth'])->prefix('open-high-low')->name('open-high-low.')->group(function () {
-        Route::get('/index',     [OpenHighLowController::class, 'index'])->name('index');
-        Route::get('/symbols',   [OpenHighLowController::class, 'getSymbols'])->name('symbols');
-        Route::get('/analyze',   [OpenHighLowController::class, 'analyze'])->name('analyze');
+        Route::get('/index',      [OpenHighLowController::class, 'index'])->name('index');
+        Route::get('/last-date',  [OpenHighLowController::class, 'lastDate'])->name('last.date');  // ← ADD
+        Route::get('/symbols',    [OpenHighLowController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [OpenHighLowController::class, 'analyze'])->name('analyze');
     });
  
     Route::middleware(['auth'])->prefix('momentum-breakout')->name('momentum-breakout.')->group(function () {

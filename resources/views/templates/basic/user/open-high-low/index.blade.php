@@ -72,25 +72,40 @@
 .ohl-inst-tab.on-fut    { border-color:#F5A623; background:rgba(245,166,35,.08); color:#c97f00; }
 .ohl-inst-tab.on-option { border-color:#7c3aed; background:rgba(124,58,237,.08); color:#6d28d9; }
 
-/* Inputs */
+/* Symbol select — single, styled like pivot */
+.ohl-sym-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; cursor:pointer; outline:none; min-width:140px;
+}
+.ohl-sym-select:focus { border-color:#F5A623; }
+
+/* Date controls — same style as pivot */
+.ohl-date-wrap { display:flex; align-items:center; gap:4px; }
 .ohl-date-input {
     border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
 .ohl-date-input:focus { border-color:#F5A623; }
-
-.ohl-sym-select {
-    border:1.5px solid #e5e9f2; border-radius:7px; padding:6px 10px;
-    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
-    background:#fff; cursor:pointer; outline:none; min-width:120px;
+.ohl-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.ohl-sym-select:focus { border-color:#F5A623; }
+.ohl-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.ohl-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
+/* Status badge */
+.ohl-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.ohl-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+
+/* Tolerance */
 .ohl-tol-input {
     border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
     font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
-    color:#333; outline:none; width:72px;
+    color:#333; outline:none; width:70px;
 }
 .ohl-tol-input:focus { border-color:#F5A623; }
 
@@ -140,8 +155,7 @@
 /* Table card */
 .ohl-card {
     background:#fff; border-radius:12px; overflow:hidden;
-    border:1px solid #e8e8e8;
-    transition:box-shadow .25s;
+    border:1px solid #e8e8e8; transition:box-shadow .25s;
 }
 .ohl-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08); }
 .ohl-card.oh-card { border-top:3px solid #dc2626; }
@@ -174,7 +188,7 @@
 .ohl-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
 /* Table */
-.ohl-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:540px; }
+.ohl-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:520px; }
 .ohl-table thead th {
     padding:9px 10px; text-align:center;
     font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
@@ -216,9 +230,7 @@
 .act-sell-pe { background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
 
 /* Empty / Loading */
-.ohl-empty {
-    text-align:center; padding:48px 20px; color:#ccc;
-}
+.ohl-empty { text-align:center; padding:48px 20px; color:#ccc; }
 .ohl-empty i { font-size:2.5rem; display:block; margin-bottom:12px; color:#e5e9f2; }
 .ohl-empty p { font-size:13px; }
 
@@ -276,22 +288,26 @@
 
         <div class="ohl-sep"></div>
 
-        {{-- Dates --}}
-        <span class="ohl-filter-label">From</span>
-        <input type="date" id="ohl-from" class="ohl-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
-
-        <span class="ohl-filter-label">To</span>
-        <input type="date" id="ohl-to" class="ohl-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+        {{-- Symbol — single select like pivot --}}
+        <span class="ohl-filter-label">Symbol</span>
+        <select id="ohl-sym" class="ohl-sym-select" onchange="ohlAnalyze()">
+            <option value="ALL">— All —</option>
+        </select>
 
         <div class="ohl-sep"></div>
 
-        {{-- Symbol --}}
-        <span class="ohl-filter-label">Symbol</span>
-        <select id="ohl-sym" class="ohl-sym-select" multiple size="1">
-            <option value="">Loading…</option>
-        </select>
+        {{-- Single date with nav buttons — exactly like pivot --}}
+        <span class="ohl-filter-label">Date</span>
+        <div class="ohl-date-wrap">
+            <button class="ohl-date-nav" onclick="ohlShiftDate(-1)">‹</button>
+            <input type="date" id="ohl-date" class="ohl-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="ohlAnalyze()">
+            <button class="ohl-date-nav" onclick="ohlShiftDate(1)">›</button>
+            <button class="ohl-date-nav ohl-today-btn" onclick="ohlGoToday()">TODAY</button>
+            <span id="ohl-date-badge"></span>
+        </div>
 
         {{-- Tolerance --}}
         <span class="ohl-filter-label">Tol.</span>
@@ -303,9 +319,7 @@
         <button class="ohl-analyze-btn" onclick="ohlAnalyze()">
             <i class="las la-search"></i> Analyze
         </button>
-        <button class="ohl-reset-btn" onclick="ohlReset()">
-            ↺ Reset
-        </button>
+        <button class="ohl-reset-btn" onclick="ohlReset()">↺ Reset</button>
 
         <div class="ohl-filter-right">
             <span class="ohl-info-text" id="ohl-info"></span>
@@ -323,7 +337,7 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="ohl-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
@@ -338,29 +352,22 @@
                 <span style="font-size:13px;color:#888;">→</span>
                 <span class="act-badge act-buy-pe">BUY PE</span>
                 <span class="ohl-count-pill" id="oh-count">0</span>
-                <span class="ohl-tol-pill"   id="oh-tol"   style="display:none;"></span>
+                <span class="ohl-tol-pill"   id="oh-tol" style="display:none;"></span>
             </div>
             <div class="ohl-table-scroll">
                 <table class="ohl-table">
                     <thead>
                         <tr id="oh-thead-row">
-                            <th>#</th>
-                            <th>Date</th>
-                            <th>Symbol</th>
-                            <th>Open</th>
-                            <th>High (09:15)</th>
-                            <th>Day High</th>
-                            <th>LTP</th>
-                            <th>Change</th>
-                            <th>Chg %</th>
-                            <th>Action</th>
+                            <th>#</th><th>Date</th><th>Symbol</th>
+                            <th>Open</th><th>High (09:15)</th><th>Day High</th>
+                            <th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="oh-tbody">
                         <tr><td colspan="10">
                             <div class="ohl-empty">
                                 <i class="las la-chart-area"></i>
-                                <p>Select dates and click Analyze</p>
+                                <p>Detecting last available date…</p>
                             </div>
                         </td></tr>
                     </tbody>
@@ -375,29 +382,22 @@
                 <span style="font-size:13px;color:#888;">→</span>
                 <span class="act-badge act-buy-ce">BUY CE</span>
                 <span class="ohl-count-pill" id="ol-count">0</span>
-                <span class="ohl-tol-pill"   id="ol-tol"   style="display:none;"></span>
+                <span class="ohl-tol-pill"   id="ol-tol" style="display:none;"></span>
             </div>
             <div class="ohl-table-scroll">
                 <table class="ohl-table">
                     <thead>
                         <tr id="ol-thead-row">
-                            <th>#</th>
-                            <th>Date</th>
-                            <th>Symbol</th>
-                            <th>Open</th>
-                            <th>Low (09:15)</th>
-                            <th>Day Low</th>
-                            <th>LTP</th>
-                            <th>Change</th>
-                            <th>Chg %</th>
-                            <th>Action</th>
+                            <th>#</th><th>Date</th><th>Symbol</th>
+                            <th>Open</th><th>Low (09:15)</th><th>Day Low</th>
+                            <th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="ol-tbody">
                         <tr><td colspan="10">
                             <div class="ohl-empty">
                                 <i class="las la-chart-area"></i>
-                                <p>Select dates and click Analyze</p>
+                                <p>Detecting last available date…</p>
                             </div>
                         </td></tr>
                     </tbody>
@@ -417,36 +417,56 @@
 //  Open=High / Open=Low — JS (no jQuery)
 // ═══════════════════════════════════════════════════════════════
 
-var OHL_ANALYZE = '{{ route("open-high-low.analyze") }}';
-var OHL_SYMBOLS = '{{ route("open-high-low.symbols") }}';
-var OHL_TODAY   = '{{ now()->toDateString() }}';
+var OHL_ANALYZE  = '{{ route("open-high-low.analyze") }}';
+var OHL_SYMBOLS  = '{{ route("open-high-low.symbols") }}';
+var OHL_LASTDATE = '{{ route("open-high-low.last.date") }}';
+var OHL_TODAY    = '{{ now()->toDateString() }}';
 
 var ohlInst     = 'stock';
 var ohlSymCache = {};
 
 // helpers
-function el(id)          { return document.getElementById(id); }
-function html(id, h)     { var e = el(id); if (e) e.innerHTML = h; }
-function txt(id, t)      { var e = el(id); if (e) e.textContent = t; }
-function show(id)        { var e = el(id); if (e) e.style.display = ''; }
-function hide(id)        { var e = el(id); if (e) e.style.display = 'none'; }
+function el(id)      { return document.getElementById(id); }
+function html(id, h) { var e = el(id); if (e) e.innerHTML = h; }
+function txt(id, t)  { var e = el(id); if (e) e.textContent = t; }
 
-document.addEventListener('DOMContentLoaded', function() { ohlLoadSymbols(); });
+// ═══════════════════════════════════════════════════════════════
+//  BOOT — detect last available date then auto-analyze
+// ═══════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function () {
+    ohlResolveLastDateAndLoad();
+});
+
+function ohlResolveLastDateAndLoad() {
+    fetch(OHL_LASTDATE + '?instrument=' + ohlInst, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        if (res.last_date) {
+            el('ohl-date').value = res.last_date;
+        }
+        // Load symbols then analyze
+        ohlLoadSymbols(function () { ohlAnalyze(); });
+    })
+    .catch(function () {
+        ohlLoadSymbols(function () { ohlAnalyze(); });
+    });
+}
 
 // ── Instrument switcher ───────────────────────────────────────
 
 function ohlSetInst(inst, btn) {
     ohlInst = inst;
-    document.querySelectorAll('.ohl-inst-tab').forEach(function(b) {
+    document.querySelectorAll('.ohl-inst-tab').forEach(function (b) {
         b.className = 'ohl-inst-tab';
     });
     btn.classList.add('on-' + inst);
 
-    // Add/remove opt-type column in headers
-    var isOpt   = inst === 'option';
-    var optTh   = isOpt ? '<th>Type</th>' : '';
-    var cols    = isOpt ? 11 : 10;
-
+    // Update table headers for options type column
+    var isOpt = inst === 'option';
+    var optTh = isOpt ? '<th>Type</th>' : '';
     el('oh-thead-row').innerHTML =
         '<th>#</th><th>Date</th><th>Symbol</th>' + optTh
         + '<th>Open</th><th>High (09:15)</th><th>Day High</th>'
@@ -456,75 +476,135 @@ function ohlSetInst(inst, btn) {
         + '<th>Open</th><th>Low (09:15)</th><th>Day Low</th>'
         + '<th>LTP</th><th>Change</th><th>Chg %</th><th>Action</th>';
 
-    ohlLoadSymbols();
+    // Re-detect last date for the new instrument, then reload symbols + analyze
+    fetch(OHL_LASTDATE + '?instrument=' + ohlInst, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        if (res.last_date) el('ohl-date').value = res.last_date;
+        ohlLoadSymbols(function () { ohlAnalyze(); });
+    })
+    .catch(function () {
+        ohlLoadSymbols(function () { ohlAnalyze(); });
+    });
 }
 
-// ── Load symbols ──────────────────────────────────────────────
+// ── Date helpers — identical pattern to pivot ─────────────────
 
-function ohlLoadSymbols() {
+function ohlGetDate() { return el('ohl-date').value; }
+
+function ohlShiftDate(d) {
+    var picker = el('ohl-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
+    var s = dt.toISOString().split('T')[0];
+    if (s > OHL_TODAY) return;
+    picker.value = s;
+    ohlAnalyze();
+}
+
+function ohlGoToday() {
+    el('ohl-date').value = OHL_TODAY;
+    ohlAnalyze();
+}
+
+function ohlUpdateDateBadge(isToday) {
+    el('ohl-date-badge').innerHTML = isToday
+        ? '<span class="ohl-live-badge">● Live</span>'
+        : '<span class="ohl-hist-badge">📅 Historical</span>';
+}
+
+// ── Symbol dropdown — single select like pivot ────────────────
+
+function ohlLoadSymbols(callback) {
     var key = ohlInst;
     if (ohlSymCache[key] && ohlSymCache[key].length) {
-        ohlRebuildSym(ohlSymCache[key]); return;
+        ohlRebuildSym(ohlSymCache[key]);
+        if (callback) callback();
+        return;
     }
 
-    fetch(OHL_SYMBOLS + '?instrument=' + ohlInst)
-        .then(function(r) { return r.json(); })
-        .then(function(res) {
-            if (res.no_config) {
-                ohlShowWarn('No active 15min config found.');
-                ohlRebuildSym([]); return;
-            }
+    fetch(OHL_SYMBOLS + '?instrument=' + ohlInst, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        if (res.no_config) {
+            ohlShowWarn('No active analysis config found.');
+            ohlRebuildSym([]);
+        } else {
             ohlHideWarn();
             ohlSymCache[key] = res.symbols || [];
             ohlRebuildSym(ohlSymCache[key]);
-        });
+        }
+        if (callback) callback();
+    })
+    .catch(function () {
+        if (callback) callback();
+    });
 }
 
 function ohlRebuildSym(symbols) {
     var sel  = el('ohl-sym');
-    var prev = Array.from(sel.selectedOptions || []).map(function(o) { return o.value; });
-    if (!symbols.length) {
-        sel.innerHTML = '<option value="" disabled>No symbols</option>';
-        sel.size = 1; return;
+    var prev = sel.value;
+
+    // Build options: "All" + individual symbols
+    var opts = '<option value="ALL">— All Symbols —</option>';
+    symbols.forEach(function (s) {
+        opts += '<option value="' + s + '"' + (s === prev ? ' selected' : '') + '>' + s + '</option>';
+    });
+    sel.innerHTML = opts;
+    // Restore previous selection if it still exists
+    if (prev && prev !== 'ALL') {
+        sel.value = prev;
+        if (sel.value !== prev) sel.value = 'ALL'; // fallback
     }
-    sel.innerHTML = symbols.map(function(s) {
-        return '<option value="' + s + '"' + (prev.indexOf(s) > -1 ? ' selected' : '') + '>' + s + '</option>';
-    }).join('');
-    sel.size = Math.min(3, Math.max(1, symbols.length));
 }
 
 // ── Analyze ───────────────────────────────────────────────────
 
 function ohlAnalyze() {
-    var from    = el('ohl-from').value;
-    var to      = el('ohl-to').value;
-    var tol     = parseFloat(el('ohl-tol').value) || 1;
-    var symSel  = el('ohl-sym');
-    var symbols = Array.from(symSel.selectedOptions || [])
-        .map(function(o) { return o.value; })
-        .filter(Boolean);
+    var date = ohlGetDate();
+    var sym  = el('ohl-sym').value;
+    var tol  = parseFloat(el('ohl-tol').value) || 1;
 
-    if (!from || !to) { alert('Please select both dates.'); return; }
+    if (!date) { return; }
 
     ohlHideWarn();
     ohlShowLoading();
 
     var params = new URLSearchParams({
         instrument : ohlInst,
-        from_date  : from,
-        to_date    : to,
+        date       : date,
         tolerance  : tol,
     });
-    symbols.forEach(function(s) { params.append('symbols[]', s); });
+    // Send symbol only when a specific one is chosen
+    if (sym && sym !== 'ALL') {
+        params.append('symbol', sym);
+    }
 
     fetch(OHL_ANALYZE + '?' + params.toString(), {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(function(r) {
+    .then(function (r) {
         if (!r.ok) throw new Error('Server error ' + r.status);
         return r.json();
     })
-    .then(function(res) {
+    .then(function (res) {
+        // Update date badge
+        if (typeof res.is_today !== 'undefined') {
+            ohlUpdateDateBadge(res.is_today);
+        }
+
+        // Rebuild symbol list if server sends available_symbols
+        if (res.available_symbols && res.available_symbols.length) {
+            ohlSymCache[ohlInst] = res.available_symbols;
+            ohlRebuildSym(res.available_symbols);
+            // Restore the symbol selection after rebuild
+            if (sym && sym !== 'ALL') el('ohl-sym').value = sym;
+        }
+
         if (res.no_config) {
             ohlShowWarn(res.message);
             ohlEmptyBoth('—', 10);
@@ -532,16 +612,17 @@ function ohlAnalyze() {
         }
 
         if (!res.success || !res.data || !res.data.length) {
-            ohlEmptyBoth(res.message || 'No signals found.', 10);
+            ohlEmptyBoth(res.message || 'No signals found for this date.', 10);
             txt('ohl-info', '');
             ohlUpdateCounts(0, 0, tol);
             return;
         }
 
-        var ohRows = res.data.filter(function(r) { return r.signal === 'OPEN=HIGH'; });
-        var olRows = res.data.filter(function(r) { return r.signal === 'OPEN=LOW';  });
+        var ohRows = res.data.filter(function (r) { return r.signal === 'OPEN=HIGH'; });
+        var olRows = res.data.filter(function (r) { return r.signal === 'OPEN=LOW';  });
 
         ohlUpdateCounts(ohRows.length, olRows.length, res.tolerance);
+
         el('ohl-info').innerHTML =
             '<span style="color:#b91c1c;">O=H: ' + ohRows.length + '</span>'
             + ' &nbsp;·&nbsp; '
@@ -554,7 +635,7 @@ function ohlAnalyze() {
         ohlRenderOH(ohRows);
         ohlRenderOL(olRows);
     })
-    .catch(function(err) {
+    .catch(function (err) {
         ohlEmptyBoth('⚠ ' + err.message, 10);
     });
 }
@@ -565,23 +646,23 @@ function ohlRenderOH(rows) {
     var isOpt = ohlInst === 'option';
     var cols  = isOpt ? 11 : 10;
     if (!rows.length) {
-        html('oh-tbody', ohlEmptyHtml(cols, 'No Open=High signals found.'));
+        html('oh-tbody', ohlEmptyHtml(cols, 'No Open=High signals found for this date.'));
         return;
     }
     var h = '';
-    rows.forEach(function(r, i) {
-        h += '<tr class="' + (i%2===0?'tr-even':'tr-odd') + '">'
-            + '<td class="c-num">' + (i+1) + '</td>'
-            + '<td class="c-date">' + r.date + '</td>'
-            + '<td class="c-sym">' + esc(r.symbol)
+    rows.forEach(function (r, i) {
+        h += '<tr class="' + (i % 2 === 0 ? 'tr-even' : 'tr-odd') + '">'
+            + '<td class="c-num">'  + (i + 1) + '</td>'
+            + '<td class="c-date">' + r.date   + '</td>'
+            + '<td class="c-sym">'  + esc(r.symbol)
                 + (r.expiry ? '<small>' + r.expiry + '</small>' : '') + '</td>'
             + (isOpt ? '<td>' + ohlOptBadge(r.opt_type) + '</td>' : '')
             + '<td class="c-open">₹' + f(r.open)      + '</td>'
             + '<td class="c-h915">₹' + f(r.high_open)  + '</td>'
             + '<td class="c-dh">₹'   + f(r.day_high)   + '</td>'
             + '<td class="c-ltp">₹'  + f(r.ltp)        + '</td>'
-            + '<td>'                  + ohlChangeTd(r.change)      + '</td>'
-            + '<td>'                  + ohlPctTd(r.change_pct)     + '</td>'
+            + '<td>'                  + ohlChangeTd(r.change)       + '</td>'
+            + '<td>'                  + ohlPctTd(r.change_pct)      + '</td>'
             + '<td>'                  + ohlActionBadge(r.trade_action) + '</td>'
             + '</tr>';
     });
@@ -592,23 +673,23 @@ function ohlRenderOL(rows) {
     var isOpt = ohlInst === 'option';
     var cols  = isOpt ? 11 : 10;
     if (!rows.length) {
-        html('ol-tbody', ohlEmptyHtml(cols, 'No Open=Low signals found.'));
+        html('ol-tbody', ohlEmptyHtml(cols, 'No Open=Low signals found for this date.'));
         return;
     }
     var h = '';
-    rows.forEach(function(r, i) {
-        h += '<tr class="' + (i%2===0?'tr-even':'tr-odd') + '">'
-            + '<td class="c-num">' + (i+1) + '</td>'
-            + '<td class="c-date">' + r.date + '</td>'
-            + '<td class="c-sym">' + esc(r.symbol)
+    rows.forEach(function (r, i) {
+        h += '<tr class="' + (i % 2 === 0 ? 'tr-even' : 'tr-odd') + '">'
+            + '<td class="c-num">'  + (i + 1) + '</td>'
+            + '<td class="c-date">' + r.date   + '</td>'
+            + '<td class="c-sym">'  + esc(r.symbol)
                 + (r.expiry ? '<small>' + r.expiry + '</small>' : '') + '</td>'
             + (isOpt ? '<td>' + ohlOptBadge(r.opt_type) + '</td>' : '')
             + '<td class="c-open">₹' + f(r.open)    + '</td>'
-            + '<td class="c-l915">₹' + f(r.low_open)+ '</td>'
-            + '<td class="c-dl">₹'   + f(r.day_low) + '</td>'
-            + '<td class="c-ltp">₹'  + f(r.ltp)     + '</td>'
-            + '<td>'                  + ohlChangeTd(r.change)      + '</td>'
-            + '<td>'                  + ohlPctTd(r.change_pct)     + '</td>'
+            + '<td class="c-l915">₹' + f(r.low_open) + '</td>'
+            + '<td class="c-dl">₹'   + f(r.day_low)  + '</td>'
+            + '<td class="c-ltp">₹'  + f(r.ltp)      + '</td>'
+            + '<td>'                  + ohlChangeTd(r.change)       + '</td>'
+            + '<td>'                  + ohlPctTd(r.change_pct)      + '</td>'
             + '<td>'                  + ohlActionBadge(r.trade_action) + '</td>'
             + '</tr>';
     });
@@ -659,13 +740,25 @@ function ohlShowWarn(msg) {
 function ohlHideWarn() { el('ohl-warn').classList.remove('show'); }
 
 function ohlReset() {
-    el('ohl-from').value = OHL_TODAY;
-    el('ohl-to').value   = OHL_TODAY;
-    el('ohl-tol').value  = '1';
-    Array.from(el('ohl-sym').options).forEach(function(o) { o.selected = false; });
-    ohlEmptyBoth('Reset — select dates and click Analyze.', 10);
-    txt('ohl-info', ''); txt('ohl-upd', '');
-    ohlHideWarn();
+    // Re-detect last available date on reset
+    fetch(OHL_LASTDATE + '?instrument=' + ohlInst, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+        el('ohl-date').value = res.last_date || OHL_TODAY;
+        el('ohl-tol').value  = '1';
+        el('ohl-sym').value  = 'ALL';
+        ohlHideWarn();
+        ohlAnalyze();
+    })
+    .catch(function () {
+        el('ohl-date').value = OHL_TODAY;
+        el('ohl-tol').value  = '1';
+        el('ohl-sym').value  = 'ALL';
+        ohlHideWarn();
+        ohlAnalyze();
+    });
 }
 
 // ── Badge helpers ─────────────────────────────────────────────
@@ -677,7 +770,7 @@ function ohlActionBadge(action) {
         'SELL CE': '<span class="act-badge act-sell-ce">SELL CE</span>',
         'SELL PE': '<span class="act-badge act-sell-pe">SELL PE</span>',
     };
-    return map[action] || '<span style="color:#aab;font-size:9px;">' + (action||'—') + '</span>';
+    return map[action] || '<span style="color:#aab;font-size:9px;">' + (action || '—') + '</span>';
 }
 
 function ohlOptBadge(type) {
@@ -688,21 +781,21 @@ function ohlOptBadge(type) {
 
 function ohlChangeTd(v) {
     var n = parseFloat(v) || 0;
-    if (n > 0) return '<span class="c-up">▲ ₹' + f(n) + '</span>';
-    if (n < 0) return '<span class="c-down">▼ ₹' + f(Math.abs(n)) + '</span>';
+    if (n > 0) return '<span class="c-up">▲ ₹'   + f(n)            + '</span>';
+    if (n < 0) return '<span class="c-down">▼ ₹' + f(Math.abs(n))  + '</span>';
     return '<span class="c-neu">₹' + f(n) + '</span>';
 }
 
 function ohlPctTd(v) {
     var n = parseFloat(v) || 0;
-    if (n > 0) return '<span class="c-up">+' + f(n) + '%</span>';
+    if (n > 0) return '<span class="c-up">+'  + f(n) + '%</span>';
     if (n < 0) return '<span class="c-down">' + f(n) + '%</span>';
     return '<span class="c-neu">' + f(n) + '%</span>';
 }
 
 function f(v)   { return parseFloat(v || 0).toFixed(2); }
 function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 </script>
 @endpush

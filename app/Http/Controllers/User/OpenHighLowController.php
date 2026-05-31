@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Open=High / Open=Low Signal Analysis
  * Instruments : Stock EQ | FUT | Option (ATM CE/PE)
- * Timeframe   : 15min ONLY
+ * Timeframe   : 15min ONLY (internal — not shown to users)
  *
  * LOGIC:
  *   Fetch the FIRST candle of each day (09:15 slot).
@@ -35,6 +35,65 @@ class OpenHighLowController extends Controller
     {
         $pageTitle = 'Open=High / Open=Low Analysis';
         return view(activeTemplate() . 'user.open-high-low.index', compact('pageTitle'));
+    }
+
+    // ── Last Available Date ────────────────────────────────────────────────────
+    //   Returns the most recent trade_date that actually has 09:15 candle data
+    //   for the given instrument, so the frontend defaults to a date with real data.
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'last_date' => Carbon::today()->toDateString(),
+                    'is_today'  => true,
+                ]);
+            }
+
+            $instrument = $this->resolveInstrument($request);
+            $table      = self::TABLES[$instrument];
+
+            $lastDate = DB::table($table)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->whereRaw("TIME(interval_time) = '09:15:00'")
+                ->max('trade_date');
+
+            // Fall back to other tables if nothing found
+            if (!$lastDate) {
+                foreach (self::TABLES as $key => $tbl) {
+                    if ($tbl === $table) continue;
+                    $lastDate = DB::table($tbl)
+                        ->where('analysis_config_id', $config->id)
+                        ->where('is_missing', false)
+                        ->whereRaw("TIME(interval_time) = '09:15:00'")
+                        ->max('trade_date');
+                    if ($lastDate) break;
+                }
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate
+                ? Carbon::parse($lastDate)->toDateString()
+                : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('OpenHighLow lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
     }
 
     // ── Symbols API ───────────────────────────────────────────────────────────
@@ -68,18 +127,27 @@ class OpenHighLowController extends Controller
     }
 
     // ── Main Analyze API ──────────────────────────────────────────────────────
+    //   Now accepts a single `date` param (same as pivot point page).
+    //   `from_date` / `to_date` are kept as aliases for backward-compat.
 
     public function analyze(Request $request): JsonResponse
     {
         try {
             $instrument = $this->resolveInstrument($request);
-            $fromDate   = $request->get('from_date');
-            $toDate     = $request->get('to_date');
-            $symbolReq  = array_filter((array) $request->get('symbols', []));
-            $tolerance  = max(0, (float) $request->get('tolerance', 1));
+
+            // Single date (preferred) — fall back to from/to if sent
+            $date     = $request->get('date');
+            $fromDate = $date ?? $request->get('from_date');
+            $toDate   = $date ?? $request->get('to_date');
+
+            // Accept single symbol string or array; empty = all
+            $symbolRaw = $request->get('symbol', $request->get('symbols', []));
+            $symbolReq = array_filter(is_array($symbolRaw) ? $symbolRaw : [$symbolRaw]);
+
+            $tolerance = max(0, (float) $request->get('tolerance', 1));
 
             if (!$fromDate || !$toDate) {
-                return response()->json(['success' => false, 'message' => 'Please select both dates.', 'data' => []]);
+                return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
             $config = $this->getActiveConfig();
@@ -87,7 +155,7 @@ class OpenHighLowController extends Controller
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => 'No active 15min config found. Go to Admin → Analysis Config.',
+                    'message'   => 'No active analysis config found. Go to Admin → Analysis Config.',
                     'data'      => [],
                 ]);
             }
@@ -121,6 +189,8 @@ class OpenHighLowController extends Controller
                 'instrument'        => strtoupper($instrument),
                 'tolerance'         => $tolerance,
                 'available_symbols' => $configSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
@@ -199,7 +269,6 @@ class OpenHighLowController extends Controller
 
         if (empty($opens)) return [];
 
-        // Stats keyed by "symbol|date|type"
         $stats = DB::table($table)
             ->where('analysis_config_id', $configId)
             ->whereIn('base_symbol', $symbols)
