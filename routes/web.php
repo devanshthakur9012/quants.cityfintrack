@@ -1412,9 +1412,10 @@ Route::controller('SiteController')->group(function () {
     });
  
     Route::middleware(['auth'])->prefix('intraday-oi-snapshot')->name('intraday-oi-snapshot.')->group(function () {
-        Route::get('/index',        [IntradayOISnapshotController::class, 'index'])->name('index');
-        Route::get('/symbols', [IntradayOISnapshotController::class, 'getSymbols'])->name('symbols');
-        Route::get('/analyze', [IntradayOISnapshotController::class, 'analyze'])->name('analyze');
+        Route::get('/index',      [IntradayOISnapshotController::class, 'index'])->name('index');
+        Route::get('/last-date',  [IntradayOISnapshotController::class, 'lastDate'])->name('last.date');  // ← ADD
+        Route::get('/symbols',    [IntradayOISnapshotController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [IntradayOISnapshotController::class, 'analyze'])->name('analyze');
     });
  
     Route::middleware(['auth'])->prefix('index-driven-signal')->name('index-driven-signal.')->group(function () {

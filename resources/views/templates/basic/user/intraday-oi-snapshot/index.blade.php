@@ -19,19 +19,14 @@
 }
 .ios-hero-left h1 { font-size:clamp(24px,3.5vw,40px); font-weight:700; color:#1a1a2e; margin:0 0 8px; line-height:1.1; }
 .ios-hero-left h1 span { color:#F5A623; }
-.ios-hero-left p { font-size:13px; color:#666; margin:0 0 10px; line-height:1.7; max-width:640px; }
-.ios-hero-pills { display:flex; flex-wrap:wrap; gap:6px; }
-.ios-pill { display:inline-block; padding:3px 10px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; }
-.ios-pill-snap { background:rgba(13,148,136,.08);  color:#0f766e; border:1px solid rgba(13,148,136,.25); }
-.ios-pill-bull { background:rgba(5,150,105,.08);   color:#047857; border:1px solid rgba(5,150,105,.25); }
-.ios-pill-bear { background:rgba(220,38,38,.07);   color:#b91c1c; border:1px solid rgba(220,38,38,.22); }
+.ios-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:640px; }
 .ios-hero-icon {
     width:76px; height:76px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
     font-size:32px; color:#F5A623; flex-shrink:0;
 }
-@media(max-width:768px){ .ios-hero{ flex-direction:column; padding:24px 16px; text-align:center; } .ios-hero-pills{ justify-content:center; } .ios-hero-icon{ display:none; } }
+@media(max-width:768px){ .ios-hero{ flex-direction:column; padding:24px 16px; text-align:center; } .ios-hero-icon{ display:none; } }
 
 /* ── FILTER BAR ── */
 .ios-filter-bar { background:#fff; border-bottom:1px solid #e8e8e8; padding:0 48px; position:sticky; top:0; z-index:200; box-shadow:0 2px 8px rgba(0,0,0,.06); }
@@ -39,10 +34,36 @@
 .ios-filter-label { font-size:10.5px; color:#999; font-weight:700; text-transform:uppercase; letter-spacing:.07em; flex-shrink:0; }
 .ios-sep { width:1px; height:28px; background:#e8e8e8; flex-shrink:0; }
 
-.ios-date-input { border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:#333; outline:none; }
-.ios-date-input:focus { border-color:#F5A623; }
-.ios-sym-select { border:1.5px solid #e5e9f2; border-radius:7px; padding:6px 10px; font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif; background:#fff; cursor:pointer; outline:none; min-width:120px; }
+/* Symbol select — single like pivot */
+.ios-sym-select {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
+    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; cursor:pointer; outline:none; min-width:140px;
+}
 .ios-sym-select:focus { border-color:#F5A623; }
+
+/* Date controls — same as pivot */
+.ios-date-wrap { display:flex; align-items:center; gap:4px; }
+.ios-date-input {
+    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    color:#333; outline:none; cursor:pointer;
+}
+.ios-date-input:focus { border-color:#F5A623; }
+.ios-date-nav {
+    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
+    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.ios-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.ios-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
+
+/* Status badge */
+.ios-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+.ios-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+
+/* Action filter */
 .ios-action-select {
     border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 28px 7px 10px;
     font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
@@ -50,14 +71,17 @@
     appearance:none; cursor:pointer; outline:none; min-width:130px;
 }
 .ios-action-select:focus { border-color:#F5A623; }
+
+/* Buttons */
 .ios-analyze-btn { background:#F5A623; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
 .ios-analyze-btn:hover { background:#d4890e; }
 .ios-reset-btn { background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; font-family:'Exo 2',sans-serif; }
 .ios-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+
 .ios-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 .ios-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
 .ios-upd-text  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
-@media(max-width:768px){ .ios-filter-bar{ padding:0 12px; } .ios-filter-right{ margin-left:0;width:100%; } }
+@media(max-width:768px){ .ios-filter-bar{ padding:0 12px; } .ios-filter-inner{ gap:8px; } .ios-filter-right{ margin-left:0;width:100%; } }
 
 /* ── CONTENT ── */
 .ios-content { padding:28px 48px 64px; }
@@ -65,6 +89,7 @@
 
 .ios-warn { background:#fff3e0; border:1px solid #ffcc80; border-radius:10px; padding:14px 20px; margin-bottom:20px; display:none; align-items:center; gap:12px; font-size:13px; color:#e65100; }
 .ios-warn.show { display:flex; }
+.ios-warn i { font-size:18px; flex-shrink:0; }
 
 /* ── STATS ── */
 .ios-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:24px; }
@@ -112,7 +137,6 @@
 .c-num  { font-size:9px; color:#ccc; }
 .c-date { font-size:11px; font-weight:700; color:#F5A623; }
 .c-sym  { font-size:12px; font-weight:800; color:#1a56db; }
-.c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
 .c-atm  { font-size:10px; color:#c97f00; font-weight:700; }
 .c-fut  { font-size:10px; color:#1a56db; }
 .c-expiry { font-size:10px; color:#aab; }
@@ -153,43 +177,48 @@
 
 <div class="ios-wrap">
 
-{{-- HERO --}}
+{{-- ══ HERO ══ --}}
 <div class="ios-hero ios-anim">
     <div class="ios-hero-left">
         <h1>Intraday OI <span>Snapshot</span></h1>
         <p>
-            Compares CE/PE Open Interest at 09:15 (market open) vs 12:00 (midday snapshot)
-            to detect intraday option writing momentum — bullish or bearish.
+            Tracks CE and PE Open Interest changes from market open to midday,
+            helping identify intraday option writing momentum and market direction.
         </p>
-        <div class="ios-hero-pills">
-            <span class="ios-pill ios-pill-snap">09:15 Open → 12:00 Snapshot</span>
-            <span class="ios-pill ios-pill-bull">CE↓ + PE↑ → BULLISH → BUY CE</span>
-            <span class="ios-pill ios-pill-bear">CE↑ + PE↓ → BEARISH → BUY PE</span>
-        </div>
     </div>
     <div class="ios-hero-icon"><i class="las la-camera"></i></div>
 </div>
 
-{{-- FILTER BAR --}}
+{{-- ══ FILTER BAR ══ --}}
 <div class="ios-filter-bar">
     <div class="ios-filter-inner">
-        <span class="ios-filter-label">From</span>
-        <input type="date" id="ios-from" class="ios-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
 
-        <span class="ios-filter-label">To</span>
-        <input type="date" id="ios-to" class="ios-date-input"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}">
+        {{-- Symbol — single select like pivot --}}
+        <span class="ios-filter-label">Symbol</span>
+        <select id="ios-sym" class="ios-sym-select" onchange="iosAnalyze()">
+            <option value="ALL">— All —</option>
+        </select>
 
         <div class="ios-sep"></div>
 
-        <span class="ios-filter-label">Symbol</span>
-        <select id="ios-sym" class="ios-sym-select" multiple size="1">
-            <option value="">Loading…</option>
-        </select>
+        {{-- Single date with nav buttons — same as pivot --}}
+        <span class="ios-filter-label">Date</span>
+        <div class="ios-date-wrap">
+            <button class="ios-date-nav" onclick="iosShiftDate(-1)">‹</button>
+            <input type="date" id="ios-date" class="ios-date-input"
+                   value="{{ now()->toDateString() }}"
+                   max="{{ now()->toDateString() }}"
+                   onchange="iosAnalyze()">
+            <button class="ios-date-nav" onclick="iosShiftDate(1)">›</button>
+            <button class="ios-date-nav ios-today-btn" onclick="iosGoToday()">TODAY</button>
+            <span id="ios-date-badge"></span>
+        </div>
 
+        <div class="ios-sep"></div>
+
+        {{-- Action filter --}}
         <span class="ios-filter-label">Action</span>
-        <select id="ios-action" class="ios-action-select">
+        <select id="ios-action" class="ios-action-select" onchange="iosAnalyze()">
             <option value="">All Actions</option>
             <option value="BUY CE">BUY CE Only</option>
             <option value="BUY PE">BUY PE Only</option>
@@ -208,7 +237,7 @@
     </div>
 </div>
 
-{{-- CONTENT --}}
+{{-- ══ CONTENT ══ --}}
 <div class="ios-content">
 
     <div class="ios-warn" id="ios-warn">
@@ -216,17 +245,17 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="ios-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
 
     {{-- Stats --}}
     <div class="ios-stats ios-anim">
-        <div class="ios-stat-card s-total"><div class="ios-stat-label">Total</div><div class="ios-stat-val" id="st-total">—</div></div>
-        <div class="ios-stat-card s-ce">  <div class="ios-stat-label">BUY CE</div><div class="ios-stat-val" id="st-ce">—</div></div>
-        <div class="ios-stat-card s-pe">  <div class="ios-stat-label">BUY PE</div><div class="ios-stat-val" id="st-pe">—</div></div>
-        <div class="ios-stat-card s-wait"><div class="ios-stat-label">WAIT</div>  <div class="ios-stat-val" id="st-wait">—</div></div>
+        <div class="ios-stat-card s-total"><div class="ios-stat-label">Total</div>  <div class="ios-stat-val" id="st-total">—</div></div>
+        <div class="ios-stat-card s-ce">  <div class="ios-stat-label">BUY CE</div> <div class="ios-stat-val" id="st-ce">—</div></div>
+        <div class="ios-stat-card s-pe">  <div class="ios-stat-label">BUY PE</div> <div class="ios-stat-val" id="st-pe">—</div></div>
+        <div class="ios-stat-card s-wait"><div class="ios-stat-label">WAIT</div>   <div class="ios-stat-val" id="st-wait">—</div></div>
         <div class="ios-stat-card s-bull"><div class="ios-stat-label">Bullish</div><div class="ios-stat-val" id="st-bull">—</div></div>
         <div class="ios-stat-card s-bear"><div class="ios-stat-label">Bearish</div><div class="ios-stat-val" id="st-bear">—</div></div>
     </div>
@@ -234,15 +263,15 @@
     {{-- Table --}}
     <div class="ios-card ios-anim">
         <div class="ios-card-header">
-            <div class="ios-card-title">◆ Intraday OI Snapshot — 15min · 09:15 → 12:00</div>
-            <span class="ios-card-subtitle" id="ios-subtitle">Select dates and click Analyze</span>
+            <div class="ios-card-title">◆ Intraday OI Snapshot</div>
+            <span class="ios-card-subtitle" id="ios-subtitle">Detecting last available date…</span>
         </div>
         <div class="ios-tscroll">
             <table class="ios-table">
                 <thead>
                     <tr class="th-group">
                         <th colspan="5" class="g-info">Market Info</th>
-                        <th colspan="4" class="g-oi sep-oi">CE / PE OI Change (09:15 → 12:00)</th>
+                        <th colspan="4" class="g-oi sep-oi">CE / PE OI Change (Open → Midday)</th>
                         <th colspan="4" class="g-signal sep-signal">Signal</th>
                     </tr>
                     <tr class="th-cols">
@@ -263,9 +292,9 @@
                 </thead>
                 <tbody id="ios-tbody">
                     <tr><td colspan="13">
-                        <div class="ios-empty">
-                            <i class="las la-chart-bar"></i>
-                            <p>Select a date range and click <strong>Analyze</strong></p>
+                        <div class="ios-spinner-row">
+                            <div class="ios-spinner"></div>
+                            Detecting last available date…
                         </div>
                     </td></tr>
                 </tbody>
@@ -273,8 +302,8 @@
         </div>
     </div>
 
-</div>
-</div>
+</div>{{-- /.ios-content --}}
+</div>{{-- /.ios-wrap --}}
 
 @endsection
 
@@ -284,155 +313,285 @@
 //  Intraday OI Snapshot — JS (no jQuery)
 // ═══════════════════════════════════════════════════════════
 
-var IOS_ANALYZE = '{{ route("intraday-oi-snapshot.analyze") }}';
-var IOS_SYMBOLS = '{{ route("intraday-oi-snapshot.symbols") }}';
-var IOS_TODAY   = '{{ now()->toDateString() }}';
+var IOS_ANALYZE  = '{{ route("intraday-oi-snapshot.analyze") }}';
+var IOS_SYMBOLS  = '{{ route("intraday-oi-snapshot.symbols") }}';
+var IOS_LASTDATE = '{{ route("intraday-oi-snapshot.last.date") }}';
+var IOS_TODAY    = '{{ now()->toDateString() }}';
+
 var iosSymCache = null;
 
 function el(id)      { return document.getElementById(id); }
 function html(id, h) { var e = el(id); if (e) e.innerHTML = h; }
 function txt(id, t)  { var e = el(id); if (e) e.textContent = t; }
 
-document.addEventListener('DOMContentLoaded', function() { iosLoadSymbols(); });
+// ═══════════════════════════════════════════════════════════
+//  BOOT — detect last available date then auto-analyze
+// ═══════════════════════════════════════════════════════════
 
-function iosLoadSymbols() {
-    if (iosSymCache !== null) { iosRebuildSym(iosSymCache); return; }
-    fetch(IOS_SYMBOLS, { headers:{'X-Requested-With':'XMLHttpRequest'} })
-        .then(function(r){ return r.json(); })
-        .then(function(res) {
-            if (res.no_config) { iosShowWarn(res.message||''); iosRebuildSym([]); return; }
-            iosHideWarn();
-            iosSymCache = res.symbols || [];
-            iosRebuildSym(iosSymCache);
+document.addEventListener('DOMContentLoaded', function () {
+    iosResolveLastDateAndLoad();
+});
+
+function iosResolveLastDateAndLoad() {
+    fetch(IOS_LASTDATE, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.last_date) el('ios-date').value = res.last_date;
+            iosLoadSymbols(function () { iosAnalyze(); });
+        })
+        .catch(function () {
+            iosLoadSymbols(function () { iosAnalyze(); });
         });
+}
+
+// ── Date helpers ──────────────────────────────────────────
+
+function iosGetDate() { return el('ios-date').value; }
+
+function iosShiftDate(d) {
+    var picker = el('ios-date');
+    var dt     = new Date(picker.value);
+    dt.setDate(dt.getDate() + d);
+    var s = dt.toISOString().split('T')[0];
+    if (s > IOS_TODAY) return;
+    picker.value = s;
+    iosAnalyze();
+}
+
+function iosGoToday() {
+    el('ios-date').value = IOS_TODAY;
+    iosAnalyze();
+}
+
+function iosUpdateDateBadge(isToday) {
+    el('ios-date-badge').innerHTML = isToday
+        ? '<span class="ios-live-badge">● Live</span>'
+        : '<span class="ios-hist-badge">📅 Historical</span>';
+}
+
+// ── Symbols — single select like pivot ───────────────────
+
+function iosLoadSymbols(callback) {
+    if (iosSymCache !== null) {
+        iosRebuildSym(iosSymCache);
+        if (callback) callback();
+        return;
+    }
+
+    fetch(IOS_SYMBOLS, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.no_config) {
+                iosShowWarn(res.message || '');
+                iosSymCache = [];
+                iosRebuildSym([]);
+            } else {
+                iosHideWarn();
+                iosSymCache = res.symbols || [];
+                iosRebuildSym(iosSymCache);
+            }
+            if (callback) callback();
+        })
+        .catch(function () { if (callback) callback(); });
 }
 
 function iosRebuildSym(syms) {
     var sel  = el('ios-sym');
-    var prev = Array.from(sel.selectedOptions||[]).map(function(o){ return o.value; });
-    if (!syms.length) { sel.innerHTML='<option value="" disabled>No symbols</option>'; sel.size=1; return; }
-    sel.innerHTML = syms.map(function(s){
-        return '<option value="'+s+'"'+(prev.indexOf(s)>-1?' selected':'')+'>'+s+'</option>';
-    }).join('');
-    sel.size = Math.min(3, Math.max(1, syms.length));
+    var prev = sel.value;
+    var opts = '<option value="ALL">— All Symbols —</option>';
+    syms.forEach(function (s) {
+        opts += '<option value="' + s + '"' + (s === prev ? ' selected' : '') + '>' + s + '</option>';
+    });
+    sel.innerHTML = opts;
+    if (prev && prev !== 'ALL') {
+        sel.value = prev;
+        if (sel.value !== prev) sel.value = 'ALL';
+    }
 }
 
-function iosAnalyze() {
-    var from   = el('ios-from').value;
-    var to     = el('ios-to').value;
-    var action = el('ios-action').value;
-    var syms   = Array.from((el('ios-sym').selectedOptions)||[]).map(function(o){ return o.value; }).filter(Boolean);
+// ── Analyze ───────────────────────────────────────────────
 
-    if (!from || !to) { alert('Please select both dates.'); return; }
+function iosAnalyze() {
+    var date   = iosGetDate();
+    var action = el('ios-action').value;
+    var sym    = el('ios-sym').value;
+
+    if (!date) return;
 
     iosHideWarn();
     iosResetStats();
 
     html('ios-tbody', '<tr><td colspan="13"><div class="ios-spinner-row">'
         + '<div class="ios-spinner"></div>'
-        + 'Comparing 09:15 → 12:00 OI for ' + from + ' → ' + to + '…'
+        + 'Comparing OI for ' + date + '…'
         + '</div></td></tr>');
-    txt('ios-subtitle', 'Loading…');
+    txt('ios-subtitle', date + ' · Loading…');
 
-    var params = new URLSearchParams({ from_date:from, to_date:to, filter_action:action });
-    syms.forEach(function(s){ params.append('symbols[]', s); });
+    var params = new URLSearchParams({ date: date, filter_action: action });
+    if (sym && sym !== 'ALL') {
+        params.append('symbols[]', sym);
+    }
 
-    fetch(IOS_ANALYZE + '?' + params.toString(), { headers:{'X-Requested-With':'XMLHttpRequest'} })
-        .then(function(r){ if(!r.ok) throw new Error('Server error '+r.status); return r.json(); })
-        .then(function(res) {
-            if (res.no_config) { iosShowWarn(res.message); iosEmptyTable('No active config.'); return; }
-            if (!res.success || !res.data || !res.data.length) {
-                iosEmptyTable(res.message || 'No signals found.');
-                return;
-            }
-            iosUpdateStats(res);
-            iosRenderTable(res.data);
-            el('ios-info').innerHTML =
-                '<span style="color:#047857;">CE: '+res.buy_ce_count+'</span>'
-                +' &nbsp;·&nbsp; '
-                +'<span style="color:#b91c1c;">PE: '+res.buy_pe_count+'</span>'
-                +' &nbsp;·&nbsp; 15min · 09:15→12:00';
-            txt('ios-subtitle', '15min · '+from+' → '+to+' · '+res.message);
-            txt('ios-upd', 'Updated ' + new Date().toLocaleTimeString());
-        })
-        .catch(function(err){ iosEmptyTable('⚠ '+err.message); });
+    fetch(IOS_ANALYZE + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function (res) {
+        if (typeof res.is_today !== 'undefined') {
+            iosUpdateDateBadge(res.is_today);
+        }
+
+        // Rebuild symbol list if server sends available_symbols
+        if (res.available_symbols && res.available_symbols.length) {
+            iosSymCache = res.available_symbols;
+            iosRebuildSym(iosSymCache);
+            if (sym && sym !== 'ALL') el('ios-sym').value = sym;
+        }
+
+        if (res.no_config) {
+            iosShowWarn(res.message);
+            iosEmptyTable('No active config.');
+            return;
+        }
+
+        if (!res.success || !res.data || !res.data.length) {
+            iosEmptyTable(res.message || 'No signals found for this date.');
+            iosResetStats();
+            txt('ios-subtitle', date + ' · No data found');
+            return;
+        }
+
+        iosUpdateStats(res);
+        iosRenderTable(res.data);
+
+        el('ios-info').innerHTML =
+            '<span style="color:#047857;">CE: ' + res.buy_ce_count + '</span>'
+            + ' &nbsp;·&nbsp; '
+            + '<span style="color:#b91c1c;">PE: ' + res.buy_pe_count + '</span>';
+        txt('ios-subtitle', date + ' · ' + res.message);
+        txt('ios-upd', 'Updated ' + new Date().toLocaleTimeString());
+    })
+    .catch(function (err) {
+        iosEmptyTable('⚠ ' + err.message);
+    });
 }
+
+// ── Render ────────────────────────────────────────────────
 
 function iosRenderTable(data) {
     var h = '', num = 1;
-    data.forEach(function(r, i) {
-        var isBull = r.sentiment==='BULLISH', isBear = r.sentiment==='BEARISH';
-        var rowCls = (isBull?'tr-bull':isBear?'tr-bear':'') + ' ' + (i%2===0?'tr-even':'tr-odd');
+
+    data.forEach(function (r, i) {
+        var isBull = r.sentiment === 'BULLISH', isBear = r.sentiment === 'BEARISH';
+        var rowCls = (isBull ? 'tr-bull' : isBear ? 'tr-bear' : '') + ' ' + (i % 2 === 0 ? 'tr-even' : 'tr-odd');
+
         var sentBadge = isBull ? '<span class="sig-bull">▲ BULLISH</span>'
                       : isBear ? '<span class="sig-bear">▼ BEARISH</span>'
                       : '<span class="sig-neut">— NEUTRAL</span>';
-        var actBadge = r.trade_action==='BUY CE' ? '<span class="act-ce">📈 BUY CE</span>'
-                     : r.trade_action==='BUY PE' ? '<span class="act-pe">📉 BUY PE</span>'
-                     : '<span class="act-wt">⏸ WAIT</span>';
-        var cond = r.condition || '';
-        var condCls = 'cond-base cond-flat';
-        if (cond.includes('CE ↑')&&cond.includes('PE ↓')) condCls='cond-base cond-ce-pe';
-        else if (cond.includes('CE ↓')&&cond.includes('PE ↑')) condCls='cond-base cond-pe-ce';
-        else if (cond.includes('Both')) condCls='cond-base cond-both';
-        var rankCls = {'Rank 1':'rank-badge rank-1','Rank 2':'rank-badge rank-2','Rank 3':'rank-badge rank-3','Rank 4':'rank-badge rank-4','Normal':'rank-badge rank-n'}[r.strength_rank]||'rank-badge rank-n';
 
-        h += '<tr class="'+rowCls+'">'
-            +'<td class="c-num">'+num+'</td>'
-            +'<td class="c-date">'+r.date+'</td>'
-            +'<td class="c-sym">'+esc(r.symbol)+'</td>'
-            +'<td>'+(r.atm_strike?'<span class="c-atm">₹'+nInt(r.atm_strike)+'</span>':'—')
-                   +(r.fut_price?'<br><span class="c-fut">F:₹'+f(r.fut_price)+'</span>':'')+'</td>'
-            +'<td class="c-expiry">'+(r.expiry||'—')+'</td>'
-            +'<td class="sep-oi c-oi">'+nInt(r.ce_oi)+'<small>open: '+nInt(r.ce_oi_prev)+'</small></td>'
-            +'<td>'+pctCell(r.ce_oi_pct)+'</td>'
-            +'<td class="c-oi">'+nInt(r.pe_oi)+'<small>open: '+nInt(r.pe_oi_prev)+'</small></td>'
-            +'<td>'+pctCell(r.pe_oi_pct)+'</td>'
-            +'<td class="sep-signal">'+sentBadge+'</td>'
-            +'<td><span class="'+condCls+'">'+esc(cond)+'</span>'
-                +(r.reason?'<div class="reason-tip">'+esc(r.reason)+'</div>':'')+'</td>'
-            +'<td><span class="'+rankCls+'">'+r.strength_rank+'</span><div class="rank-diff">Δ '+r.oi_diff+'%</div></td>'
-            +'<td>'+actBadge+'</td>'
-            +'</tr>';
+        var actBadge = r.trade_action === 'BUY CE' ? '<span class="act-ce">📈 BUY CE</span>'
+                     : r.trade_action === 'BUY PE' ? '<span class="act-pe">📉 BUY PE</span>'
+                     : '<span class="act-wt">⏸ WAIT</span>';
+
+        var cond    = r.condition || '';
+        var condCls = 'cond-base cond-flat';
+        if (cond.includes('CE ↑') && cond.includes('PE ↓'))      condCls = 'cond-base cond-ce-pe';
+        else if (cond.includes('CE ↓') && cond.includes('PE ↑')) condCls = 'cond-base cond-pe-ce';
+        else if (cond.includes('Both'))                            condCls = 'cond-base cond-both';
+
+        var rankMap = {
+            'Rank 1':'rank-badge rank-1','Rank 2':'rank-badge rank-2',
+            'Rank 3':'rank-badge rank-3','Rank 4':'rank-badge rank-4','Normal':'rank-badge rank-n'
+        };
+        var rankCls = rankMap[r.strength_rank] || 'rank-badge rank-n';
+
+        h += '<tr class="' + rowCls + '">'
+            + '<td class="c-num">'   + num + '</td>'
+            + '<td class="c-date">'  + r.date + '</td>'
+            + '<td class="c-sym">'   + esc(r.symbol) + '</td>'
+            + '<td>'
+                + (r.atm_strike ? '<span class="c-atm">₹' + nInt(r.atm_strike) + '</span>' : '—')
+                + (r.fut_price  ? '<br><span class="c-fut">F:₹' + f(r.fut_price) + '</span>' : '')
+            + '</td>'
+            + '<td class="c-expiry">' + (r.expiry || '—') + '</td>'
+            + '<td class="sep-oi c-oi">' + nInt(r.ce_oi) + '<small>open: ' + nInt(r.ce_oi_prev) + '</small></td>'
+            + '<td>' + pctCell(r.ce_oi_pct) + '</td>'
+            + '<td class="c-oi">'    + nInt(r.pe_oi) + '<small>open: ' + nInt(r.pe_oi_prev) + '</small></td>'
+            + '<td>' + pctCell(r.pe_oi_pct) + '</td>'
+            + '<td class="sep-signal">' + sentBadge + '</td>'
+            + '<td><span class="' + condCls + '">' + esc(cond) + '</span>'
+                + (r.reason ? '<div class="reason-tip">' + esc(r.reason) + '</div>' : '') + '</td>'
+            + '<td><span class="' + rankCls + '">' + r.strength_rank + '</span>'
+                + '<div class="rank-diff">Δ ' + r.oi_diff + '%</div></td>'
+            + '<td>' + actBadge + '</td>'
+            + '</tr>';
         num++;
     });
+
     html('ios-tbody', h || iosEmptyHtml('No results.'));
 }
 
+// ── Stats / helpers ───────────────────────────────────────
+
 function iosUpdateStats(res) {
-    txt('st-total', res.total_records||'0');
-    txt('st-ce',   res.buy_ce_count||'0');
-    txt('st-pe',   res.buy_pe_count||'0');
-    txt('st-wait', res.wait_count||'0');
-    txt('st-bull', res.bullish_count||'0');
-    txt('st-bear', res.bearish_count||'0');
+    txt('st-total', res.total_records || '0');
+    txt('st-ce',   res.buy_ce_count  || '0');
+    txt('st-pe',   res.buy_pe_count  || '0');
+    txt('st-wait', res.wait_count    || '0');
+    txt('st-bull', res.bullish_count || '0');
+    txt('st-bear', res.bearish_count || '0');
 }
+
 function iosResetStats() {
-    ['st-total','st-ce','st-pe','st-wait','st-bull','st-bear'].forEach(function(id){ txt(id,'—'); });
+    ['st-total','st-ce','st-pe','st-wait','st-bull','st-bear'].forEach(function (id) { txt(id, '—'); });
 }
-function iosShowWarn(msg) { el('ios-warn').classList.add('show'); txt('ios-warn-msg', msg||''); }
+
+function iosShowWarn(msg) { el('ios-warn').classList.add('show'); txt('ios-warn-msg', msg || ''); }
 function iosHideWarn()    { el('ios-warn').classList.remove('show'); }
-function iosEmptyTable(msg){ html('ios-tbody', iosEmptyHtml(msg)); }
+function iosEmptyTable(msg) { html('ios-tbody', iosEmptyHtml(msg)); }
 function iosEmptyHtml(msg) {
-    return '<tr><td colspan="13"><div class="ios-empty"><i class="las la-chart-bar"></i><p>'+(msg||'No data found.')+'</p></div></td></tr>';
+    return '<tr><td colspan="13"><div class="ios-empty"><i class="las la-chart-bar"></i><p>'
+        + (msg || 'No data found.') + '</p></div></td></tr>';
 }
+
 function iosReset() {
-    el('ios-from').value = IOS_TODAY;
-    el('ios-to').value   = IOS_TODAY;
-    el('ios-action').value = '';
-    Array.from(el('ios-sym').options).forEach(function(o){ o.selected=false; });
-    iosResetStats();
-    iosEmptyTable('Reset — select dates and click Analyze.');
-    txt('ios-info',''); txt('ios-upd','');
-    txt('ios-subtitle','Select dates and click Analyze');
-    iosHideWarn();
+    fetch(IOS_LASTDATE, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            el('ios-date').value   = res.last_date || IOS_TODAY;
+            el('ios-action').value = '';
+            el('ios-sym').value    = 'ALL';
+            iosHideWarn();
+            iosAnalyze();
+        })
+        .catch(function () {
+            el('ios-date').value   = IOS_TODAY;
+            el('ios-action').value = '';
+            el('ios-sym').value    = 'ALL';
+            iosHideWarn();
+            iosAnalyze();
+        });
 }
+
 function pctCell(v) {
-    if (v==null) return '<span class="pct-neu">—</span>';
-    var n=parseFloat(v)||0, cls=n>0?'pct-up':n<0?'pct-dn':'pct-neu';
-    return '<span class="'+cls+'">'+(n>0?'+':'')+n.toFixed(2)+'%</span>';
+    if (v == null) return '<span class="pct-neu">—</span>';
+    var n = parseFloat(v) || 0, cls = n > 0 ? 'pct-up' : n < 0 ? 'pct-dn' : 'pct-neu';
+    return '<span class="' + cls + '">' + (n > 0 ? '+' : '') + n.toFixed(2) + '%</span>';
 }
-function f(v)   { return parseFloat(v||0).toFixed(2); }
-function nInt(v){ var n=Number(v)||0; if(n>=1e7)return(n/1e7).toFixed(2)+'Cr'; if(n>=1e5)return(n/1e5).toFixed(2)+'L'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return n.toLocaleString('en-IN'); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function f(v)    { return parseFloat(v || 0).toFixed(2); }
+function nInt(v) {
+    var n = Number(v) || 0;
+    if (n >= 1e7) return (n/1e7).toFixed(2) + 'Cr';
+    if (n >= 1e5) return (n/1e5).toFixed(2) + 'L';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    return n.toLocaleString('en-IN');
+}
+function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
 @endpush

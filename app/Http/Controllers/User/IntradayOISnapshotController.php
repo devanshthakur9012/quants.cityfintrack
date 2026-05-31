@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Intraday OI Snapshot Analyzer — 15min only
+ * Intraday OI Snapshot Analyzer — 15min only (internal — not shown to users)
  * Compares CE/PE OI at 09:15 (open) vs 12:00 (midday snapshot).
- * Same signal logic as OI Flow Sentiment — time window differs.
  */
 class IntradayOISnapshotController extends Controller
 {
     private const TF        = '15min';
     private const OPEN_TIME = '09:15:00';
-    private const SNAP_TIME = '12:00:00';   // 15min: 12:00
+    private const SNAP_TIME = '12:00:00';
+    private const OPT_TABLE = 'cp_option_ohlc_15min';
 
     public function index()
     {
@@ -25,43 +26,116 @@ class IntradayOISnapshotController extends Controller
         return view(activeTemplate() . 'user.intraday-oi-snapshot.index', compact('pageTitle'));
     }
 
+    // ── Last Available Date ────────────────────────────────────────────────────
+
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'last_date' => Carbon::today()->toDateString(),
+                    'is_today'  => true,
+                ]);
+            }
+
+            // Look for dates that have both the open AND snapshot candles
+            $lastDate = DB::table(self::OPT_TABLE)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->whereRaw("TIME(interval_time) = ?", [self::SNAP_TIME])
+                ->max('trade_date');
+
+            // Fall back: any data with open candle
+            if (!$lastDate) {
+                $lastDate = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('is_missing', false)
+                    ->whereRaw("TIME(interval_time) = ?", [self::OPEN_TIME])
+                    ->max('trade_date');
+            }
+
+            // Last resort: any data at all
+            if (!$lastDate) {
+                $lastDate = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('is_missing', false)
+                    ->max('trade_date');
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('IntradayOISnapshot lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
+    // ── Symbols API ───────────────────────────────────────────────────────────
+
     public function getSymbols(Request $request): JsonResponse
     {
         $config = $this->getActiveConfig();
         if (!$config) {
-            return response()->json(['success'=>true,'symbols'=>[],'no_config'=>true,
-                'message'=>'No active 15min config found.']);
+            return response()->json([
+                'success'   => true,
+                'symbols'   => [],
+                'no_config' => true,
+                'message'   => 'No active analysis config found.',
+            ]);
         }
-        return response()->json(['success'=>true,'symbols'=>$this->getConfigSymbols($config->id)]);
+        return response()->json(['success' => true, 'symbols' => $this->getConfigSymbols($config->id)]);
     }
+
+    // ── Analyze API ───────────────────────────────────────────────────────────
+    //   Accepts single `date` param (preferred) OR `from_date`/`to_date` range.
 
     public function analyze(Request $request): JsonResponse
     {
         try {
-            $fromDate     = $request->get('from_date');
-            $toDate       = $request->get('to_date');
-            $symbolReq    = array_filter((array)$request->get('symbols', []));
+            // Single date (preferred) — fall back to from/to if sent
+            $date      = $request->get('date');
+            $fromDate  = $date ?? $request->get('from_date');
+            $toDate    = $date ?? $request->get('to_date');
+
+            $symbolReq    = array_filter((array) $request->get('symbols', []));
             $actionFilter = $request->get('filter_action', '');
 
             if (!$fromDate || !$toDate) {
-                return response()->json(['success'=>false,'message'=>'Please select both dates.','data'=>[]]);
+                return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
             $config = $this->getActiveConfig();
             if (!$config) {
-                return response()->json(['success'=>false,'no_config'=>true,
-                    'message'=>'No active 15min Analysis Config. Go to Admin → Analysis Config.','data'=>[]]);
+                return response()->json([
+                    'success'   => false,
+                    'no_config' => true,
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
+                    'data'      => [],
+                ]);
             }
 
             $configSymbols = $this->getConfigSymbols($config->id);
             if (empty($configSymbols)) {
-                return response()->json(['success'=>false,'message'=>'No symbols configured.','data'=>[]]);
+                return response()->json(['success' => false, 'message' => 'No symbols configured.', 'data' => []]);
             }
 
             $symbols  = !empty($symbolReq)
                 ? array_values(array_intersect($symbolReq, $configSymbols))
                 : $configSymbols;
-            $optTable = 'cp_option_ohlc_15min';
+            $optTable = self::OPT_TABLE;
 
             // Trading dates with data
             $tradeDates = DB::table($optTable)
@@ -72,7 +146,14 @@ class IntradayOISnapshotController extends Controller
                 ->distinct()->orderBy('d')->pluck('d')->toArray();
 
             if (empty($tradeDates)) {
-                return response()->json(['success'=>true,'data'=>[],'message'=>'No data found for selected dates.']);
+                return response()->json([
+                    'success'           => true,
+                    'data'              => [],
+                    'date'              => $fromDate,
+                    'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                    'available_symbols' => $configSymbols,
+                    'message'           => 'No data found for the selected date.',
+                ]);
             }
 
             // Open OI at 09:15
@@ -82,13 +163,15 @@ class IntradayOISnapshotController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::OPEN_TIME])
-                ->whereIn('instrument_type', ['CE','PE'])
+                ->whereIn('instrument_type', ['CE', 'PE'])
                 ->where('is_missing', false)
-                ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
-                ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
+                ->select(['base_symbol', 'instrument_type',
+                          DB::raw('DATE(trade_date) as trade_day'),
+                          DB::raw('SUM(oi) as total_oi')])
+                ->groupBy('base_symbol', 'instrument_type', DB::raw('DATE(trade_date)'))
                 ->orderBy('base_symbol')
-                ->each(function($r) use (&$oiMap) {
-                    $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|o"] = (int)$r->total_oi;
+                ->each(function ($r) use (&$oiMap) {
+                    $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|o"] = (int) $r->total_oi;
                 });
 
             // Snapshot OI at 12:00
@@ -97,13 +180,15 @@ class IntradayOISnapshotController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::SNAP_TIME])
-                ->whereIn('instrument_type', ['CE','PE'])
+                ->whereIn('instrument_type', ['CE', 'PE'])
                 ->where('is_missing', false)
-                ->select(['base_symbol','instrument_type',DB::raw('DATE(trade_date) as trade_day'),DB::raw('SUM(oi) as total_oi')])
-                ->groupBy('base_symbol','instrument_type',DB::raw('DATE(trade_date)'))
-                ->orderBy('base_symbol')  
-                ->each(function($r) use (&$oiMap) {
-                    $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|s"] = (int)$r->total_oi;
+                ->select(['base_symbol', 'instrument_type',
+                          DB::raw('DATE(trade_date) as trade_day'),
+                          DB::raw('SUM(oi) as total_oi')])
+                ->groupBy('base_symbol', 'instrument_type', DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$oiMap) {
+                    $oiMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}|s"] = (int) $r->total_oi;
                 });
 
             // ATM / price info from 09:15 CE ATM
@@ -113,10 +198,13 @@ class IntradayOISnapshotController extends Controller
                 ->whereIn('base_symbol', $symbols)
                 ->whereIn(DB::raw('DATE(trade_date)'), $tradeDates)
                 ->whereRaw("TIME(interval_time) = ?", [self::OPEN_TIME])
-                ->where('instrument_type','CE')->where('strike_position','ATM')->where('is_missing',false)
-                ->select(['base_symbol',DB::raw('DATE(trade_date) as trade_day'),'atm_strike','expiry_date','future_price'])
-                ->orderBy('base_symbol')     
-                ->each(function($r) use (&$infoMap) {
+                ->where('instrument_type', 'CE')
+                ->where('strike_position', 'ATM')
+                ->where('is_missing', false)
+                ->select(['base_symbol', DB::raw('DATE(trade_date) as trade_day'),
+                          'atm_strike', 'expiry_date', 'future_price'])
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$infoMap) {
                     $infoMap["{$r->base_symbol}|{$r->trade_day}"] = $r;
                 });
 
@@ -154,7 +242,7 @@ class IntradayOISnapshotController extends Controller
                         'symbol'        => $symbol,
                         'expiry'        => $info ? substr($info->expiry_date ?? '', 0, 10) : null,
                         'atm_strike'    => $info?->atm_strike,
-                        'fut_price'     => $info ? round((float)$info->future_price, 2) : null,
+                        'fut_price'     => $info ? round((float) $info->future_price, 2) : null,
                         'ce_oi'         => $ceSnap,
                         'ce_oi_prev'    => $ceOpen,
                         'ce_oi_pct'     => $cePct,
@@ -171,51 +259,65 @@ class IntradayOISnapshotController extends Controller
                 }
             }
 
-            usort($results, fn($a,$b) => strcmp($b['date'],$a['date']) ?: strcmp($a['symbol'],$b['symbol']));
+            usort($results, fn($a, $b) => strcmp($b['date'], $a['date']) ?: strcmp($a['symbol'], $b['symbol']));
 
             return response()->json([
                 'success'           => true,
                 'data'              => $results,
                 'total_records'     => count($results),
-                'buy_ce_count'      => count(array_filter($results, fn($r) => $r['trade_action']==='BUY CE')),
-                'buy_pe_count'      => count(array_filter($results, fn($r) => $r['trade_action']==='BUY PE')),
-                'wait_count'        => count(array_filter($results, fn($r) => $r['trade_action']==='WAIT')),
-                'bullish_count'     => count(array_filter($results, fn($r) => $r['sentiment']==='BULLISH')),
-                'bearish_count'     => count(array_filter($results, fn($r) => $r['sentiment']==='BEARISH')),
-                'message'           => count($results) . ' record(s) found',
+                'buy_ce_count'      => count(array_filter($results, fn($r) => $r['trade_action'] === 'BUY CE')),
+                'buy_pe_count'      => count(array_filter($results, fn($r) => $r['trade_action'] === 'BUY PE')),
+                'wait_count'        => count(array_filter($results, fn($r) => $r['trade_action'] === 'WAIT')),
+                'bullish_count'     => count(array_filter($results, fn($r) => $r['sentiment'] === 'BULLISH')),
+                'bearish_count'     => count(array_filter($results, fn($r) => $r['sentiment'] === 'BEARISH')),
+                'message'           => count($results) . ' record(s) found for ' . $fromDate,
                 'snapshot_time'     => self::SNAP_TIME,
                 'available_symbols' => $configSymbols,
+                'date'              => $fromDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
             Log::error('IntradayOISnapshot: ' . $e->getMessage());
-            return response()->json(['success'=>false,'message'=>$e->getMessage(),'data'=>[]], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
     }
 
+    // ── Signal logic ──────────────────────────────────────────────────────────
+
     private function calcSignal(float $cePct, float $pePct): array
     {
-        if ($cePct > 0 && $pePct < 0) return ['sentiment'=>'BEARISH','condition'=>'CE ↑ + PE ↓','reason'=>'Call buildup + Put unwinding → Resistance forming'];
-        if ($cePct < 0 && $pePct > 0) return ['sentiment'=>'BULLISH','condition'=>'CE ↓ + PE ↑','reason'=>'Call unwinding + Put buildup → Support forming'];
-        if ($cePct > 0 && $pePct > 0) return $cePct > $pePct
-            ? ['sentiment'=>'BEARISH','condition'=>'Both ↑ (CE > PE)','reason'=>"Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"]
-            : ['sentiment'=>'BULLISH','condition'=>'Both ↑ (PE > CE)','reason'=>"Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
-        if ($cePct < 0 && $pePct < 0) return $cePct < $pePct
-            ? ['sentiment'=>'BULLISH','condition'=>'Both ↓ (CE < PE)','reason'=>"Call unwinding larger ({$cePct}% vs {$pePct}%) → Bullish"]
-            : ['sentiment'=>'BEARISH','condition'=>'Both ↓ (PE < CE)','reason'=>"Put unwinding larger ({$pePct}% vs {$cePct}%) → Bearish"];
-        return ['sentiment'=>'NEUTRAL','condition'=>'Flat','reason'=>'No clear OI direction'];
+        if ($cePct > 0 && $pePct < 0)
+            return ['sentiment' => 'BEARISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Resistance forming'];
+        if ($cePct < 0 && $pePct > 0)
+            return ['sentiment' => 'BULLISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Support forming'];
+        if ($cePct > 0 && $pePct > 0)
+            return $cePct > $pePct
+                ? ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"]
+                : ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
+        if ($cePct < 0 && $pePct < 0)
+            return $cePct < $pePct
+                ? ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Bullish"]
+                : ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Bearish"];
+        return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }
+
+    // ── Config helpers ────────────────────────────────────────────────────────
 
     private function getActiveConfig(): ?object
     {
-        return DB::table('analysis_configs')->where('time_frame', self::TF)->where('is_active',1)->first();
+        return DB::table('analysis_configs')
+            ->where('time_frame', self::TF)
+            ->where('is_active', 1)
+            ->first();
     }
 
     private function getConfigSymbols(int $configId): array
     {
         return DB::table('analysis_config_symbols')
-            ->join('symbol_lists','symbol_lists.id','=','analysis_config_symbols.symbol_list_id')
+            ->join('symbol_lists', 'symbol_lists.id', '=', 'analysis_config_symbols.symbol_list_id')
             ->where('analysis_config_symbols.analysis_config_id', $configId)
-            ->pluck('symbol_lists.symbol')->toArray();
+            ->pluck('symbol_lists.symbol')
+            ->toArray();
     }
 }
