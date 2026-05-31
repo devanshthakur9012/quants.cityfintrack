@@ -265,17 +265,7 @@
 <div class="pv-hero pv-anim">
     <div class="pv-hero-left">
         <h1 class="mb-0">Pivot Point <span>Analysis</span></h1>
-        <p>
-            Real-time pivot levels for Stock EQ, Futures, and ATM Options —
-            calculated on live candle data during market hours.
-        </p>
-        <div class="pv-hero-formulas">
-            <span class="pv-pill pv-pill-pp">PP = (H+L+C) / 3</span>
-            <span class="pv-pill pv-pill-r">R1 = 2×PP − L</span>
-            <span class="pv-pill pv-pill-r">R2 = PP + (H−L)</span>
-            <span class="pv-pill pv-pill-s">S1 = 2×PP − H</span>
-            <span class="pv-pill pv-pill-s">S2 = PP − (H−L)</span>
-        </div>
+        <p>Real-time pivot levels for Stock EQ, Futures, and ATM Options — calculated on live candle data during market hours.</p>
     </div>
     <div class="pv-hero-icon">
         <i class="las la-chart-bar"></i>
