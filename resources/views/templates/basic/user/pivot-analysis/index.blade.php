@@ -265,7 +265,7 @@
 <div class="pv-hero pv-anim">
     <div class="pv-hero-left">
         <h1>Pivot Point <span>Analysis</span></h1>
-        <p>
+        {{-- <p>
             Real-time pivot levels for Stock EQ, Futures, and ATM Options —
             calculated on live 15min candle data during market hours.
         </p>
@@ -275,11 +275,11 @@
             <span class="pv-pill pv-pill-s">S2 = PP − Range</span>
             <span class="pv-pill pv-pill-r">R1 = 2×PP − L</span>
             <span class="pv-pill pv-pill-r">R2 = PP + Range</span>
-        </div>
+        </div> --}}
     </div>
-    <div class="pv-hero-icon">
+    {{-- <div class="pv-hero-icon">
         <i class="las la-chart-bar"></i>
-    </div>
+    </div> --}}
 </div>
 
 {{-- ══ FILTER BAR ══ --}}
