@@ -5,8 +5,8 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title> {{ $general->siteName(__(isset($customPageTitle) ? $customPageTitle : $pageTitle)) }}</title>
-
+    <title>{{ $general->siteName(__($customPageTitle ?? $pageTitle ?? '')) }}</title>
+    
     @include('partials.seo')
 
     <!-- bootstrap 5  -->
