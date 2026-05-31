@@ -1391,7 +1391,7 @@ Route::controller('SiteController')->group(function () {
         Route::get('/option/signals', [PivotAnalysisController::class, 'optionSignals'])->name('option.signals');
     });
  
-    Route::middleware(['auth'])->prefix('open-high-low')->name('open-hl.')->group(function () {
+    Route::middleware(['auth'])->prefix('open-high-low')->name('open-high-low.')->group(function () {
         Route::get('/index',     [OpenHighLowController::class, 'index'])->name('index');
         Route::get('/symbols',   [OpenHighLowController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',   [OpenHighLowController::class, 'analyze'])->name('analyze');
