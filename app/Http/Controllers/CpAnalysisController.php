@@ -194,7 +194,7 @@ class CpAnalysisController extends Controller
         $pageTitle = "My Subscription";
 
         return view(activeTemplate() . 'cp.subscription.my-subscription',
-            compact('userSubscription', 'userTier', 'payments', 'plans', 'accessibleAnalyses'));
+            compact('userSubscription', 'userTier', 'payments', 'plans', 'accessibleAnalyses', 'pageTitle'));
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────────
