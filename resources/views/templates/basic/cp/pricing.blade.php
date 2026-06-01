@@ -25,7 +25,7 @@
 }
 .cpp-hero h1{ font-size:clamp(28px,4vw,48px);color:#fff;margin:0 0 12px;
     position:relative;z-index:1; }
-.cpp-hero h1 span{ color:#F5A623; }
+.cpp-hero h1 span{ color:#7DFF00; }
 .cpp-hero p{ color:rgba(255,255,255,.6);font-size:15px;margin:0;
     position:relative;z-index:1;max-width:560px;margin:0 auto;line-height:1.7; }
 
@@ -45,7 +45,7 @@
 .cpp-plan:hover{ transform:translateY(-6px);box-shadow:0 20px 48px rgba(0,0,0,.1); }
 .cpp-plan.featured{
     border-color:transparent;
-    box-shadow:0 0 0 2px #F5A623, 0 20px 48px rgba(245,166,35,.15);
+    box-shadow:0 0 0 2px #7DFF00, 0 20px 48px rgba(245,166,35,.15);
     transform:translateY(-8px);
 }
 
@@ -66,7 +66,7 @@
 .cpp-plan-desc{ font-size:13px;color:#888;line-height:1.6;margin-top:8px; }
 .cpp-featured-badge{
     position:absolute;top:16px;right:16px;
-    background:#F5A623;color:#000;font-size:10px;font-weight:700;
+    background:#7DFF00;color:#000;font-size:10px;font-weight:700;
     padding:4px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;
 }
 
@@ -98,7 +98,7 @@
     font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;
     letter-spacing:.04em;cursor:pointer;transition:all .2s;
 }
-.cpp-plan-btn.gold{ background:#F5A623;color:#000; }
+.cpp-plan-btn.gold{ background:#7DFF00;color:#000; }
 .cpp-plan-btn.gold:hover{ background:#d4890e; }
 .cpp-plan-btn.dark{
     background:linear-gradient(90deg,#0F2848,#1a3050);color:#fff;
@@ -107,7 +107,7 @@
 .cpp-plan-btn.outline{
     background:transparent;border:1.5px solid #e5e9f2;color:#666;
 }
-.cpp-plan-btn.outline:hover{ border-color:#F5A623;color:#F5A623; }
+.cpp-plan-btn.outline:hover{ border-color:#7DFF00;color:#7DFF00; }
 .cpp-plan-btn.current{
     background:#e8f5e9;color:#2e7d32;border:1.5px solid #c8e6c9;
     cursor:default;
@@ -127,7 +127,7 @@
     display:flex;align-items:center;justify-content:space-between;
     padding:16px 20px;cursor:pointer;font-weight:600;color:#1a1a2e;font-size:14px;
 }
-.cpp-faq-q i{ color:#F5A623;transition:transform .3s; }
+.cpp-faq-q i{ color:#7DFF00;transition:transform .3s; }
 .cpp-faq-q.open i{ transform:rotate(45deg); }
 .cpp-faq-a{ display:none;padding:0 20px 16px;font-size:13px;color:#666;line-height:1.7; }
 .cpp-faq-a.open{ display:block; }
@@ -323,7 +323,7 @@ function subscribePlan(planId, planName, price) {
                 email:   data.user_email,
                 contact: data.user_mobile,
             },
-            theme: { color: '#F5A623' },
+            theme: { color: '#7DFF00' },
             modal: {
                 ondismiss: function() {
                     btn.classList.remove('loading'); btn.disabled = false;

@@ -105,7 +105,7 @@
                 <p style="margin:4px 0 0;color:#aaa;">Intraday shift: PE unwind + CE build = BULLISH. Opposite = BEARISH. Late-session weight boost.</p>
             </div>
             <div class="col-md-3">
-                <strong style="color:#f5a623;">Priority 2 — Trap</strong>
+                <strong style="color:#7DFF00;">Priority 2 — Trap</strong>
                 <p style="margin:4px 0 0;color:#aaa;">CE/PE OI divergence &gt;15% signals retail trap. CE_TRAP = DOWN. PE_TRAP = UP.</p>
             </div>
             <div class="col-md-3">
@@ -181,7 +181,7 @@
             <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#dc3545;"><small>Bearish</small><strong id="s_bear" style="color:#dc3545;">—</strong></div></div>
             <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#ffc107;"><small>Neutral</small><strong id="s_neut" style="color:#ffc107;">—</strong></div></div>
             <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#667eea;"><small>Bull Weight</small><strong id="s_bw" style="color:#667eea;">—</strong></div></div>
-            <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#f5a623;"><small>Bear Weight</small><strong id="s_bew" style="color:#f5a623;">—</strong></div></div>
+            <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#7DFF00;"><small>Bear Weight</small><strong id="s_bew" style="color:#7DFF00;">—</strong></div></div>
         </div>
 
         {{-- Bias + Trap + Rotation Row --}}
@@ -252,7 +252,7 @@
                 <div class="col-4"><span style="color:#888;">ATM CE OI</span><br><strong id="atm_ce_oi_val" style="color:#dc3545;">—</strong></div>
                 <div class="col-4"><span style="color:#888;">ATM PE OI</span><br><strong id="atm_pe_oi_val" style="color:#28a745;">—</strong></div>
                 <div class="col-4 mt-2"><span style="color:#888;">ATM PCR</span><br><strong id="atm_pcr_val" style="color:#667eea;">—</strong></div>
-                <div class="col-4 mt-2"><span style="color:#888;">Premium Bias</span><br><strong id="atm_prem_bias" style="color:#f5a623;">—</strong></div>
+                <div class="col-4 mt-2"><span style="color:#888;">Premium Bias</span><br><strong id="atm_prem_bias" style="color:#7DFF00;">—</strong></div>
                 <div class="col-4 mt-2"><span style="color:#888;">ATM Signal</span><br><strong id="atm_sig_val" style="color:#00d2ff;">—</strong></div>
             </div>
         </div>
@@ -349,7 +349,7 @@
                 <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#28a745;"><small>Win Rate</small><strong id="m_wr" style="color:#28a745;">0%</strong></div></div>
                 <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#28a745;"><small>Avg Win %</small><strong id="m_avgw" style="color:#28a745;">0%</strong></div></div>
                 <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#dc3545;"><small>Avg Loss %</small><strong id="m_avgl" style="color:#dc3545;">0%</strong></div></div>
-                <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#f5a623;"><small>R:R Ratio</small><strong id="m_rr" style="color:#f5a623;">0</strong></div></div>
+                <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#7DFF00;"><small>R:R Ratio</small><strong id="m_rr" style="color:#7DFF00;">0</strong></div></div>
                 <div class="col-md-2 col-6"><div class="metric-card" style="border-top-color:#667eea;"><small>Total PnL %</small><strong id="m_total_pnl">0%</strong></div></div>
             </div>
             <div class="row">
@@ -557,7 +557,7 @@ function renderAnalysis(d) {
 
     // ── Signal Score ──
     var sc = d.signal_score || {};
-    var scoreColor = sc.total >= 70 ? '#28a745' : sc.total >= 55 ? '#f5a623' : '#dc3545';
+    var scoreColor = sc.total >= 70 ? '#28a745' : sc.total >= 55 ? '#7DFF00' : '#dc3545';
     setHtml('signal_score_val',
         '<span style="font-size:2rem;font-weight:700;color:' + scoreColor + ';">' + (sc.total || 0) + '</span>'
         + '<span style="font-size:13px;color:#aaa;"> / 100 &nbsp; Grade: <strong>' + (sc.grade || '—') + '</strong></span>');
@@ -814,8 +814,8 @@ function renderBacktest(data) {
         var resClass  = t.result === 'WIN' ? 'bt-win' : 'bt-loss';
         var exitColor = t.exit_reason === 'TARGET' ? '#28a745'
                       : t.exit_reason === 'SL'     ? '#dc3545' : '#888';
-        var scoreColor = t.score >= 70 ? '#28a745' : t.score >= 55 ? '#f5a623' : '#dc3545';
-        var trapColor  = (!t.trap || t.trap === 'NO_TRAP') ? '#888' : '#f5a623';
+        var scoreColor = t.score >= 70 ? '#28a745' : t.score >= 55 ? '#7DFF00' : '#dc3545';
+        var trapColor  = (!t.trap || t.trap === 'NO_TRAP') ? '#888' : '#7DFF00';
         var rotHtml    = t.rotation
             ? '<span style="color:#00d2ff;font-size:10px;">YES</span>'
             : '<span style="color:#555;font-size:10px;">No</span>';

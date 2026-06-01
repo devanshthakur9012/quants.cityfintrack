@@ -11,7 +11,7 @@
 .ed a { text-decoration:none; }
 /* Crumb */
 .ed-crumb { background:#f8f9fc; border-bottom:1px solid #eee; padding:12px 48px; font-size:13px; color:#888; }
-.ed-crumb a { color:#F5A623; }
+.ed-crumb a { color:#7DFF00; }
 .ed-crumb span { margin:0 6px; }
 @media(max-width:768px){ .ed-crumb { padding:12px 16px; } }
 /* Top */
@@ -34,18 +34,18 @@
 .ed-title { font-size:clamp(24px,3.5vw,36px); font-weight:700; color:#1a1a2e; margin:0 0 16px; line-height:1.1; }
 .ed-meta-row { display:flex; flex-wrap:wrap; gap:18px; margin-bottom:18px; }
 .ed-meta-item { display:flex; align-items:center; gap:8px; font-size:14px; color:#555; }
-.ed-meta-item i { color:#F5A623; width:16px; text-align:center; }
+.ed-meta-item i { color:#7DFF00; width:16px; text-align:center; }
 /* Seats */
 .ed-seats-bar { background:#f7f8fc; border:1px solid #e8e8e8; border-radius:9px; padding:12px 16px; margin-bottom:20px; }
 .ed-seats-label { font-size:13px; color:#555; margin-bottom:6px; }
 .ed-seats-progress { height:6px; background:#e0e0e0; border-radius:3px; }
-.ed-seats-fill { height:100%; border-radius:3px; background:#F5A623; }
+.ed-seats-fill { height:100%; border-radius:3px; background:#7DFF00; }
 /* Countdown */
 .ed-countdown-bar { background:#0D1B2A; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
 .ed-countdown-label { font-size:12px; color:rgba(255,255,255,.5); font-weight:600; flex-shrink:0; }
 .ed-countdown-boxes { display:flex; gap:8px; }
 .ed-countdown-unit { display:flex; flex-direction:column; align-items:center; background:rgba(245,166,35,.12); border:1px solid rgba(245,166,35,.25); border-radius:6px; padding:6px 10px; min-width:44px; }
-.ed-countdown-num { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:#F5A623; line-height:1; }
+.ed-countdown-num { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:#7DFF00; line-height:1; }
 .ed-countdown-sub { font-size:9px; color:rgba(255,255,255,.4); letter-spacing:.05em; }
 /* Reg card */
 .ed-reg-card { background:#fff; border-radius:14px; border:1px solid #e8e8e8; box-shadow:0 8px 30px rgba(0,0,0,.08); overflow:hidden; position:sticky; top:80px; }
@@ -56,7 +56,7 @@
 .ed-reg-date-label { font-size:13px; color:#888; padding:6px 22px 14px; }
 .ed-reg-body { padding:0 22px 22px; }
 .ed-reg-btn { display:block; width:100%; text-align:center; font-weight:700; font-size:17px; padding:15px; border-radius:10px; font-family:'Rajdhani',sans-serif; letter-spacing:.04em; border:none; cursor:pointer; transition:background .2s; }
-.ed-reg-btn.paid-btn     { background:#F5A623; color:#000; }
+.ed-reg-btn.paid-btn     { background:#7DFF00; color:#000; }
 .ed-reg-btn.paid-btn:hover { background:#d4890e; }
 .ed-reg-btn.free-btn     { background:#43a047; color:#fff; }
 .ed-reg-btn.free-btn:hover { background:#2e7d32; }
@@ -64,7 +64,7 @@
 .ed-reg-btn.closed-btn   { background:#f5f5f5; color:#aaa; cursor:not-allowed; }
 .ed-reg-meta { margin-top:16px; display:flex; flex-direction:column; gap:9px; }
 .ed-reg-meta-row { display:flex; align-items:center; gap:10px; font-size:13px; color:#555; }
-.ed-reg-meta-row i { color:#F5A623; width:16px; text-align:center; }
+.ed-reg-meta-row i { color:#7DFF00; width:16px; text-align:center; }
 /* Body */
 .ed-body { padding:0 48px 60px; }
 @media(max-width:940px){ .ed-body { padding:0 16px 48px; } }
@@ -90,7 +90,7 @@
 .ed-speaker-avatar { width:72px; height:72px; border-radius:50%; flex-shrink:0; background:#1a56db; color:#fff; font-size:24px; font-weight:700; display:flex; align-items:center; justify-content:center; overflow:hidden; }
 .ed-speaker-avatar img { width:100%; height:100%; object-fit:cover; }
 .ed-speaker-name { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:#1a1a2e; margin-bottom:2px; }
-.ed-speaker-role { font-size:12px; color:#F5A623; font-weight:600; margin-bottom:8px; text-transform:uppercase; }
+.ed-speaker-role { font-size:12px; color:#7DFF00; font-weight:600; margin-bottom:8px; text-transform:uppercase; }
 .ed-speaker-bio  { font-size:13px; color:#666; line-height:1.6; }
 /* FAQ */
 .ed-faq-item { border:1px solid #e8e8e8; border-radius:9px; margin-bottom:10px; overflow:hidden; }
@@ -108,7 +108,7 @@
 .ed-rel-card img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
 .ed-rel-card-body { padding:10px 12px; }
 .ed-rel-card-title { font-size:13px; font-weight:600; color:#1a1a2e; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.ed-rel-card-price { padding:0 12px 10px; font-size:13px; font-weight:700; color:#F5A623; }
+.ed-rel-card-price { padding:0 12px 10px; font-size:13px; font-weight:700; color:#7DFF00; }
 /* Popup */
 .ed-popup-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999; align-items:center; justify-content:center; padding:20px; }
 .ed-popup-overlay.open { display:flex; }
@@ -126,9 +126,9 @@
 .ed-form-group { margin-bottom:14px; }
 .ed-form-group label { font-size:13px; font-weight:600; color:#333; display:block; margin-bottom:5px; }
 .ed-form-group input,.ed-form-group textarea { width:100%; border:1px solid #ddd; border-radius:8px; padding:10px 13px; font-size:14px; font-family:'Exo 2',sans-serif; color:#333; outline:none; transition:border .2s; }
-.ed-form-group input:focus,.ed-form-group textarea:focus { border-color:#F5A623; }
+.ed-form-group input:focus,.ed-form-group textarea:focus { border-color:#7DFF00; }
 .ed-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.ed-submit-btn { display:block; width:100%; background:#F5A623; color:#000; font-weight:700; font-size:16px; padding:14px; border-radius:10px; border:none; cursor:pointer; font-family:'Rajdhani',sans-serif; letter-spacing:.04em; transition:background .2s; }
+.ed-submit-btn { display:block; width:100%; background:#7DFF00; color:#000; font-weight:700; font-size:16px; padding:14px; border-radius:10px; border:none; cursor:pointer; font-family:'Rajdhani',sans-serif; letter-spacing:.04em; transition:background .2s; }
 .ed-submit-btn:hover { background:#d4890e; }
 .ed-submit-btn.free { background:#43a047; color:#fff; }
 .ed-submit-btn:disabled { background:#ccc; cursor:not-allowed; }
@@ -138,8 +138,8 @@
 /* Mobile sticky */
 .ed-sticky-bar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:500; background:#1a1a2e; padding:12px 16px; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 -4px 20px rgba(0,0,0,.2); }
 @media(max-width:940px){ .ed-sticky-bar { display:flex; } }
-.ed-sticky-price { color:#F5A623; font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
-.ed-sticky-btn { background:#F5A623; color:#000; font-weight:700; padding:11px 24px; border-radius:9px; border:none; cursor:pointer; font-size:15px; font-family:'Rajdhani',sans-serif; }
+.ed-sticky-price { color:#7DFF00; font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
+.ed-sticky-btn { background:#7DFF00; color:#000; font-weight:700; padding:11px 24px; border-radius:9px; border:none; cursor:pointer; font-size:15px; font-family:'Rajdhani',sans-serif; }
 </style>
 
 <div class="ed">
@@ -206,7 +206,7 @@
         </div>
         @else
         <div class="ed-seats-bar">
-            <div class="ed-seats-label"><i class="fas fa-users" style="color:#F5A623;"></i> <strong>{{ $event->total_booked }}</strong> people registered</div>
+            <div class="ed-seats-label"><i class="fas fa-users" style="color:#7DFF00;"></i> <strong>{{ $event->total_booked }}</strong> people registered</div>
         </div>
         @endif
     </div>
@@ -467,7 +467,7 @@ function submitBooking(e) {
             key: res.key, amount: res.amount, currency: res.currency,
             order_id: res.order_id, name: appName, description: res.event_name,
             prefill: { name: res.user_name, email: res.user_email, contact: res.user_phone },
-            theme: { color: '#F5A623' },
+            theme: { color: '#7DFF00' },
             handler: function(response) {
                 fetch(verifyUrl, {
                     method: 'POST',

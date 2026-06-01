@@ -27,7 +27,7 @@
 
     @if($webinar->webinar_date)
     <div class="wd-reg-date-label">
-        <i class="fas fa-calendar-alt" style="color:#F5A623;"></i>
+        <i class="fas fa-calendar-alt" style="color:#7DFF00;"></i>
         {{ $webinar->webinar_date->format('d M Y, h:i A') }}
     </div>
     @endif

@@ -4,7 +4,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 .qev * { box-sizing:border-box; }
-:root { --gold:#F5A623; --dark:#0D1B2A; --bg:#f4f6fb; --txt:#1a1a2e; --bdr:#e5e9f2; }
+:root { --gold:#7DFF00; --dark:#0D1B2A; --bg:#f4f6fb; --txt:#1a1a2e; --bdr:#e5e9f2; }
 @keyframes evFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
 .ev-anim { animation:evFadeUp .6s ease both; }
 @keyframes pulseDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(.6);opacity:.4} }

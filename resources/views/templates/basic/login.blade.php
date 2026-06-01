@@ -48,7 +48,7 @@
 }
 .qa-card-logo-icon {
     width: 48px; height: 48px; border-radius: 12px;
-    background: #F5A623; color: #fff; font-size: 20px; font-weight: 700;
+    background: #7DFF00; color: #fff; font-size: 20px; font-weight: 700;
     font-family: 'Rajdhani', sans-serif;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -88,7 +88,7 @@
     transition: border-color .2s, box-shadow .2s; background: #fff;
 }
 .qa-form-input:focus {
-    border-color: #F5A623;
+    border-color: #7DFF00;
     box-shadow: 0 0 0 3px rgba(245,166,35,.12);
 }
 .qa-form-input-wrap { position: relative; }
@@ -98,7 +98,7 @@
     background: none; border: none; color: #bbb; cursor: pointer;
     font-size: 15px; display: flex; align-items: center; padding: 0;
 }
-.qa-pass-toggle:hover { color: #F5A623; }
+.qa-pass-toggle:hover { color: #7DFF00; }
 .qa-form-error { font-size: 12px; color: #e53935; margin-top: 5px; display: none; }
 .qa-form-error.show { display: block; }
 
@@ -111,14 +111,14 @@
     transition: border-color .2s, box-shadow .2s;
 }
 .qa-otp-input:focus {
-    border-color: #F5A623;
+    border-color: #7DFF00;
     box-shadow: 0 0 0 3px rgba(245,166,35,.12);
 }
 
 /* Submit btn */
 .qa-auth-submit {
     width: 100%; padding: 13px; border-radius: 10px;
-    background: #F5A623; border: none; color: #000;
+    background: #7DFF00; border: none; color: #000;
     font-size: 15px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
     letter-spacing: .04em; cursor: pointer; transition: background .2s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -136,7 +136,7 @@
 
 /* Secondary link-style btn */
 .qa-auth-link-btn {
-    background: none; border: none; color: #F5A623; font-size: 13px;
+    background: none; border: none; color: #7DFF00; font-size: 13px;
     font-weight: 600; cursor: pointer; font-family: 'Exo 2', sans-serif;
     padding: 0; transition: color .2s; display: inline;
 }
@@ -152,14 +152,14 @@
 /* Step dots */
 .qa-step-dots { display: flex; gap: 6px; margin-bottom: 20px; }
 .qa-step-dot  { width: 8px; height: 8px; border-radius: 50%; background: #e5e9f2; transition: all .3s; }
-.qa-step-dot.active { background: #F5A623; width: 22px; border-radius: 4px; }
+.qa-step-dot.active { background: #7DFF00; width: 22px; border-radius: 4px; }
 
 /* Bottom links */
 .qa-auth-bottom {
     margin-top: 20px; text-align: center;
     font-size: 13px; color: #aab;
 }
-.qa-auth-bottom a { color: #F5A623; font-weight: 600; }
+.qa-auth-bottom a { color: #7DFF00; font-weight: 600; }
 .qa-auth-bottom a:hover { color: #d4890e; }
 
 /* Remember / forgot row */
@@ -181,7 +181,7 @@
     font-size: clamp(26px, 3vw, 38px); font-weight: 700;
     color: #1a1a2e; line-height: 1.2;
 }
-.qa-promo-heading span { color: #F5A623; }
+.qa-promo-heading span { color: #7DFF00; }
 
 /* Video */
 .qa-promo-video {
@@ -204,7 +204,7 @@
     font-size: 13px; font-weight: 600; color: #1a1a2e;
     backdrop-filter: blur(4px);
 }
-.qa-promo-feature-pill i { color: #F5A623; font-size: 12px; }
+.qa-promo-feature-pill i { color: #7DFF00; font-size: 12px; }
 
 /* Brokers section */
 .qa-promo-brokers-label {
@@ -356,7 +356,7 @@
                             <input type="checkbox" name="remember"> Remember me
                         </label>
                         <a href="{{ route('user.forgot.password') }}"
-                           style="color:#F5A623;font-weight:600;font-size:13px;">
+                           style="color:#7DFF00;font-weight:600;font-size:13px;">
                             Forgot password?
                         </a>
                     </div>

@@ -12,9 +12,9 @@
 .speaker-check { margin-left:auto; color:#1a56db; display:none; }
 .speaker-item.selected .speaker-check { display:block; }
 .price-preview-box { background:linear-gradient(135deg,#0f1b2d,#1a3050); border-radius:10px; padding:16px 18px; color:#fff; margin-top:12px; display:none; }
-.pp-price { font-size:28px; font-weight:700; color:#f5a623; line-height:1.1; }
+.pp-price { font-size:28px; font-weight:700; color:#7DFF00; line-height:1.1; }
 .pp-mrp   { font-size:13px; text-decoration:line-through; color:rgba(255,255,255,.5); }
-.pp-disc  { font-size:12px; background:#f5a623; color:#0f1b2d; padding:2px 8px; border-radius:4px; font-weight:700; display:inline-block; margin-top:4px; }
+.pp-disc  { font-size:12px; background:#7DFF00; color:#0f1b2d; padding:2px 8px; border-radius:4px; font-weight:700; display:inline-block; margin-top:4px; }
 .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
 .gallery-card { border:1px solid #e5e9f2; border-radius:8px; overflow:hidden; background:#fff; }
 .gallery-card img { width:100%; height:110px; object-fit:cover; display:block; }

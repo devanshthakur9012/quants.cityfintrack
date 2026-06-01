@@ -46,10 +46,10 @@
                         </div>
                     </div>
 
-                    <h6 class="mb-3" style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;">Stat Boxes (shown in hero strip)</h6>
+                    <h6 class="mb-3" style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;">Stat Boxes (shown in hero strip)</h6>
                     @foreach([1,2,3,4] as $n)
                     <div class="row g-2 mb-2 align-items-center">
-                        <div class="col-1 text-center fw-bold" style="color:#F5A623;">{{ $n }}</div>
+                        <div class="col-1 text-center fw-bold" style="color:#7DFF00;">{{ $n }}</div>
                         <div class="col-4">
                             <input type="text" name="stat{{ $n }}_value" class="form-control form-control-sm"
                                    value="{{ old('stat'.$n.'_value', $hero->{'stat'.$n.'_value'} ?? '') }}"

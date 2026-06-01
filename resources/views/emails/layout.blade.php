@@ -14,7 +14,7 @@
             background:#FDECC8; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
             font-size:15px; color:#1a1a1a; -webkit-font-smoothing:antialiased;
         }
-        a { color:#F5A623; text-decoration:none; }
+        a { color:#7DFF00; text-decoration:none; }
         a:hover { text-decoration:underline; }
 
         .email-wrap   { width:100%; background:#FDECC8; padding:40px 16px; }
@@ -30,7 +30,7 @@
             display:flex; align-items:center; gap:14px;
         }
         .email-logo-icon {
-            width:46px; height:46px; border-radius:10px; background:#F5A623;
+            width:46px; height:46px; border-radius:10px; background:#7DFF00;
             display:inline-flex; align-items:center; justify-content:center;
             font-size:22px; font-weight:700; color:#fff;
             font-family:Georgia,serif; flex-shrink:0;
@@ -55,7 +55,7 @@
         /* OTP box */
         .otp-wrap { text-align:center; margin:28px 0; }
         .otp-box  {
-            display:inline-block; background:#1a1a1a; color:#F5A623;
+            display:inline-block; background:#1a1a1a; color:#7DFF00;
             font-size:40px; font-weight:700; letter-spacing:18px;
             padding:18px 28px 18px 46px; border-radius:14px;
             font-family:Georgia,'Courier New',monospace;
@@ -65,14 +65,14 @@
         /* CTA button */
         .email-cta-wrap { text-align:center; margin:28px 0; }
         .email-cta {
-            display:inline-block; background:#F5A623; color:#fff !important;
+            display:inline-block; background:#7DFF00; color:#fff !important;
             font-size:16px; font-weight:700; letter-spacing:.06em;
             padding:16px 40px; border-radius:10px; text-decoration:none !important;
         }
 
         /* Info box */
         .email-info {
-            background:#fff; border-left:4px solid #F5A623;
+            background:#fff; border-left:4px solid #7DFF00;
             border-radius:0 8px 8px 0; padding:14px 18px;
             font-size:13px; color:#555; margin-bottom:20px; line-height:1.6;
         }
@@ -86,7 +86,7 @@
             text-align:center;
         }
         .email-footer p { font-size:12px; color:#777; line-height:1.7; }
-        .email-footer a { color:#F5A623; font-size:12px; }
+        .email-footer a { color:#7DFF00; font-size:12px; }
         .email-footer .footer-links { margin-bottom:10px; }
         .email-footer .footer-links a { margin:0 8px; }
     </style>

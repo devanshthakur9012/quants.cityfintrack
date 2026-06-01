@@ -64,7 +64,7 @@
 }
 
 .qapp-pill-btn:hover {
-    background-color: #F5A623;
+    background-color: #7DFF00;
     color: #000;
 }
 
@@ -162,7 +162,7 @@
 
 .qapp-nav-links .menu_has_children .sub-menu li a:hover {
     background-color: #1f1f1f;
-    color: #F5A623;
+    color: #7DFF00;
 }
 
 .qapp-nav-links .menu_has_children .sub-menu li a i {
@@ -172,7 +172,7 @@
 }
 
 .qapp-nav-links .menu_has_children .sub-menu li a:hover i {
-    color: #F5A623;
+    color: #7DFF00;
 }
 
 /* User icon button */
@@ -224,7 +224,7 @@
         position: static;
         background-color: #1a1a1a;
         border: none;
-        border-left: 2px solid #F5A623;
+        border-left: 2px solid #7DFF00;
         border-radius: 0;
         padding: 4px 0 4px 12px;
         box-shadow: none;

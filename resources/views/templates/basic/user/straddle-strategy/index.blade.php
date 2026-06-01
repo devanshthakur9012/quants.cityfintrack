@@ -22,7 +22,7 @@
     font-size:clamp(26px,3.5vw,42px); font-weight:700;
     color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.ss-hero-left h1 span { color:#F5A623; }
+.ss-hero-left h1 span { color:#7DFF00; }
 .ss-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:560px; }
 .ss-hero-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
 .ss-pill {
@@ -36,7 +36,7 @@
     width:80px; height:80px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    font-size:36px; color:#F5A623; flex-shrink:0;
+    font-size:36px; color:#7DFF00; flex-shrink:0;
 }
 @media(max-width:768px){
     .ss-hero { flex-direction:column; padding:24px 16px; text-align:center; }
@@ -65,7 +65,7 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
     appearance:none; cursor:pointer; outline:none; min-width:180px;
 }
-.ss-strat-select:focus { border-color:#F5A623; }
+.ss-strat-select:focus { border-color:#7DFF00; }
 
 /* Symbol select */
 .ss-sym-select {
@@ -74,7 +74,7 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
     appearance:none; cursor:pointer; outline:none; min-width:140px;
 }
-.ss-sym-select:focus { border-color:#F5A623; }
+.ss-sym-select:focus { border-color:#7DFF00; }
 
 /* Date */
 .ss-date-wrap { display:flex; align-items:center; gap:4px; }
@@ -83,13 +83,13 @@
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.ss-date-input:focus { border-color:#F5A623; }
+.ss-date-input:focus { border-color:#7DFF00; }
 .ss-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.ss-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.ss-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .ss-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Status badge */
@@ -98,7 +98,7 @@
 
 /* Buttons */
 .ss-load-btn {
-    background:#F5A623; color:#000; border:none; border-radius:8px;
+    background:#7DFF00; color:#000; border:none; border-radius:8px;
     padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
     font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
 }
@@ -108,7 +108,7 @@
     padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
     font-family:'Exo 2',sans-serif; transition:.2s;
 }
-.ss-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.ss-reset-btn:hover { border-color:#7DFF00; color:#c97f00; }
 
 /* Filter pills */
 .ss-fp-wrap { display:flex; gap:4px; flex-wrap:wrap; }
@@ -117,8 +117,8 @@
     font-size:10px; font-weight:700; cursor:pointer;
     border:1.5px solid #e5e9f2; background:#fff; color:#999; transition:.15s;
 }
-.ss-fp:hover         { border-color:#F5A623; color:#c97f00; }
-.ss-fp.f-all         { border-color:#F5A623; background:rgba(245,166,35,.08); color:#c97f00; }
+.ss-fp:hover         { border-color:#7DFF00; color:#c97f00; }
+.ss-fp.f-all         { border-color:#7DFF00; background:rgba(245,166,35,.08); color:#c97f00; }
 .ss-fp.f-ce          { border-color:#047857; background:rgba(5,150,105,.08);  color:#047857; }
 .ss-fp.f-pe          { border-color:#b91c1c; background:rgba(220,38,38,.08);  color:#b91c1c; }
 .ss-fp.f-wait        { border-color:#aab; background:#f7f8fc; color:#aab; }
@@ -161,7 +161,7 @@
 .ss-stat strong {
     display:block; font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700;
 }
-.ss-stat-total { border-left:3px solid #F5A623; }
+.ss-stat-total { border-left:3px solid #7DFF00; }
 .ss-stat-ce    { border-left:3px solid #047857; }
 .ss-stat-pe    { border-left:3px solid #b91c1c; }
 .ss-stat-wait  { border-left:3px solid #aab; }
@@ -188,7 +188,7 @@
     border-radius:12px; padding:14px 18px; margin-bottom:14px;
     display:flex; align-items:center; flex-wrap:wrap; gap:10px;
 }
-.ss-detail-sym { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:900; color:#F5A623; }
+.ss-detail-sym { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:900; color:#7DFF00; }
 .ss-dm {
     border-radius:6px; padding:3px 10px; font-size:10px; font-weight:700;
     border:1px solid; font-family:'Exo 2',sans-serif;
@@ -239,13 +239,13 @@
 .tr-ce       { background:rgba(5,150,105,.04)  !important; border-left:2px solid #047857 !important; }
 .tr-pe       { background:rgba(220,38,38,.04)  !important; border-left:2px solid #b91c1c !important; }
 .tr-wait     { opacity:.75; }
-.tr-entry    { background:rgba(245,166,35,.05) !important; border-left:2px solid #F5A623 !important; }
+.tr-entry    { background:rgba(245,166,35,.05) !important; border-left:2px solid #7DFF00 !important; }
 .tr-latest   { background:rgba(124,58,237,.04) !important; border-left:2px solid #7c3aed !important; }
 
 /* Cell styles */
 .c-num   { font-size:9px; color:#ccc; }
 .c-sym   { font-size:11px; font-weight:700; color:#1a56db; }
-.c-time  { font-size:12px; font-weight:700; color:#F5A623; }
+.c-time  { font-size:12px; font-weight:700; color:#7DFF00; }
 .c-amber { color:#c97f00; font-weight:700; }
 .c-green { color:#047857; font-weight:700; }
 .c-red   { color:#b91c1c; font-weight:700; }
@@ -288,7 +288,7 @@
 }
 .ss-spinner {
     width:36px; height:36px; border:3px solid #f0f0f0;
-    border-top:3px solid #F5A623; border-radius:50%;
+    border-top:3px solid #7DFF00; border-radius:50%;
     animation:ssSpin 1s linear infinite;
 }
 .ss-loading-text { color:#aab; margin-top:12px; font-size:13px; }
@@ -396,7 +396,7 @@
     <div class="ss-stats" id="ss-stats" style="display:none;">
         <div class="ss-stat ss-stat-total">
             <small>Total</small>
-            <strong id="ss-st-total" style="color:#F5A623;">0</strong>
+            <strong id="ss-st-total" style="color:#7DFF00;">0</strong>
         </div>
         <div class="ss-stat ss-stat-ce">
             <small>▲ Buy CE</small>
@@ -847,7 +847,7 @@ function ssRenderDetail(res) {
         + '</table></div>'
         + '<div class="ss-legend">'
         + '<strong>Signal fires when 3+ factors align on same side.</strong> &nbsp;'
-        + '<span style="color:#F5A623;">▲ Amber row</span> = Entry 09:15 &nbsp;'
+        + '<span style="color:#7DFF00;">▲ Amber row</span> = Entry 09:15 &nbsp;'
         + '<span style="color:#6d28d9;">▼ Purple row</span> = Latest candle &nbsp;·&nbsp; '
         + 'Click "All Symbols" to return to summary view.'
         + '</div></div>';

@@ -62,7 +62,7 @@
 /* logo */
 .qd-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; position: relative; z-index: 1; }
 .qd-logo-icon {
-    width: 48px; height: 48px; border-radius: 10px; background: #F5A623;
+    width: 48px; height: 48px; border-radius: 10px; background: #7DFF00;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; font-weight: 700; color: #fff; font-family: 'Rajdhani', sans-serif; flex-shrink: 0;
 }
@@ -76,7 +76,7 @@
     color: #fff; margin: 0 0 10px; line-height: 1.1;
     position: relative; z-index: 1;
 }
-.qd-promo-head span { color: #F5A623; }
+.qd-promo-head span { color: #7DFF00; }
 .qd-promo-sub {
     font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.75; margin: 0 0 32px;
     position: relative; z-index: 1; max-width: 380px;
@@ -89,7 +89,7 @@
     width: 40px; height: 40px; border-radius: 10px;
     background: rgba(245,166,35,.15); border: 1px solid rgba(245,166,35,.3);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    font-size: 16px; color: #F5A623;
+    font-size: 16px; color: #7DFF00;
 }
 .qd-what-text {}
 .qd-what-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
@@ -102,7 +102,7 @@
     position: relative; z-index: 1;
 }
 .qd-stat { display: flex; flex-direction: column; }
-.qd-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #F5A623; line-height: 1; }
+.qd-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #7DFF00; line-height: 1; }
 .qd-stat-lbl { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; }
 
 /* testimonial mini */
@@ -114,13 +114,13 @@
 .qd-testimonial p { font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.65; margin: 0 0 10px; font-style: italic; }
 .qd-testimonial-author { display: flex; align-items: center; gap: 10px; }
 .qd-testimonial-avatar {
-    width: 36px; height: 36px; border-radius: 50%; background: #F5A623;
+    width: 36px; height: 36px; border-radius: 50%; background: #7DFF00;
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; font-weight: 700; color: #000; font-family: 'Rajdhani', sans-serif; flex-shrink: 0;
 }
 .qd-testimonial-name { font-size: 13px; font-weight: 700; color: #fff; }
 .qd-testimonial-role { font-size: 11px; color: rgba(255,255,255,.4); }
-.qd-stars { color: #F5A623; font-size: 11px; letter-spacing: 1px; }
+.qd-stars { color: #7DFF00; font-size: 11px; letter-spacing: 1px; }
 
 /* =========================================
    RIGHT — FORM PANEL (white)
@@ -149,7 +149,7 @@
     transition: all .3s;
 }
 .qd-step-dot.done    { background: #43a047; color: #fff; }
-.qd-step-dot.active  { background: #F5A623; color: #000; }
+.qd-step-dot.active  { background: #7DFF00; color: #000; }
 .qd-step-dot.pending { background: #e0e0e0; color: #aaa; }
 .qd-step-line { flex: 1; height: 2px; background: #e0e0e0; transition: background .3s; }
 .qd-step-line.done { background: #43a047; }
@@ -176,7 +176,7 @@
 .qd-field-input:focus,
 .qd-field-select:focus,
 .qd-field-textarea:focus {
-    border-color: #F5A623; box-shadow: 0 0 0 3px rgba(245,166,35,.12);
+    border-color: #7DFF00; box-shadow: 0 0 0 3px rgba(245,166,35,.12);
 }
 .qd-field-input::placeholder,
 .qd-field-textarea::placeholder { color: #ccc; }
@@ -195,7 +195,7 @@
     font-size: 14px; font-weight: 600; color: #1a1a2e; cursor: pointer;
     white-space: nowrap; flex-shrink: 0; transition: border-color .2s;
 }
-.qd-country-btn:hover { border-color: #F5A623; }
+.qd-country-btn:hover { border-color: #7DFF00; }
 
 /* slot picker */
 .qd-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 6px; }
@@ -205,14 +205,14 @@
     cursor: pointer; text-align: center; transition: all .2s; font-family: 'Exo 2', sans-serif;
     line-height: 1.3;
 }
-.qd-slot-btn:hover { border-color: #F5A623; color: #b87800; background: rgba(245,166,35,.06); }
-.qd-slot-btn.on    { border-color: #F5A623; color: #b87800; background: rgba(245,166,35,.12); }
+.qd-slot-btn:hover { border-color: #7DFF00; color: #b87800; background: rgba(245,166,35,.06); }
+.qd-slot-btn.on    { border-color: #7DFF00; color: #b87800; background: rgba(245,166,35,.12); }
 .qd-slot-btn.full  { background: #f5f5f5; color: #bbb; cursor: not-allowed; border-color: #e8e8e8; }
 
 /* CTA */
 .qd-cta-btn {
     width: 100%; height: 52px; border: none; border-radius: 10px;
-    background: #F5A623; color: #000; font-family: 'Rajdhani', sans-serif;
+    background: #7DFF00; color: #000; font-family: 'Rajdhani', sans-serif;
     font-size: 18px; font-weight: 700; letter-spacing: .05em;
     cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 10px;
     margin-bottom: 14px;
@@ -221,7 +221,7 @@
 .qd-cta-btn:active { transform: scale(.98); }
 
 .qd-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #999; cursor: pointer; margin-bottom: 22px; transition: color .2s; background: none; border: none; padding: 0; }
-.qd-back:hover { color: #F5A623; }
+.qd-back:hover { color: #7DFF00; }
 
 /* trust badges */
 .qd-trust { display: flex; align-items: center; gap: 18px; justify-content: center; margin-top: 2px; flex-wrap: wrap; }
@@ -249,17 +249,17 @@
     border-radius: 10px; padding: 14px 18px; margin-bottom: 22px;
     font-size: 13px; color: #b45309; font-weight: 600;
 }
-.qd-success-ref span { font-family: 'Rajdhani', sans-serif; font-size: 18px; color: #F5A623; font-weight: 700; }
+.qd-success-ref span { font-family: 'Rajdhani', sans-serif; font-size: 18px; color: #7DFF00; font-weight: 700; }
 .qd-app-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .qd-app-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 11px 22px; border-radius: 9px; font-size: 13px; font-weight: 700;
     font-family: 'Exo 2', sans-serif; transition: all .2s;
 }
-.qd-app-btn.primary   { background: #F5A623; color: #000; }
+.qd-app-btn.primary   { background: #7DFF00; color: #000; }
 .qd-app-btn.primary:hover { background: #d4890e; }
 .qd-app-btn.secondary { border: 1.5px solid #ddd; color: #555; background: #fff; }
-.qd-app-btn.secondary:hover { border-color: #F5A623; color: #b87800; }
+.qd-app-btn.secondary:hover { border-color: #7DFF00; color: #b87800; }
 
 /* divider */
 .qd-sep { height: 1px; background: #eee; margin: 18px 0; }
@@ -569,7 +569,7 @@
                     Booking Reference: <span id="qdRefId">CQ-DEMO-XXXXX</span>
                 </div>
                 <div style="font-size:13px;color:#888;margin-bottom:24px;">
-                    <i class="fas fa-info-circle" style="color:#F5A623;margin-right:6px;"></i>
+                    <i class="fas fa-info-circle" style="color:#7DFF00;margin-right:6px;"></i>
                     In the meantime, explore <strong>25 free tools</strong> on CityQuants.
                 </div>
                 <div class="qd-app-cta">
@@ -671,8 +671,8 @@ function qdShowSummary(dateStr, time) {
     var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     var dateFormatted = d.toLocaleDateString('en-IN', opts);
     var html = '<b>' + fn + ' ' + ln + '</b> &lt;' + em + '&gt;<br>' +
-               '<i class="fas fa-calendar-alt" style="color:#F5A623;margin-right:5px;"></i>' + dateFormatted + ' &nbsp;·&nbsp; ' + time + ' IST<br>' +
-               '<i class="fas fa-chart-line" style="color:#F5A623;margin-right:5px;"></i>' + (st || 'Not specified');
+               '<i class="fas fa-calendar-alt" style="color:#7DFF00;margin-right:5px;"></i>' + dateFormatted + ' &nbsp;·&nbsp; ' + time + ' IST<br>' +
+               '<i class="fas fa-chart-line" style="color:#7DFF00;margin-right:5px;"></i>' + (st || 'Not specified');
     document.getElementById('qdSumContent').innerHTML = html;
     document.getElementById('qdSummary').style.display = 'block';
 }

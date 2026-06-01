@@ -41,8 +41,8 @@
 .ud-avatar-wrap {
     width: 76px; height: 76px; border-radius: 50%;
     margin: 0 auto 14px; position: relative;
-    border: 3px solid #f5a623; overflow: hidden;
-    background: #f5a623;
+    border: 3px solid #7DFF00; overflow: hidden;
+    background: #7DFF00;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Rajdhani',sans-serif; font-size: 28px;
     font-weight: 700; color: #0f1b2d;
@@ -71,7 +71,7 @@
 .ud-mini-stat { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f5f6fb; }
 .ud-mini-stat:last-child { border-bottom: none; }
 .ud-mini-stat-label { font-size: 13px; color: #5a6678; display: flex; align-items: center; gap: 7px; }
-.ud-mini-stat-label i { color: #f5a623; width: 16px; text-align: center; }
+.ud-mini-stat-label i { color: #7DFF00; width: 16px; text-align: center; }
 .ud-mini-stat-val { font-size: 15px; font-weight: 700; color: #0f1b2d; font-family: 'Rajdhani',sans-serif; }
 
 /* ─── STAT CARDS ROW ────────────────────────────────────────────────────── */
@@ -152,7 +152,7 @@
 .ud-course-tag.ongoing { background: #fce4ec; color: #c62828; border-color: #f48fb1; }
 .ud-course-tag.recorded{ background: #ede7f6; color: #4527a0; border-color: #d1c4e9; }
 .ud-course-date { font-size: 11.5px; color: #9aa3b5; display: flex; align-items: center; gap: 4px; }
-.ud-course-date i { color: #f5a623; font-size: 10px; }
+.ud-course-date i { color: #7DFF00; font-size: 10px; }
 .ud-course-link {
     position: absolute; inset: 0; border-radius: 10px;
     display: flex; align-items: center; justify-content: flex-end;
@@ -191,7 +191,7 @@
 .ud-empty p  { font-size: 13.5px; margin-bottom: 18px; }
 .ud-empty-btn {
     display: inline-flex; align-items: center; gap: 7px;
-    background: #f5a623; color: #0f1b2d; font-weight: 700;
+    background: #7DFF00; color: #0f1b2d; font-weight: 700;
     padding: 11px 24px; border-radius: 8px; font-family: 'Exo 2',sans-serif; font-size: 14px;
     transition: background .2s;
 }
@@ -204,7 +204,7 @@
 }
 .ud-page-header-inner { max-width: 1200px; margin: 0 auto; }
 .ud-welcome { font-size: 24px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-.ud-welcome span { color: #f5a623; }
+.ud-welcome span { color: #7DFF00; }
 .ud-welcome-sub { font-size: 13.5px; color: rgba(255,255,255,.5); }
 
 /* ─── RESPONSIVE ────────────────────────────────────────────────────────── */
@@ -255,7 +255,7 @@
             <div class="ud-profile-name">{{ $user->firstname }} {{ $user->lastname }}</div>
             <div class="ud-profile-email">{{ $user->email }}</div>
             <div class="ud-profile-since">
-                <i class="fas fa-calendar-alt" style="color:#f5a623;margin-right:4px;"></i>
+                <i class="fas fa-calendar-alt" style="color:#7DFF00;margin-right:4px;"></i>
                 Member since {{ $user->created_at->format('M Y') }}
             </div>
         </div>
@@ -548,7 +548,7 @@
                                 <td>
                                     @if($order->course)
                                     <a href="{{ route('courses.detail', $order->course->slug) }}"
-                                       style="font-size:12px;color:#f5a623;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+                                       style="font-size:12px;color:#7DFF00;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;">
                                         View <i class="fas fa-arrow-right"></i>
                                     </a>
                                     @endif

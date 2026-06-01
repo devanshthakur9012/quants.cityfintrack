@@ -12,10 +12,10 @@
     border:1px solid rgba(245,166,35,.25);
     border-radius:20px; overflow:hidden;
   }
-  .top-bar { height:3px; background:linear-gradient(90deg,transparent,#F5A623,#FFD06A,#F5A623,transparent); }
+  .top-bar { height:3px; background:linear-gradient(90deg,transparent,#7DFF00,#FFD06A,#7DFF00,transparent); }
   .inner   { padding:40px 36px; }
   .logo    { font-size:24px; font-weight:700; color:#fff; margin-bottom:28px; letter-spacing:.04em; }
-  .logo span { color:#F5A623; }
+  .logo span { color:#7DFF00; }
   h1       { font-size:22px; color:#fff; margin:0 0 8px; font-weight:600; }
   .sub     { font-size:14px; color:#7A90B5; margin:0 0 32px; line-height:1.6; }
   .otp-box {
@@ -26,7 +26,7 @@
   }
   .otp-label { font-size:11px; color:#7A90B5; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
   .otp-code  {
-    font-size:42px; font-weight:700; color:#F5A623;
+    font-size:42px; font-weight:700; color:#7DFF00;
     letter-spacing:12px; font-family:'Courier New',monospace;
   }
   .otp-exp   { font-size:12px; color:#7A90B5; margin-top:10px; }

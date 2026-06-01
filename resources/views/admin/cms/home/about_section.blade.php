@@ -50,7 +50,7 @@
                 @for($i = 0; $i < $statCount; $i++)
                 @php $s = $stats[$i] ?? null; @endphp
                 <div class="row g-2 mb-3 align-items-center">
-                    <div class="col-1 text-center" style="font-size:18px;font-weight:700;color:#F5A623;">{{ $i+1 }}</div>
+                    <div class="col-1 text-center" style="font-size:18px;font-weight:700;color:#7DFF00;">{{ $i+1 }}</div>
                     <div class="col-3">
                         <input type="text" name="stat_value[]" class="form-control form-control-sm"
                                value="{{ old('stat_value.'.$i, $s?->value ?? '') }}" placeholder="6500+">

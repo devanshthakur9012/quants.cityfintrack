@@ -13,7 +13,7 @@
                     @csrf
 
                     {{-- ── HERO ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Hero Section</h6>
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Hero Section</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Page Title</label>
@@ -42,7 +42,7 @@
                     </div>
 
                     {{-- ── FILTER DROPDOWNS ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         Filter Dropdown Options
                     </h6>
                     <div class="row g-3 mb-2">

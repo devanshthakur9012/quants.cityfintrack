@@ -55,7 +55,7 @@
     /* ── Misc badges ────────────────────────────────────── */
     .ratio-badge       { background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:3px 5px; border-radius:4px; font-weight:700; font-size:10px; display:inline-block; }
     .new-feature-badge { background:linear-gradient(135deg,#f093fb,#f5576c); color:white; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700; margin-left:5px; }
-    .heavy-badge       { background:linear-gradient(135deg,#f5a623,#e67e22); color:white; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700; }
+    .heavy-badge       { background:linear-gradient(135deg,#7DFF00,#e67e22); color:white; padding:2px 6px; border-radius:3px; font-size:9px; font-weight:700; }
     .bias-badge-bull   { background:linear-gradient(135deg,#28a745,#20c997); color:white; padding:5px 14px; border-radius:6px; font-weight:700; font-size:13px; display:inline-block; }
     .bias-badge-bear   { background:linear-gradient(135deg,#dc3545,#c82333); color:white; padding:5px 14px; border-radius:6px; font-weight:700; font-size:13px; display:inline-block; }
     .bias-badge-neut   { background:linear-gradient(135deg,#6c757d,#5a6268); color:white; padding:5px 14px; border-radius:6px; font-weight:700; font-size:13px; display:inline-block; }
@@ -87,15 +87,15 @@
     /* ── Heavy weights panel ────────────────────────────── */
     .heavy-panel {
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        border: 2px solid #f5a623;
+        border: 2px solid #7DFF00;
         border-radius: 14px;
         padding: 16px 20px 8px;
         margin-bottom: 20px;
         box-shadow: 0 4px 20px rgba(245,166,35,0.2);
     }
     .heavy-panel-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-    .heavy-panel-header h6 { color:#f5a623; font-size:13px; font-weight:700; margin:0; text-transform:uppercase; letter-spacing:.5px; }
-    .heavy-tag { background:linear-gradient(135deg,#f5a623,#e67e22); color:white; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; text-transform:uppercase; }
+    .heavy-panel-header h6 { color:#7DFF00; font-size:13px; font-weight:700; margin:0; text-transform:uppercase; letter-spacing:.5px; }
+    .heavy-tag { background:linear-gradient(135deg,#7DFF00,#e67e22); color:white; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; text-transform:uppercase; }
 
     .heavy-stock-card {
         background: rgba(255,255,255,0.05);
@@ -103,7 +103,7 @@
         border-radius: 10px;
         padding: 12px 14px;
         margin-bottom: 12px;
-        border-left: 4px solid #f5a623;
+        border-left: 4px solid #7DFF00;
         transition: transform .2s;
     }
     .heavy-stock-card:hover { transform:translateY(-2px); }
@@ -111,7 +111,7 @@
     .heavy-stock-card.bear { border-left-color:#dc3545; }
     .heavy-stock-card.neut { border-left-color:#6c757d; }
     .heavy-stock-sym  { color:white; font-weight:700; font-size:13px; }
-    .heavy-stock-wt   { color:#f5a623; font-size:10px; font-weight:700; }
+    .heavy-stock-wt   { color:#7DFF00; font-size:10px; font-weight:700; }
     .heavy-stock-co   { color:rgba(255,255,255,0.55); font-size:10px; margin-top:2px; }
 
     /* ── Trade plan ─────────────────────────────────────── */
@@ -132,7 +132,7 @@
 
     /* ── Weight bar (for table) ─────────────────────────── */
     .wt-bar-wrap { background:#f1f3f5; border-radius:3px; height:5px; margin-top:3px; overflow:hidden; }
-    .wt-bar-fill { background:#f5a623; height:100%; border-radius:3px; }
+    .wt-bar-fill { background:#7DFF00; height:100%; border-radius:3px; }
 
     /* ── Page header ────────────────────────────────────── */
     .page-header { background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 4px 15px rgba(102,126,234,0.4); }
@@ -302,19 +302,19 @@
         <div class="row mb-2">
             <div class="col-md-4">
                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; font-size:11px; color:rgba(255,255,255,0.7);">
-                    <strong style="color:#f5a623;">Top-3 (HDFC+SBI+ICICI = 66%)</strong><br>
+                    <strong style="color:#7DFF00;">Top-3 (HDFC+SBI+ICICI = 66%)</strong><br>
                     Bull: <strong id="top3_bull" style="color:#28a745;">0%</strong> &nbsp;|&nbsp; Bear: <strong id="top3_bear" style="color:#dc3545;">0%</strong>
                 </div>
             </div>
             <div class="col-md-4">
                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; font-size:11px; color:rgba(255,255,255,0.7);">
-                    <strong style="color:#f5a623;">Top-5 Heavy Weights (82%)</strong><br>
+                    <strong style="color:#7DFF00;">Top-5 Heavy Weights (82%)</strong><br>
                     Bull: <strong id="heavy_bull" style="color:#28a745;">0%</strong> &nbsp;|&nbsp; Bear: <strong id="heavy_bear" style="color:#dc3545;">0%</strong>
                 </div>
             </div>
             <div class="col-md-4">
                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; font-size:11px; color:rgba(255,255,255,0.7);">
-                    <strong style="color:#f5a623;">Confidence</strong><br>
+                    <strong style="color:#7DFF00;">Confidence</strong><br>
                     <strong id="heavy_confidence" style="color:white; font-size:16px;">—</strong>
                 </div>
             </div>
@@ -596,14 +596,14 @@ function renderTable(stocks) {
             : '';
 
         html += `<tr ${rowStyle}>
-            <td><strong>${i + 1}</strong>${isHeavy ? ' <span title="Heavy weight" style="color:#f5a623;font-size:10px;">👑</span>' : ''}</td>
+            <td><strong>${i + 1}</strong>${isHeavy ? ' <span title="Heavy weight" style="color:#7DFF00;font-size:10px;">👑</span>' : ''}</td>
             <td>
                 <strong style="color:#667eea;">${row.symbol}</strong>
-                ${TOP3.includes(row.symbol) ? '<br><span style="font-size:9px;color:#f5a623;font-weight:700;">TOP-3</span>' : ''}
+                ${TOP3.includes(row.symbol) ? '<br><span style="font-size:9px;color:#7DFF00;font-weight:700;">TOP-3</span>' : ''}
             </td>
             <td style="font-size:10px;">${row.company}</td>
             <td>
-                <strong style="color:#f5a623;">${wt}%</strong>
+                <strong style="color:#7DFF00;">${wt}%</strong>
                 <div class="wt-bar-wrap"><div class="wt-bar-fill" style="width:${wtFill}%;"></div></div>
             </td>
             <td>${row.fut_price ? '₹' + Number(row.fut_price).toLocaleString('en-IN') : '<span class="text-muted">—</span>'}</td>

@@ -44,7 +44,7 @@
 .qa-card-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
 .qa-card-logo-icon {
     width: 48px; height: 48px; border-radius: 12px;
-    background: #F5A623; color: #fff; font-size: 20px; font-weight: 700;
+    background: #7DFF00; color: #fff; font-size: 20px; font-weight: 700;
     font-family: 'Rajdhani', sans-serif;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
@@ -79,12 +79,12 @@
     font-family: 'Exo 2', sans-serif; outline: none;
     transition: border-color .2s, box-shadow .2s; background: #fff;
 }
-.qa-form-input:focus { border-color: #F5A623; box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.qa-form-input:focus { border-color: #7DFF00; box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
 
 /* Submit */
 .qa-auth-submit {
     width: 100%; padding: 13px; border-radius: 10px;
-    background: #F5A623; border: none; color: #000;
+    background: #7DFF00; border: none; color: #000;
     font-size: 15px; font-weight: 700; font-family: 'Rajdhani', sans-serif;
     letter-spacing: .04em; cursor: pointer; transition: background .2s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -102,11 +102,11 @@
 
 /* Terms */
 .qa-terms { font-size: 11.5px; color: #bbb; line-height: 1.6; margin-top: 12px; text-align: center; }
-.qa-terms a { color: #F5A623; }
+.qa-terms a { color: #7DFF00; }
 
 /* Bottom */
 .qa-auth-bottom { margin-top: 18px; text-align: center; font-size: 13px; color: #aab; }
-.qa-auth-bottom a { color: #F5A623; font-weight: 600; }
+.qa-auth-bottom a { color: #7DFF00; font-weight: 600; }
 .qa-auth-bottom a:hover { color: #d4890e; }
 
 /* Success */
@@ -122,7 +122,7 @@
     font-size: clamp(26px, 3vw, 38px); font-weight: 700;
     color: #1a1a2e; line-height: 1.2;
 }
-.qa-promo-heading span { color: #F5A623; }
+.qa-promo-heading span { color: #7DFF00; }
 .qa-promo-video {
     border-radius: 16px; overflow: hidden;
     box-shadow: 0 12px 48px rgba(0,0,0,.15);
@@ -138,7 +138,7 @@
     font-size: 13px; font-weight: 600; color: #1a1a2e;
     backdrop-filter: blur(4px);
 }
-.qa-promo-feature-pill i { color: #F5A623; font-size: 12px; }
+.qa-promo-feature-pill i { color: #7DFF00; font-size: 12px; }
 .qa-promo-brokers-divider {
     display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
 }

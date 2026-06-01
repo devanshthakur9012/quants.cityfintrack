@@ -8,7 +8,7 @@
    ROOT VARIABLES
 ========================================= */
 :root {
-    --gold:      #F5A623;
+    --gold:      #7DFF00;
     --gold2:     #FFD06A;
     --gold-dim:  rgba(245,166,35,.15);
     --dark:      #0D1B2A;
@@ -1346,7 +1346,7 @@ var splineOpts = {
     dataLabels: { enabled: false },
     stroke: { curve: 'smooth', width: 2 },
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
-    colors: ['#F5A623', '#1ab87e'],
+    colors: ['#7DFF00', '#1ab87e'],
     xaxis: {
         type: 'category',
         categories: [{!! "'" . implode("','", $datesArr) . "'" !!}],

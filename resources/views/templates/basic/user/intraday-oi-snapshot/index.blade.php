@@ -18,13 +18,13 @@
     justify-content:space-between; gap:24px;
 }
 .ios-hero-left h1 { font-size:clamp(24px,3.5vw,40px); font-weight:700; color:#1a1a2e; margin:0 0 8px; line-height:1.1; }
-.ios-hero-left h1 span { color:#F5A623; }
+.ios-hero-left h1 span { color:#7DFF00; }
 .ios-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:640px; }
 .ios-hero-icon {
     width:76px; height:76px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    font-size:32px; color:#F5A623; flex-shrink:0;
+    font-size:32px; color:#7DFF00; flex-shrink:0;
 }
 @media(max-width:768px){ .ios-hero{ flex-direction:column; padding:24px 16px; text-align:center; } .ios-hero-icon{ display:none; } }
 
@@ -41,7 +41,7 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
     appearance:none; cursor:pointer; outline:none; min-width:140px;
 }
-.ios-sym-select:focus { border-color:#F5A623; }
+.ios-sym-select:focus { border-color:#7DFF00; }
 
 /* Date controls — same as pivot */
 .ios-date-wrap { display:flex; align-items:center; gap:4px; }
@@ -50,13 +50,13 @@
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.ios-date-input:focus { border-color:#F5A623; }
+.ios-date-input:focus { border-color:#7DFF00; }
 .ios-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.ios-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.ios-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .ios-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Status badge */
@@ -70,13 +70,13 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 9px center;
     appearance:none; cursor:pointer; outline:none; min-width:130px;
 }
-.ios-action-select:focus { border-color:#F5A623; }
+.ios-action-select:focus { border-color:#7DFF00; }
 
 /* Buttons */
-.ios-analyze-btn { background:#F5A623; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
+.ios-analyze-btn { background:#7DFF00; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
 .ios-analyze-btn:hover { background:#d4890e; }
 .ios-reset-btn { background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; font-family:'Exo 2',sans-serif; }
-.ios-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.ios-reset-btn:hover { border-color:#7DFF00; color:#c97f00; }
 
 .ios-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 .ios-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
@@ -135,7 +135,7 @@
 .tr-bear { background:rgba(220,38,38,.03) !important; }
 
 .c-num  { font-size:9px; color:#ccc; }
-.c-date { font-size:11px; font-weight:700; color:#F5A623; }
+.c-date { font-size:11px; font-weight:700; color:#7DFF00; }
 .c-sym  { font-size:12px; font-weight:800; color:#1a56db; }
 .c-atm  { font-size:10px; color:#c97f00; font-weight:700; }
 .c-fut  { font-size:10px; color:#1a56db; }
@@ -172,7 +172,7 @@
 .ios-empty i { font-size:2.5rem; display:block; margin-bottom:12px; color:#e5e9f2; }
 .ios-empty p { font-size:13px; }
 .ios-spinner-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:48px; color:#aab; font-size:13px; }
-.ios-spinner { width:28px; height:28px; border:3px solid #f0f0f0; border-top:3px solid #F5A623; border-radius:50%; animation:iosSpin 1s linear infinite; flex-shrink:0; }
+.ios-spinner { width:28px; height:28px; border:3px solid #f0f0f0; border-top:3px solid #7DFF00; border-radius:50%; animation:iosSpin 1s linear infinite; flex-shrink:0; }
 </style>
 
 <div class="ios-wrap">

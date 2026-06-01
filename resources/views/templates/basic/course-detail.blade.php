@@ -24,7 +24,7 @@
 /* breadcrumb */
 .cd-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px;flex-wrap:wrap;}
 .cd-breadcrumb a{color:rgba(255,255,255,.6);transition:color .2s;}
-.cd-breadcrumb a:hover{color:#f5a623;}
+.cd-breadcrumb a:hover{color:#7DFF00;}
 
 /* badges */
 .cd-hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
@@ -32,8 +32,8 @@
 .cd-hbadge.ongoing{background:#e65100;color:#fff;}
 .cd-hbadge.upcoming{background:#2e7d32;color:#fff;}
 .cd-hbadge.recorded{background:#4527a0;color:#fff;}
-.cd-hbadge.cat{background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3);}
-.cd-hbadge.featured{background:#f5a623;color:#0f1b2d;}
+.cd-hbadge.cat{background:rgba(245,166,35,.15);color:#7DFF00;border:1px solid rgba(245,166,35,.3);}
+.cd-hbadge.featured{background:#7DFF00;color:#0f1b2d;}
 .cd-hbadge.cert{background:rgba(255,224,130,.15);color:#ffe082;border:1px solid rgba(255,224,130,.3);}
 
 .cd-hero-title{font-size:clamp(24px,3.5vw,38px);font-weight:700;color:#fff;line-height:1.15;margin:0 0 14px;}
@@ -41,7 +41,7 @@
 
 .cd-meta-strip{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:20px;}
 .cd-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.75);}
-.cd-meta-item i{color:#f5a623;font-size:13px;}
+.cd-meta-item i{color:#7DFF00;font-size:13px;}
 .cd-meta-item strong{color:#fff;}
 
 /* ─── BUY CARD ────────────────────────────────────────────────────────── */
@@ -55,7 +55,7 @@
 .cd-buy-price-orig{font-size:15px;color:#b0b8c9;text-decoration:line-through;}
 .cd-buy-price-disc{font-size:12px;font-weight:700;color:#43a047;background:#e8f5e9;padding:3px 8px;border-radius:4px;}
 .cd-buy-cta{width:100%;padding:14px;border-radius:9px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Exo 2',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s;margin-bottom:10px;}
-.cd-buy-cta.primary{background:#f5a623;color:#0f1b2d;}
+.cd-buy-cta.primary{background:#7DFF00;color:#0f1b2d;}
 .cd-buy-cta.primary:hover{background:#d4890e;transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,166,35,.4);}
 .cd-buy-cta.enrolled{background:#e8f5e9;color:#2e7d32;cursor:default;}
 .cd-buy-cta.go-watch{background:#1a56db;color:#fff;}
@@ -63,7 +63,7 @@
 .cd-buy-cta.login-req{background:#1a56db;color:#fff;}
 .cd-buy-cta.login-req:hover{background:#1446b8;}
 .cd-buy-note{font-size:11.5px;color:#9aa3b5;text-align:center;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:5px;}
-.cd-buy-note i{color:#f5a623;}
+.cd-buy-note i{color:#7DFF00;}
 .cd-buy-includes{border-top:1px solid #f0f2f7;padding-top:14px;}
 .cd-buy-includes h6{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#0f1b2d;margin-bottom:10px;}
 .cd-buy-include-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5a6678;padding:4px 0;}
@@ -108,7 +108,7 @@
 /* ─── CURRICULUM ─────────────────────────────────────────────────────── */
 .cd-cur-summary{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#7a8499;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #f0f2f7;}
 .cd-cur-summary span{display:flex;align-items:center;gap:5px;}
-.cd-cur-summary i{color:#f5a623;}
+.cd-cur-summary i{color:#7DFF00;}
 
 .cd-section{border:1px solid #e5e9f2;border-radius:10px;margin-bottom:10px;overflow:hidden;background:#fff;}
 .cd-section-header{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f8f9fd;cursor:pointer;user-select:none;transition:background .2s;}
@@ -160,7 +160,7 @@
 /* ─── TRAINERS ────────────────────────────────────────────────────────── */
 .cd-trainers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
 .cd-trainer-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e9f2;border-radius:9px;background:#fafbff;}
-.cd-trainer-avatar{width:46px;height:46px;border-radius:50%;background:#f5a623;color:#0f1b2d;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.cd-trainer-avatar{width:46px;height:46px;border-radius:50%;background:#7DFF00;color:#0f1b2d;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .cd-trainer-avatar img{width:100%;height:100%;object-fit:cover;}
 .cd-trainer-name{font-size:14px;font-weight:600;color:#0f1b2d;}
 .cd-trainer-role{font-size:12px;color:#7a8499;margin-top:2px;}
@@ -187,7 +187,7 @@
 .cd-related-thumb{width:76px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#e5e9f2;}
 .cd-related-title{font-size:13px;font-weight:600;color:#0f1b2d;line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .cd-related-meta{font-size:11.5px;color:#7a8499;display:flex;align-items:center;gap:6px;}
-.cd-related-price{font-size:13px;color:#f5a623;font-weight:700;margin-top:4px;}
+.cd-related-price{font-size:13px;color:#7DFF00;font-weight:700;margin-top:4px;}
 
 /* ─── VIDEO PREVIEW MODAL ──────────────────────────────────────────────── */
 .cdv-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;}
@@ -207,7 +207,7 @@
 .cdv-modal.fullscreen .cdv-video-wrap{padding-bottom:0;height:calc(100vh - 56px);}
 .cdv-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
 .cdv-label{padding:10px 18px 14px;background:#0f1b2d;font-size:12px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:6px;}
-.cdv-label i{color:#f5a623;}
+.cdv-label i{color:#7DFF00;}
 
 /* ─── PAYMENT OVERLAY ──────────────────────────────────────────────────── */
 .cd-pay-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}
@@ -309,7 +309,7 @@
                     $tInit   = strtoupper(substr($trainer->firstname, 0, 1));
                 @endphp
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:#f5a623;color:#0f1b2d;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:#7DFF00;color:#0f1b2d;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
                         @if($tAvatar)<img src="{{ $tAvatar }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ $tName }}">@else{{ $tInit }}@endif
                     </div>
                     <div>
@@ -894,7 +894,7 @@ function initPayment(courseId) {
             key: data.key, amount: data.amount, currency: data.currency,
             name: 'CityQuants', description: data.course_name, order_id: data.order_id,
             prefill: { name: data.user_name, email: data.user_email, contact: data.user_phone },
-            theme: { color: '#f5a623' },
+            theme: { color: '#7DFF00' },
             modal: { ondismiss: function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now'; } } },
             handler: function(response) {
                 document.getElementById('payContent').style.display = 'none';
@@ -941,7 +941,7 @@ function showPayResult(type, title, message, redirectUrl) {
     var payContent = document.getElementById('payContent');
     var icon       = type === 'success' ? '✅' : '❌';
     var btnHtml    = redirectUrl
-        ? '<a href="' + redirectUrl + '" style="display:inline-block;margin-top:12px;padding:12px 30px;background:#f5a623;color:#0f1b2d;font-weight:700;border-radius:8px;font-family:\'Exo 2\',sans-serif;font-size:14px;">Go to Course</a>'
+        ? '<a href="' + redirectUrl + '" style="display:inline-block;margin-top:12px;padding:12px 30px;background:#7DFF00;color:#0f1b2d;font-weight:700;border-radius:8px;font-family:\'Exo 2\',sans-serif;font-size:14px;">Go to Course</a>'
         : '<button onclick="document.getElementById(\'payOverlay\').classList.remove(\'show\')" style="display:inline-block;margin-top:12px;padding:12px 30px;background:#e5e9f2;color:#2d3a4e;font-weight:700;border-radius:8px;border:none;cursor:pointer;font-family:\'Exo 2\',sans-serif;font-size:14px;">Close</button>';
     payContent.innerHTML = '<div class="cd-pay-icon">' + icon + '</div><h3>' + title + '</h3><p>' + message + '</p>' + btnHtml;
     document.getElementById('payOverlay').classList.add('show');

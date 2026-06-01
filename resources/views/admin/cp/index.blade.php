@@ -7,7 +7,7 @@
              style="background:linear-gradient(135deg,#0f1b2d,#1a3050);
                     border:1px solid rgba(245,166,35,.2);">
             <div class="card-body d-flex align-items-center gap-3 py-4">
-                <i class="las la-chart-line" style="font-size:36px;color:#F5A623;"></i>
+                <i class="las la-chart-line" style="font-size:36px;color:#7DFF00;"></i>
                 <div>
                     <h4 style="color:#fff;margin:0;font-size:20px;">CP Analysis System</h4>
                     <p style="color:rgba(255,255,255,.5);margin:0;font-size:13px;">
@@ -32,7 +32,7 @@
         <a href="{{ route($item['route']) }}" style="text-decoration:none;">
             <div class="card b-radius--10 h-100"
                  style="border:1px solid #e5e9f2; transition:all .25s;"
-                 onmouseover="this.style.borderColor='#F5A623';
+                 onmouseover="this.style.borderColor='#7DFF00';
                               this.style.boxShadow='0 4px 20px rgba(245,166,35,.15)'"
                  onmouseout="this.style.borderColor='#e5e9f2';
                              this.style.boxShadow='none'">
@@ -41,7 +41,7 @@
                                 background:rgba(245,166,35,.1);
                                 border:1px solid rgba(245,166,35,.25);
                                 display:flex;align-items:center;justify-content:center;
-                                margin:0 auto 16px;font-size:24px;color:#F5A623;">
+                                margin:0 auto 16px;font-size:24px;color:#7DFF00;">
                         <i class="las {{ $item['icon'] }}"></i>
                     </div>
                     <h6 style="font-weight:700;color:#1a1a2e;margin-bottom:5px;">

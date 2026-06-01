@@ -23,13 +23,13 @@ body { background:#f7f8fc; }
     font-size:clamp(26px,3.5vw,42px); font-weight:700;
     color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.sfv-hero-left h1 span { color:#F5A623; }
+.sfv-hero-left h1 span { color:#7DFF00; }
 .sfv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:580px; }
 .sfv-hero-icon {
     width:80px; height:80px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    font-size:36px; color:#F5A623; flex-shrink:0;
+    font-size:36px; color:#7DFF00; flex-shrink:0;
 }
 @media(max-width:768px){
     .sfv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
@@ -58,13 +58,13 @@ body { background:#f7f8fc; }
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.sfv-date-input:focus { border-color:#F5A623; }
+.sfv-date-input:focus { border-color:#7DFF00; }
 .sfv-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.sfv-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.sfv-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .sfv-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Status badge */
@@ -77,8 +77,8 @@ body { background:#f7f8fc; }
     padding:5px 13px; border-radius:20px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:700;
     cursor:pointer; border:1.5px solid #e5e9f2; background:#fff; color:#888; transition:.15s;
 }
-.sfv-sp:hover  { border-color:#F5A623; color:#c97f00; }
-.sfv-sp.active { background:rgba(245,166,35,.1); border-color:#F5A623; color:#c97f00; }
+.sfv-sp:hover  { border-color:#7DFF00; color:#c97f00; }
+.sfv-sp.active { background:rgba(245,166,35,.1); border-color:#7DFF00; color:#c97f00; }
 
 /* Symbol + Sort selects */
 .sfv-select {
@@ -87,11 +87,11 @@ body { background:#f7f8fc; }
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
     appearance:none; cursor:pointer; outline:none; min-width:150px;
 }
-.sfv-select:focus { border-color:#F5A623; }
+.sfv-select:focus { border-color:#7DFF00; }
 
 /* Buttons */
 .sfv-btn {
-    background:#F5A623; color:#000; border:none; border-radius:8px;
+    background:#7DFF00; color:#000; border:none; border-radius:8px;
     padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
     font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
 }
@@ -101,7 +101,7 @@ body { background:#f7f8fc; }
     padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
     font-family:'Exo 2',sans-serif; transition:.2s;
 }
-.sfv-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.sfv-reset-btn:hover { border-color:#7DFF00; color:#c97f00; }
 .sfv-auto-btn {
     background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
     padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
@@ -145,7 +145,7 @@ body { background:#f7f8fc; }
 .sfv-stat-box strong {
     display:block; font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700;
 }
-.s-total { border-left:3px solid #F5A623; }
+.s-total { border-left:3px solid #7DFF00; }
 .s-ce    { border-left:3px solid #047857; }
 .s-pe    { border-left:3px solid #b91c1c; }
 
@@ -199,7 +199,7 @@ body { background:#f7f8fc; }
 .tr-odd  { background:#fbfcff; }
 
 .c-num  { font-size:9px; color:#ccc; }
-.c-time { font-size:12px; font-weight:700; color:#F5A623; }
+.c-time { font-size:12px; font-weight:700; color:#7DFF00; }
 .c-spot { font-size:12px; font-weight:700; color:#1a1a2e; }
 .c-sym  {
     display:inline-block; padding:2px 9px; border-radius:5px; font-size:10px; font-weight:700;
@@ -225,7 +225,7 @@ body { background:#f7f8fc; }
 }
 .sfv-spinner {
     width:36px; height:36px; border:3px solid #f0f0f0;
-    border-top:3px solid #F5A623; border-radius:50%;
+    border-top:3px solid #7DFF00; border-radius:50%;
     animation:sfvSpin 1s linear infinite;
 }
 .sfv-loading-text { color:#aab; margin-top:12px; font-size:13px; font-family:'Exo 2',sans-serif; }
@@ -323,7 +323,7 @@ body { background:#f7f8fc; }
 
     {{-- Stats --}}
     <div class="sfv-stats" id="sfv-stats" style="display:none;">
-        <div class="sfv-stat-box s-total"><small>Total Rows</small>   <strong id="st-total"    style="color:#F5A623;">0</strong></div>
+        <div class="sfv-stat-box s-total"><small>Total Rows</small>   <strong id="st-total"    style="color:#7DFF00;">0</strong></div>
         <div class="sfv-stat-box s-ce">  <small>CE Overpriced</small> <strong id="st-ce-over"  style="color:#b91c1c;">0</strong></div>
         <div class="sfv-stat-box s-ce">  <small>CE Underpriced</small><strong id="st-ce-under" style="color:#047857;">0</strong></div>
         <div class="sfv-stat-box s-pe">  <small>PE Overpriced</small> <strong id="st-pe-over"  style="color:#b91c1c;">0</strong></div>
@@ -629,7 +629,7 @@ function sfvRenderTable(rows) {
                 ? '<span style="color:#c97f00;font-weight:700;">' + r.atm_iv + '%</span>'
                 : sfvDash())
             + sfvTd('', r.expected_move != null
-                ? '<span style="color:#F5A623;font-weight:700;">±₹' + r.expected_move + '</span>'
+                ? '<span style="color:#7DFF00;font-weight:700;">±₹' + r.expected_move + '</span>'
                 : sfvDash())
             + '</tr>';
     });

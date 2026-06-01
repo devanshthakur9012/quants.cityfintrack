@@ -157,7 +157,7 @@
                                         <div style="width:72px;height:48px;background:#1a1a2e;border-radius:6px;
                                                     display:flex;align-items:center;justify-content:center;cursor:pointer;"
                                              onclick="window.open('{{ $item->file_url }}','_blank')">
-                                            <i class="las la-play-circle" style="font-size:24px;color:#F5A623;"></i>
+                                            <i class="las la-play-circle" style="font-size:24px;color:#7DFF00;"></i>
                                         </div>
                                     @endif
                                 </td>
@@ -261,7 +261,7 @@
     padding: 20px; text-align: center; cursor: pointer;
     transition: border-color .2s, background .2s;
 }
-.upload-drop-zone.dragover { border-color: #F5A623; background: #fffbf0; }
+.upload-drop-zone.dragover { border-color: #7DFF00; background: #fffbf0; }
 .file-preview-item {
     position: relative; width: 70px; height: 70px;
     border-radius: 8px; overflow: hidden;
@@ -300,7 +300,7 @@ function addFiles(files) {
             img.src = URL.createObjectURL(file);
             wrap.appendChild(img);
         } else {
-            wrap.innerHTML = '<i class="las la-video" style="font-size:28px;color:#F5A623;"></i>';
+            wrap.innerHTML = '<i class="las la-video" style="font-size:28px;color:#7DFF00;"></i>';
         }
 
         const btn = document.createElement('button');

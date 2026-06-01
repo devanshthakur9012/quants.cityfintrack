@@ -92,7 +92,7 @@
                                                         background:linear-gradient(135deg,#0f1b2d,#1a3050);
                                                         display:flex;align-items:center;
                                                         justify-content:center;
-                                                        color:#F5A623;font-size:18px;">
+                                                        color:#7DFF00;font-size:18px;">
                                                 <i class="las la-chart-bar"></i>
                                             </div>
                                         @endif

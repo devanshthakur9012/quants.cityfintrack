@@ -9,7 +9,7 @@
    VARIABLES — same as home / about / webinars
 ========================================= */
 .qa-wrap {
-    --gold:    #F5A623;
+    --gold:    #7DFF00;
     --gold2:   #FFD06A;
     --golddim: rgba(245,166,35,.1);
     font-family: 'Exo 2', sans-serif;
@@ -122,7 +122,7 @@
     outline: none; width: 200px; font-family: 'Exo 2', sans-serif;
 }
 .qa-search-btn {
-    background: #F5A623; border: none; padding: 0 15px;
+    background: #7DFF00; border: none; padding: 0 15px;
     color: #fff; font-size: 14px; cursor: pointer;
     display: flex; align-items: center; transition: background .2s;
 }
@@ -225,7 +225,7 @@
     display: flex; align-items: center; gap: 5px;
     font-size: 12px; color: #666;
 }
-.qa-cr-meta-row i      { color: #F5A623; font-size: 11px; width: 13px; text-align: center; }
+.qa-cr-meta-row i      { color: #7DFF00; font-size: 11px; width: 13px; text-align: center; }
 .qa-cr-meta-row span   { color: #333; font-weight: 500; }
 
 /* date row (full-width, red icon) */
@@ -256,7 +256,7 @@
 .qa-cr-price .orig { text-decoration: line-through; color: #aaa; font-size: 12px; font-weight: 400; margin-right: 3px; }
 .qa-cr-price .disc { font-size: 11px; color: #43a047; font-weight: 700; margin-left: 4px; }
 .qa-cr-view {
-    font-size: 12px; color: #F5A623; font-weight: 600;
+    font-size: 12px; color: #7DFF00; font-weight: 600;
     display: inline-flex; align-items: center; gap: 4px;
     white-space: nowrap; transition: gap .2s; flex-shrink: 0;
 }
@@ -279,7 +279,7 @@
 .qa-login-prompt p  { color:#888; font-size:14px; margin-bottom:26px; }
 .qa-login-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #F5A623; color: #000; font-weight: 700;
+    background: #7DFF00; color: #000; font-weight: 700;
     padding: 13px 30px; border-radius: 9px;
     font-family: 'Rajdhani', sans-serif; font-size: 16px;
     letter-spacing: .04em; transition: background .2s;

@@ -9,7 +9,7 @@
    VARIABLES — mirrors about.blade.php
 ========================================= */
 .qa-login-wrap {
-    --gold:    #F5A623;
+    --gold:    #7DFF00;
     --gold2:   #FFD06A;
     --golddim: rgba(245,166,35,.1);
     --d1: #06101A;
@@ -104,7 +104,7 @@
 .qa-login-topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 50;
     height: 3px;
-    background: linear-gradient(90deg, transparent, #F5A623 30%, #FFD06A 50%, #F5A623 70%, transparent);
+    background: linear-gradient(90deg, transparent, #7DFF00 30%, #FFD06A 50%, #7DFF00 70%, transparent);
 }
 
 /* =========================================
@@ -125,7 +125,7 @@
 .qa-login-card::before {
     content: '';
     position: absolute; top: 0; left: 24px; right: 24px; height: 2px;
-    background: linear-gradient(90deg, transparent, #F5A623, transparent);
+    background: linear-gradient(90deg, transparent, #7DFF00, transparent);
     border-radius: 2px;
 }
 
@@ -141,7 +141,7 @@
 }
 .qa-logo-icon {
     width: 44px; height: 44px; border-radius: 12px;
-    background: #F5A623;
+    background: #7DFF00;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Rajdhani', sans-serif;
     font-size: 20px; font-weight: 700; color: #000;
@@ -152,7 +152,7 @@
     font-size: 22px; font-weight: 700; color: #fff;
     letter-spacing: .04em;
 }
-.qa-logo-text span { color: #F5A623; }
+.qa-logo-text span { color: #7DFF00; }
 .qa-card-title {
     font-family: 'Rajdhani', sans-serif;
     font-size: 28px; font-weight: 700; color: #fff;
@@ -180,8 +180,8 @@
 }
 .qa-method-tab i { font-size: 14px; }
 .qa-method-tab.on {
-    color: #F5A623;
-    border-bottom-color: #F5A623;
+    color: #7DFF00;
+    border-bottom-color: #7DFF00;
     background: rgba(245,166,35,.05);
 }
 .qa-method-tab:hover:not(.on) { color: rgba(245,166,35,.6); }
@@ -226,7 +226,7 @@
     box-shadow: 0 0 0 4px rgba(245,166,35,.1);
 }
 .qa-input:focus + .qa-input-icon,
-.qa-input-wrap:focus-within .qa-input-icon { color: #F5A623; }
+.qa-input-wrap:focus-within .qa-input-icon { color: #7DFF00; }
 
 /* password toggle */
 .qa-pass-toggle {
@@ -234,7 +234,7 @@
     color: #7A90B5; font-size: 14px; cursor: pointer; background: none; border: none;
     padding: 4px; transition: color .2s;
 }
-.qa-pass-toggle:hover { color: #F5A623; }
+.qa-pass-toggle:hover { color: #7DFF00; }
 
 /* OTP boxes */
 .qa-otp-boxes {
@@ -247,9 +247,9 @@
     border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px;
     font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700;
-    color: #F5A623; text-align: center; outline: none;
+    color: #7DFF00; text-align: center; outline: none;
     transition: border-color .2s, box-shadow .2s, background .2s;
-    caret-color: #F5A623;
+    caret-color: #7DFF00;
 }
 .qa-otp-box:focus {
     border-color: rgba(245,166,35,.55);
@@ -274,7 +274,7 @@
     border-radius: 2px; overflow: hidden; margin-bottom: 8px;
 }
 .qa-countdown-bar {
-    height: 100%; background: linear-gradient(90deg, #F5A623, #FFD06A);
+    height: 100%; background: linear-gradient(90deg, #7DFF00, #FFD06A);
     border-radius: 2px;
     transition: width 1s linear;
 }
@@ -282,7 +282,7 @@
     display: flex; justify-content: space-between;
     font-size: 12px; color: #7A90B5;
 }
-.qa-countdown-num { color: #F5A623; font-weight: 700; }
+.qa-countdown-num { color: #7DFF00; font-weight: 700; }
 
 /* info box */
 .qa-info-box {
@@ -290,9 +290,9 @@
     background: rgba(245,166,35,.07); border: 1px solid rgba(245,166,35,.18);
     border-radius: 10px; padding: 14px 16px; margin-bottom: 24px;
 }
-.qa-info-box i { color: #F5A623; font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.qa-info-box i { color: #7DFF00; font-size: 14px; margin-top: 1px; flex-shrink: 0; }
 .qa-info-box span { font-size: 13px; color: #B0C0D8; line-height: 1.6; }
-.qa-info-box strong { color: #F5A623; }
+.qa-info-box strong { color: #7DFF00; }
 
 /* error box */
 .qa-error-box {
@@ -308,7 +308,7 @@
 /* ── Primary button ── */
 .qa-btn-primary {
     width: 100%; height: 52px;
-    background: #F5A623;
+    background: #7DFF00;
     border: none; border-radius: 12px; cursor: pointer;
     font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700;
     letter-spacing: .08em; text-transform: uppercase; color: #000;
@@ -352,7 +352,7 @@
     transition: color .2s;
     display: inline-flex; align-items: center; gap: 6px;
 }
-.qa-btn-ghost:hover { color: #F5A623; }
+.qa-btn-ghost:hover { color: #7DFF00; }
 .qa-btn-ghost:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ── Divider ── */
@@ -376,10 +376,10 @@
     font-size: 13px; color: #7A90B5;
 }
 .qa-checkbox {
-    width: 16px; height: 16px; accent-color: #F5A623; cursor: pointer;
+    width: 16px; height: 16px; accent-color: #7DFF00; cursor: pointer;
 }
 .qa-forgot { font-size: 13px; color: #7A90B5; }
-.qa-forgot:hover { color: #F5A623; }
+.qa-forgot:hover { color: #7DFF00; }
 
 /* ── Success state ── */
 .qa-success-wrap {
@@ -389,7 +389,7 @@
     width: 80px; height: 80px; border-radius: 50%;
     background: rgba(245,166,35,.12); border: 2px solid rgba(245,166,35,.4);
     display: flex; align-items: center; justify-content: center;
-    font-size: 32px; color: #F5A623;
+    font-size: 32px; color: #7DFF00;
     margin: 0 auto 20px;
     animation: successPop .5s ease both;
 }
@@ -409,7 +409,7 @@
     display: flex; align-items: center; justify-content: center; gap: 6px;
     font-size: 13px; color: #7A90B5; flex-wrap: wrap;
 }
-.qa-footer-links a { color: #F5A623; }
+.qa-footer-links a { color: #7DFF00; }
 .qa-footer-links a:hover { color: #FFD06A; text-decoration: underline; }
 .qa-footer-sep { color: rgba(255,255,255,.2); }
 
@@ -438,7 +438,7 @@
     font-size: 13px; color: #E4EBF5; margin-bottom: 22px;
     max-width: 100%; overflow: hidden;
 }
-.qa-email-pill i { color: #F5A623; font-size: 12px; flex-shrink: 0; }
+.qa-email-pill i { color: #7DFF00; font-size: 12px; flex-shrink: 0; }
 .qa-email-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Resend row ── */
@@ -573,7 +573,7 @@
                     <div class="qa-success-title">Login Successful!</div>
                     <p class="qa-success-sub">Welcome back, trader. Redirecting you to your dashboard…</p>
                     <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
-                        <div id="redirectBar" style="height:100%;width:0%;background:linear-gradient(90deg,#F5A623,#FFD06A);border-radius:2px;transition:width 2.8s linear;"></div>
+                        <div id="redirectBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7DFF00,#FFD06A);border-radius:2px;transition:width 2.8s linear;"></div>
                     </div>
                 </div>
             </div>
@@ -902,8 +902,8 @@ async function resendOtp(){
             document.getElementById('verifyOtpBtn').disabled = false;
             document.getElementById('otpVerifyErr').classList.remove('on');
             // reset bar colour
-            document.getElementById('countdownBar').style.background = 'linear-gradient(90deg,#F5A623,#FFD06A)';
-            document.getElementById('countdownNum').style.color = '#F5A623';
+            document.getElementById('countdownBar').style.background = 'linear-gradient(90deg,#7DFF00,#FFD06A)';
+            document.getElementById('countdownNum').style.color = '#7DFF00';
         }
     } catch(e){}
 

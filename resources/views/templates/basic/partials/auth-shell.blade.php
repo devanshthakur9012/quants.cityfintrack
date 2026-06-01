@@ -38,7 +38,7 @@
 /* Logo */
 .ql-logo { display:flex; align-items:center; gap:10px; margin-bottom:32px; text-decoration:none; }
 .ql-logo-icon {
-    width:48px; height:48px; border-radius:10px; background:#F5A623;
+    width:48px; height:48px; border-radius:10px; background:#7DFF00;
     display:flex; align-items:center; justify-content:center;
     font-size:22px; font-weight:700; color:#fff;
     font-family:'Rajdhani',sans-serif; flex-shrink:0;
@@ -67,7 +67,7 @@
     border-radius:10px; font-size:15px; color:#1a1a1a; background:#fff;
     font-family:'Exo 2',sans-serif; outline:none; transition:border-color .2s;
 }
-.ql-input-field:focus { border-color:#F5A623; }
+.ql-input-field:focus { border-color:#7DFF00; }
 .ql-input-field::placeholder { color:#bbb; }
 .ql-input-field.is-error { border-color:#e53935; }
 .ql-input-error { font-size:12px; color:#e53935; margin-top:3px; }
@@ -80,7 +80,7 @@
     background:none; border:none; cursor:pointer; color:#bbb; padding:0;
     display:flex; align-items:center;
 }
-.ql-pw-toggle:hover { color:#F5A623; }
+.ql-pw-toggle:hover { color:#7DFF00; }
 
 /* OTP boxes */
 .ql-otp-row { display:flex; gap:10px; margin-bottom:16px; }
@@ -90,12 +90,12 @@
     background:#fff; outline:none; transition:border-color .2s;
     font-family:'Rajdhani',sans-serif;
 }
-.ql-otp-box:focus { border-color:#F5A623; box-shadow:0 0 0 3px rgba(245,166,35,.15); }
+.ql-otp-box:focus { border-color:#7DFF00; box-shadow:0 0 0 3px rgba(245,166,35,.15); }
 
 /* CTA button */
 .ql-cta-btn {
     width:100%; height:52px; border:none; border-radius:10px;
-    background:#F5A623; color:#fff; font-family:'Rajdhani',sans-serif;
+    background:#7DFF00; color:#fff; font-family:'Rajdhani',sans-serif;
     font-size:18px; font-weight:700; letter-spacing:.06em;
     cursor:pointer; transition:background .2s, transform .15s; margin-bottom:12px;
     display:flex; align-items:center; justify-content:center; gap:8px;
@@ -106,18 +106,18 @@
 
 /* Secondary / outline button */
 .ql-outline-btn {
-    width:100%; height:52px; border:1.5px solid #F5A623; border-radius:10px;
-    background:transparent; color:#F5A623; font-family:'Rajdhani',sans-serif;
+    width:100%; height:52px; border:1.5px solid #7DFF00; border-radius:10px;
+    background:transparent; color:#7DFF00; font-family:'Rajdhani',sans-serif;
     font-size:16px; font-weight:700; letter-spacing:.04em;
     cursor:pointer; transition:all .2s; margin-bottom:12px;
 }
-.ql-outline-btn:hover { background:#F5A623; color:#fff; }
+.ql-outline-btn:hover { background:#7DFF00; color:#fff; }
 
 /* Text links */
 .ql-text-link { font-size:13px; color:#888; }
 .ql-text-link a { color:#888; text-decoration:none; }
-.ql-text-link a:hover { color:#F5A623; }
-.ql-text-link a.accent { color:#F5A623; }
+.ql-text-link a:hover { color:#7DFF00; }
+.ql-text-link a.accent { color:#7DFF00; }
 
 /* Back arrow */
 .ql-back {
@@ -125,7 +125,7 @@
     font-size:13px; color:#888; cursor:pointer;
     margin-bottom:18px; transition:color .2s; background:none; border:none; padding:0;
 }
-.ql-back:hover { color:#F5A623; }
+.ql-back:hover { color:#7DFF00; }
 
 /* Separator */
 .ql-sep { height:1px; background:#ddd; margin:18px 0; }
@@ -133,12 +133,12 @@
 /* T&C */
 .ql-tnc { display:flex; align-items:flex-start; gap:10px; font-size:12px; color:#666; line-height:1.55; }
 .ql-tnc-cb {
-    width:18px; height:18px; border-radius:4px; background:#F5A623; border:none;
+    width:18px; height:18px; border-radius:4px; background:#7DFF00; border:none;
     flex-shrink:0; margin-top:2px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
 }
 .ql-tnc-cb i { color:#fff; font-size:10px; }
-.ql-tnc a { color:#F5A623; text-decoration:underline; }
+.ql-tnc a { color:#7DFF00; text-decoration:underline; }
 
 /* Step visibility */
 .ql-step { display:none; }
@@ -165,7 +165,7 @@
     font-size:clamp(20px,2.3vw,28px); font-weight:700;
     color:#1a1a1a; margin:0 0 20px; text-align:center; line-height:1.2;
 }
-.ql-right-title span { color:#F5A623; }
+.ql-right-title span { color:#7DFF00; }
 .ql-video-wrap {
     border-radius:14px; overflow:hidden; margin-bottom:18px;
     background:#000; position:relative; aspect-ratio:16/9;
@@ -174,7 +174,7 @@
 .ql-video-wrap iframe { width:100%; height:100%; display:block; border:none; }
 .ql-video-logo {
     position:absolute; top:12px; right:14px;
-    width:32px; height:32px; border-radius:8px; background:#F5A623;
+    width:32px; height:32px; border-radius:8px; background:#7DFF00;
     display:flex; align-items:center; justify-content:center;
     font-size:14px; font-weight:700; color:#fff;
     font-family:'Rajdhani',sans-serif; pointer-events:none;
@@ -185,7 +185,7 @@
     padding:8px 16px; font-size:13px; font-weight:600; color:#333; white-space:nowrap;
 }
 .ql-trade-label { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-.ql-trade-line  { flex:1; height:1.5px; background:#F5A623; border-radius:2px; }
+.ql-trade-line  { flex:1; height:1.5px; background:#7DFF00; border-radius:2px; }
 .ql-trade-text  { font-size:14px; font-weight:600; color:#333; white-space:nowrap; }
 .ql-brokers-wrap { overflow:hidden; }
 .ql-brokers-track {

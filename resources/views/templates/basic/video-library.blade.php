@@ -54,7 +54,7 @@
     appearance: none; -webkit-appearance: none;
     cursor: pointer; font-family: 'Exo 2', sans-serif; min-width: 74px;
 }
-.qvl-filter-select:focus { outline: none; border-color: #F5A623; }
+.qvl-filter-select:focus { outline: none; border-color: #7DFF00; }
 
 .qvl-search-wrap {
     display: flex; align-items: stretch; overflow: hidden;
@@ -65,7 +65,7 @@
     outline: none; width: 170px; font-family: 'Exo 2', sans-serif;
 }
 .qvl-search-btn {
-    background: #F5A623; border: none; padding: 0 13px;
+    background: #7DFF00; border: none; padding: 0 13px;
     color: #fff; font-size: 13px; cursor: pointer;
     display: flex; align-items: center; transition: background .2s;
 }
@@ -122,11 +122,11 @@
     transition: all .18s; user-select: none;
     border-left: 3px solid transparent;
 }
-.qvl-sidebar-item:hover { background: rgba(245,166,35,.07); color: #b87800; border-left-color: #F5A623; }
-.qvl-sidebar-item.on  { background: rgba(245,166,35,.1); color: #b87800; border-left-color: #F5A623; font-weight: 600; }
+.qvl-sidebar-item:hover { background: rgba(245,166,35,.07); color: #b87800; border-left-color: #7DFF00; }
+.qvl-sidebar-item.on  { background: rgba(245,166,35,.1); color: #b87800; border-left-color: #7DFF00; font-weight: 600; }
 .qvl-sidebar-item-label { flex: 1; }
 .qvl-sidebar-chevron { font-size: 9px; color: #bbb; transition: transform .2s; }
-.qvl-sidebar-item.open .qvl-sidebar-chevron { transform: rotate(90deg); color: #F5A623; }
+.qvl-sidebar-item.open .qvl-sidebar-chevron { transform: rotate(90deg); color: #7DFF00; }
 .qvl-sidebar-item-count {
     font-size: 11px; color: #aaa; background: #f5f5f7;
     padding: 2px 7px; border-radius: 10px; margin-right: 6px;
@@ -230,7 +230,7 @@
     display: flex; align-items: center; gap: 5px;
     font-size: 11.5px; color: #666;
 }
-.qvl-card-meta-row i   { color: #F5A623; font-size: 10px; width: 12px; text-align: center; }
+.qvl-card-meta-row i   { color: #7DFF00; font-size: 10px; width: 12px; text-align: center; }
 .qvl-card-meta-row span { color: #333; font-weight: 500; }
 
 /* no results */

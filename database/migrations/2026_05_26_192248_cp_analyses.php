@@ -37,7 +37,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('price_monthly', 10, 2)->default(0);
             $table->json('features')->nullable();
-            $table->string('badge_color', 20)->default('#F5A623');
+            $table->string('badge_color', 20)->default('#7DFF00');
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();

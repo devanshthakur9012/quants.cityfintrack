@@ -22,7 +22,7 @@
     font-size:clamp(24px,3.5vw,40px); font-weight:700;
     color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.pf-hero-left h1 span { color:#F5A623; }
+.pf-hero-left h1 span { color:#7DFF00; }
 .pf-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:580px; }
 .pf-hero-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
 .pf-pill {
@@ -37,7 +37,7 @@
     width:80px; height:80px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    font-size:32px; color:#F5A623; flex-shrink:0; font-family:'Rajdhani',sans-serif;
+    font-size:32px; color:#7DFF00; flex-shrink:0; font-family:'Rajdhani',sans-serif;
     font-weight:900; letter-spacing:-1px;
 }
 @media(max-width:768px){
@@ -68,13 +68,13 @@
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.pf-date-input:focus { border-color:#F5A623; }
+.pf-date-input:focus { border-color:#7DFF00; }
 .pf-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.pf-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.pf-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .pf-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Badges */
@@ -83,7 +83,7 @@
 
 /* Buttons */
 .pf-scan-btn {
-    background:#F5A623; color:#000; border:none; border-radius:8px;
+    background:#7DFF00; color:#000; border:none; border-radius:8px;
     padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:13px;
     font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
 }
@@ -102,8 +102,8 @@
     font-size:11px; font-weight:700; cursor:pointer; border:1.5px solid #e5e9f2;
     background:#fff; color:#888; transition:.15s;
 }
-.pf-fp:hover           { border-color:#F5A623; color:#c97f00; }
-.pf-fp.active          { background:rgba(245,166,35,.1);  border-color:#F5A623; color:#c97f00; }
+.pf-fp:hover           { border-color:#7DFF00; color:#c97f00; }
+.pf-fp.active          { background:rgba(245,166,35,.1);  border-color:#7DFF00; color:#c97f00; }
 .pf-fp.active-call     { background:rgba(4,120,87,.1);    border-color:#059669; color:#047857; }
 .pf-fp.active-put      { background:rgba(185,28,28,.08);  border-color:#b91c1c; color:#b91c1c; }
 
@@ -144,7 +144,7 @@
 .ps-call  { border-left:3px solid #059669; }
 .ps-put   { border-left:3px solid #b91c1c; }
 .ps-trap  { border-left:3px solid #7c3aed; }
-.ps-wait  { border-left:3px solid #F5A623; }
+.ps-wait  { border-left:3px solid #7DFF00; }
 
 /* ── CARD ── */
 .pf-card { background:#fff; border:1px solid #e8e8e8; border-radius:12px; overflow:hidden; }
@@ -230,7 +230,7 @@
 .c-sl     { color:#b91c1c; font-weight:700; }
 .c-pcr    { font-size:10px; color:#888; }
 .c-strike { color:#c97f00; font-weight:700; }
-.c-time   { color:#F5A623; font-weight:700; }
+.c-time   { color:#7DFF00; font-weight:700; }
 .c-strsym { display:block; font-size:8px; color:#bbb; margin-top:1px; }
 
 /* Loading / empty */
@@ -240,7 +240,7 @@
 }
 .pf-spinner {
     width:36px; height:36px; border:3px solid #f0f0f0;
-    border-top:3px solid #F5A623; border-radius:50%;
+    border-top:3px solid #7DFF00; border-radius:50%;
     animation:pfSpin 1s linear infinite;
 }
 .pf-loading-txt { color:#bbb; margin-top:12px; font-family:'Exo 2',sans-serif; font-size:13px; }

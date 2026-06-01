@@ -16,7 +16,7 @@
                     @csrf
 
                     {{-- ── HERO ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         Hero Section
                     </h6>
                     <div class="row g-3 mb-4">
@@ -47,7 +47,7 @@
                     </div>
 
                     {{-- ── CTA STRIP ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         Press Enquiry CTA Strip
                     </h6>
                     <div class="row g-3">

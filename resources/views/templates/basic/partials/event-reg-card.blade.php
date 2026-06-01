@@ -18,7 +18,7 @@
 
     @if($event->formatted_date !== '—')
     <div class="ed-reg-date-label">
-        <i class="fas fa-calendar-alt" style="color:#F5A623;"></i>
+        <i class="fas fa-calendar-alt" style="color:#7DFF00;"></i>
         {{ $event->formatted_date }}
         @if($event->formatted_time !== '—') · {{ $event->formatted_time }}@endif
     </div>

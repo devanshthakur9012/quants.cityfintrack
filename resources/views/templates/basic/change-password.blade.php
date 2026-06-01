@@ -15,7 +15,7 @@
 .cp-sidebar{flex-shrink:0;width:240px;position:sticky;top:20px;}
 .cp-main{flex:1;min-width:0;max-width:580px;}
 .cp-profile-box{background:linear-gradient(135deg,#0f1b2d,#1a3050);border-radius:12px;padding:24px 18px 18px;text-align:center;margin-bottom:12px;border:1px solid rgba(245,166,35,.2);}
-.cp-avatar{width:68px;height:68px;border-radius:50%;margin:0 auto 12px;border:3px solid #f5a623;overflow:hidden;background:#f5a623;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#0f1b2d;}
+.cp-avatar{width:68px;height:68px;border-radius:50%;margin:0 auto 12px;border:3px solid #7DFF00;overflow:hidden;background:#7DFF00;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#0f1b2d;}
 .cp-avatar img{width:100%;height:100%;object-fit:cover;}
 .cp-profile-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;}
 .cp-profile-email{font-size:12px;color:rgba(255,255,255,.45);}
@@ -49,13 +49,13 @@
 .cp-rule i{font-size:11px;}
 .cp-rule.ok{color:#2e7d32;}
 .cp-btn{display:inline-flex;align-items:center;gap:7px;padding:11px 24px;border-radius:8px;border:none;font-family:'Exo 2',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
-.cp-btn.primary{background:#f5a623;color:#0f1b2d;}
+.cp-btn.primary{background:#7DFF00;color:#0f1b2d;}
 .cp-btn.primary:hover{background:#d4890e;transform:translateY(-1px);}
 .cp-btn.secondary{background:#f0f2f7;color:#5a6678;}
 .cp-btn.secondary:hover{background:#e5e9f2;}
 .cp-tips{background:#f8f9fd;border:1px solid #e5e9f2;border-radius:10px;padding:16px 18px;margin-top:20px;}
 .cp-tips h5{font-size:14px;font-weight:700;color:#0f1b2d;margin:0 0 10px;display:flex;align-items:center;gap:7px;}
-.cp-tips h5 i{color:#f5a623;}
+.cp-tips h5 i{color:#7DFF00;}
 .cp-tips ul{padding-left:16px;margin:0;}
 .cp-tips ul li{font-size:13px;color:#5a6678;margin-bottom:5px;line-height:1.55;}
 @media(max-width:768px){.cp-layout{flex-direction:column;padding:16px 14px 56px;}.cp-sidebar{width:100%;position:static;}.cp-main{max-width:100%;}}
@@ -64,7 +64,7 @@
 <div class="cp">
 <div class="cp-header">
     <div class="cp-header-inner">
-        <h1><i class="fas fa-lock" style="color:#f5a623;margin-right:8px;font-size:22px;"></i>Change Password</h1>
+        <h1><i class="fas fa-lock" style="color:#7DFF00;margin-right:8px;font-size:22px;"></i>Change Password</h1>
         <p>Keep your account secure with a strong, unique password.</p>
     </div>
 </div>

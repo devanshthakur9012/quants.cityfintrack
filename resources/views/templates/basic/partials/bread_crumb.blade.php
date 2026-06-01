@@ -39,7 +39,7 @@
 /* gold top line */
 .qin-hero-bar {
     position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, transparent 0%, #F5A623 30%, #FFD06A 50%, #F5A623 70%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, #7DFF00 30%, #FFD06A 50%, #7DFF00 70%, transparent 100%);
 }
 
 /* gold bottom fade */
@@ -89,8 +89,8 @@
     font-family: 'Rajdhani', sans-serif; font-size: 14px;
     font-weight: 600; color: #E4EBF5; letter-spacing: .04em;
 }
-.qin-welcome-pill i { color: #F5A623; font-size: 13px; }
-.qin-welcome-pill span { color: #F5A623; }
+.qin-welcome-pill i { color: #7DFF00; font-size: 13px; }
+.qin-welcome-pill span { color: #7DFF00; }
 
 /* page title */
 .qin-title {
@@ -103,7 +103,7 @@
 .qin-title-line {
     display: block; width: 60px; height: 3px;
     margin: 8px auto 0; border-radius: 2px;
-    background: linear-gradient(90deg, rgba(255,255,255,.5), #F5A623);
+    background: linear-gradient(90deg, rgba(255,255,255,.5), #7DFF00);
 }
 
 /* breadcrumb */
@@ -128,7 +128,7 @@
     display: flex; align-items: center; gap: 5px;
     transition: color .2s;
 }
-.qin-breadcrumb li a:hover { color: #F5A623; }
+.qin-breadcrumb li a:hover { color: #7DFF00; }
 .qin-breadcrumb li a i { font-size: 12px; }
 /* separator */
 .qin-breadcrumb li + li::before {
@@ -140,7 +140,7 @@
 }
 /* active crumb */
 .qin-breadcrumb li:last-child {
-    color: #F5A623; font-weight: 700;
+    color: #7DFF00; font-weight: 700;
 }
 
 @media (max-width: 576px) {

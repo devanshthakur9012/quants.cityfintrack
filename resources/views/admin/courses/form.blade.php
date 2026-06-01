@@ -46,8 +46,8 @@
 }
 .price-preview-box .pp-label { font-size: 11px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .06em; }
 .price-preview-box .pp-mrp   { font-size: 14px; text-decoration: line-through; color: rgba(255,255,255,.5); }
-.price-preview-box .pp-price { font-size: 28px; font-weight: 700; color: #f5a623; line-height: 1.1; }
-.price-preview-box .pp-disc  { font-size: 12px; background: #f5a623; color: #0f1b2d; padding: 2px 8px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 4px; }
+.price-preview-box .pp-price { font-size: 28px; font-weight: 700; color: #7DFF00; line-height: 1.1; }
+.price-preview-box .pp-disc  { font-size: 12px; background: #7DFF00; color: #0f1b2d; padding: 2px 8px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 4px; }
 
 /* ── FAQ builder ─────────────────────────────────────────────────────────── */
 .faq-item {
@@ -73,7 +73,7 @@
     cursor: pointer; transition: all .2s; background: #fafbff;
 }
 .cert-toggle-label.cert-enabled { border-color: #1a56db; background: #dbeafe; }
-.cert-icon { font-size: 28px; color: #f5a623; }
+.cert-icon { font-size: 28px; color: #7DFF00; }
 .cert-text-main { font-size: 14px; font-weight: 600; color: #0f1b2d; }
 .cert-text-sub  { font-size: 12px; color: #7a8499; }
 </style>

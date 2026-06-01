@@ -22,12 +22,12 @@ body{background:#0a0f1a;margin:0;}
 .lp h1,.lp h2,.lp h3,.lp h4{font-family:'Rajdhani',sans-serif;}
 .lp-bar{background:#0f1b2d;border-bottom:1px solid rgba(255,255,255,.08);padding:0 20px;height:52px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:200;}
 .lp-bar-back{color:rgba(255,255,255,.55);font-size:13px;display:flex;align-items:center;gap:6px;text-decoration:none;transition:color .2s;white-space:nowrap;}
-.lp-bar-back:hover{color:#f5a623;}
+.lp-bar-back:hover{color:#7DFF00;}
 .lp-bar-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lp-bar-sub{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
 .lp-nav-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;transition:all .2s;font-family:'Exo 2',sans-serif;white-space:nowrap;}
-.lp-nav-btn:hover{background:rgba(245,166,35,.15);border-color:#f5a623;color:#f5a623;}
-.lp-nav-btn.next{background:#f5a623;color:#0f1b2d;border-color:#f5a623;}
+.lp-nav-btn:hover{background:rgba(245,166,35,.15);border-color:#7DFF00;color:#7DFF00;}
+.lp-nav-btn.next{background:#7DFF00;color:#0f1b2d;border-color:#7DFF00;}
 .lp-nav-btn.next:hover{background:#d4890e;}
 .lp-body{display:flex;flex:1;height:calc(100vh - 52px);overflow:hidden;}
 .lp-main{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;}
@@ -39,7 +39,7 @@ body{background:#0a0f1a;margin:0;}
 .lp-yt-wrap iframe{width:100%;height:100%;border:none;display:block;}
 .lp-state{position:absolute;inset:0;z-index:10;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .lp-state.gone{display:none;}
-.lp-spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.08);border-top-color:#f5a623;border-radius:50%;animation:lspin .8s linear infinite;}
+.lp-spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.08);border-top-color:#7DFF00;border-radius:50%;animation:lspin .8s linear infinite;}
 @keyframes lspin{to{transform:rotate(360deg);}}
 .lp-state-txt{font-size:13px;color:rgba(255,255,255,.5);text-align:center;padding:0 20px;}
 .lp-state-icon{font-size:48px;opacity:.25;}
@@ -53,21 +53,21 @@ body{background:#0a0f1a;margin:0;}
 .lp-seek-wrap{position:relative;height:16px;display:flex;align-items:center;cursor:pointer;margin-bottom:8px;}
 .lp-seek-track{position:absolute;inset:6px 0;background:rgba(255,255,255,.2);border-radius:3px;pointer-events:none;}
 .lp-seek-buf{position:absolute;top:6px;bottom:6px;left:0;background:rgba(255,255,255,.3);border-radius:3px;pointer-events:none;}
-.lp-seek-fill{position:absolute;top:6px;bottom:6px;left:0;background:#f5a623;border-radius:3px;pointer-events:none;transition:width .1s;}
-.lp-seek-thumb{position:absolute;top:50%;width:14px;height:14px;background:#f5a623;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 4px rgba(0,0,0,.5);}
+.lp-seek-fill{position:absolute;top:6px;bottom:6px;left:0;background:#7DFF00;border-radius:3px;pointer-events:none;transition:width .1s;}
+.lp-seek-thumb{position:absolute;top:50%;width:14px;height:14px;background:#7DFF00;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 4px rgba(0,0,0,.5);}
 .lp-ctrl-row{display:flex;align-items:center;gap:8px;}
 .lp-ctrl-btn{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:5px 7px;border-radius:5px;transition:all .15s;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;}
-.lp-ctrl-btn:hover{color:#f5a623;background:rgba(255,255,255,.1);}
+.lp-ctrl-btn:hover{color:#7DFF00;background:rgba(255,255,255,.1);}
 .lp-skip-btn{display:flex;flex-direction:column;align-items:center;gap:1px;}
 .lp-skip-btn i{font-size:14px;}
 .lp-skip-lbl{font-size:8px;font-weight:700;font-family:'Exo 2',sans-serif;color:rgba(255,255,255,.8);}
 .lp-vol-row{display:flex;align-items:center;gap:5px;}
 .lp-vol-slide{width:65px;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.3);border-radius:2px;cursor:pointer;outline:none;}
-.lp-vol-slide::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#f5a623;cursor:pointer;}
+.lp-vol-slide::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#7DFF00;cursor:pointer;}
 .lp-time-txt{font-size:12px;color:rgba(255,255,255,.85);font-family:'Exo 2',sans-serif;white-space:nowrap;}
 .lp-spacer{flex:1;}
 .lp-speed{font-size:11px;font-weight:700;font-family:'Exo 2',sans-serif;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .15s;}
-.lp-speed:hover{background:rgba(245,166,35,.25);border-color:#f5a623;color:#f5a623;}
+.lp-speed:hover{background:rgba(245,166,35,.25);border-color:#7DFF00;color:#7DFF00;}
 .lp-skip-flash{position:absolute;top:50%;transform:translateY(-50%);z-index:16;font-size:14px;font-weight:700;font-family:'Rajdhani',sans-serif;color:#fff;background:rgba(0,0,0,.55);padding:8px 14px;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .25s;}
 .lp-skip-flash.left{left:12%;}
 .lp-skip-flash.right{right:12%;}
@@ -82,13 +82,13 @@ body{background:#0a0f1a;margin:0;}
 .lp-meta h2{font-size:20px;color:#fff;margin:0 0 8px;}
 .lp-meta-row{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:rgba(255,255,255,.4);}
 .lp-meta-row span{display:flex;align-items:center;gap:5px;}
-.lp-meta-row i{color:#f5a623;}
+.lp-meta-row i{color:#7DFF00;}
 .lp-desc{padding:14px 24px 24px;font-size:13px;color:rgba(255,255,255,.45);line-height:1.8;}
 
 /* SIDEBAR */
 .lp-sidebar{width:320px;flex-shrink:0;background:#0d1626;border-left:1px solid rgba(255,255,255,.05);overflow-y:auto;display:flex;flex-direction:column;}
 .lp-sb-head{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;}
-.lp-sb-head i{color:#f5a623;}
+.lp-sb-head i{color:#7DFF00;}
 .lp-sec{border-bottom:1px solid rgba(255,255,255,.03);}
 .lp-sec-hd{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;background:rgba(255,255,255,.02);user-select:none;}
 .lp-sec-hd:hover{background:rgba(255,255,255,.04);}
@@ -100,18 +100,18 @@ body{background:#0a0f1a;margin:0;}
 .lp-sec-body.open{display:block;}
 .lp-lrow{display:flex;align-items:center;gap:10px;padding:9px 16px 9px 26px;text-decoration:none;color:inherit;transition:background .15s;}
 .lp-lrow:hover{background:rgba(255,255,255,.03);}
-.lp-lrow.active{background:rgba(245,166,35,.07);border-left:3px solid #f5a623;padding-left:23px;}
-.lp-lrow.active .lp-lrow-title{color:#f5a623;}
+.lp-lrow.active{background:rgba(245,166,35,.07);border-left:3px solid #7DFF00;padding-left:23px;}
+.lp-lrow.active .lp-lrow-title{color:#7DFF00;}
 .lp-lrow-ico{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;}
 .lp-lrow-ico.yt{background:rgba(229,57,53,.2);color:#e53935;}
 .lp-lrow-ico.up{background:rgba(26,86,219,.15);color:#5c9aff;}
-.lp-lrow-ico.cur{background:#f5a623;color:#0f1b2d;}
+.lp-lrow-ico.cur{background:#7DFF00;color:#0f1b2d;}
 .lp-lrow-info{flex:1;min-width:0;}
 .lp-lrow-title{font-size:12px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
 .lp-lrow-dur{font-size:10px;color:rgba(255,255,255,.25);margin-top:1px;display:flex;align-items:center;gap:4px;}
 .lp-dt-warn{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:30px;}
 .lp-dt-warn.show{display:flex;}
-.lp-dt-warn i{font-size:56px;color:#f5a623;opacity:.8;}
+.lp-dt-warn i{font-size:56px;color:#7DFF00;opacity:.8;}
 .lp-dt-warn h3{font-family:'Rajdhani',sans-serif;font-size:24px;color:#fff;margin:0;}
 .lp-dt-warn p{font-size:14px;color:rgba(255,255,255,.5);margin:0;max-width:360px;}
 @media(max-width:768px){
@@ -363,7 +363,7 @@ function initPlayer(){
     .catch(function(e){
         showState('<i class="fas fa-exclamation-triangle" style="font-size:36px;color:#e53935;opacity:.7;display:block;margin-bottom:12px;"></i>'+
             '<div class="lp-state-txt">'+(e.message||'Could not load video.')+'</div>'+
-            '<button onclick="initPlayer()" style="margin-top:14px;padding:9px 22px;background:#f5a623;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;">Retry</button>');
+            '<button onclick="initPlayer()" style="margin-top:14px;padding:9px 22px;background:#7DFF00;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;">Retry</button>');
     });
 }
 window.initPlayer=initPlayer;
@@ -373,14 +373,14 @@ function loadVideo(url){
     vid.addEventListener('canplay',function onR(){
         hideState(); vid.removeEventListener('canplay',onR);
         vid.play().catch(function(){
-            showState('<div onclick="vid.play();hideState();" style="cursor:pointer;width:68px;height:68px;border-radius:50%;background:#f5a623;display:flex;align-items:center;justify-content:center;">'+
+            showState('<div onclick="vid.play();hideState();" style="cursor:pointer;width:68px;height:68px;border-radius:50%;background:#7DFF00;display:flex;align-items:center;justify-content:center;">'+
                 '<i class="fas fa-play" style="font-size:24px;color:#0f1b2d;margin-left:3px;"></i></div>'+
                 '<div class="lp-state-txt" style="margin-top:10px;">Click to play</div>');
         });
     },{once:true});
     vid.addEventListener('error',function(){
         showState('<i class="fas fa-exclamation-triangle" style="font-size:36px;color:#e53935;opacity:.7;display:block;margin-bottom:12px;"></i>'+
-            '<div class="lp-state-txt">Stream error. <button onclick="initPlayer()" style="background:none;border:none;color:#f5a623;cursor:pointer;font-weight:700;">Retry</button></div>');
+            '<div class="lp-state-txt">Stream error. <button onclick="initPlayer()" style="background:none;border:none;color:#7DFF00;cursor:pointer;font-weight:700;">Retry</button></div>');
     });
 }
 

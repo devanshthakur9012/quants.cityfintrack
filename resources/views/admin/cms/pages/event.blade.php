@@ -13,7 +13,7 @@
                     @csrf
 
                     {{-- ── HERO ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Hero Section</h6>
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Hero Section</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-5">
                             <label class="form-label">Eyebrow Label</label>
@@ -42,7 +42,7 @@
                     </div>
 
                     {{-- ── CITIES LIST ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         City Filter Dropdown
                         <small class="text-muted fw-normal ms-2">Format: <code>key|Display Label</code> per line (or just the city name)</small>
                     </h6>
@@ -52,7 +52,7 @@
                     </div>
 
                     {{-- ── BOTTOM CTA STRIP ── --}}
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         Bottom CTA Strip <small class="text-muted fw-normal">(leave blank to hide)</small>
                     </h6>
                     <div class="row g-3">

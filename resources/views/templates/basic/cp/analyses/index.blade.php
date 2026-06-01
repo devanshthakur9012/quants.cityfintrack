@@ -29,12 +29,12 @@
 .cp-hero-inner{ position:relative;z-index:1;max-width:1200px;margin:0 auto;
     display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap; }
 .cp-hero-left h1{ font-size:clamp(28px,4vw,48px);font-weight:700;color:#fff;margin:0 0 12px;line-height:1.1; }
-.cp-hero-left h1 span{ color:#F5A623; }
+.cp-hero-left h1 span{ color:#7DFF00; }
 .cp-hero-left p{ font-size:15px;color:rgba(255,255,255,.6);margin:0 0 24px;line-height:1.7;max-width:540px; }
 .cp-hero-btns{ display:flex;gap:12px;flex-wrap:wrap; }
 .cp-btn-gold{
     display:inline-flex;align-items:center;gap:8px;
-    background:#F5A623;color:#000;padding:12px 28px;border-radius:9px;
+    background:#7DFF00;color:#000;padding:12px 28px;border-radius:9px;
     font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;
     transition:background .2s;border:none;cursor:pointer;
 }
@@ -46,7 +46,7 @@
     font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:.04em;
     transition:all .2s;cursor:pointer;
 }
-.cp-btn-outline:hover{ border-color:#F5A623;color:#F5A623; }
+.cp-btn-outline:hover{ border-color:#7DFF00;color:#7DFF00; }
 
 /* Subscription status banner */
 .cp-sub-banner{
@@ -58,7 +58,7 @@
 }
 .cp-sub-banner-text{ font-size:14px;color:rgba(255,255,255,.85);
     display:flex;align-items:center;gap:10px; }
-.cp-sub-badge{ background:#F5A623;color:#000;border-radius:20px;
+.cp-sub-badge{ background:#7DFF00;color:#000;border-radius:20px;
     padding:3px 12px;font-size:12px;font-weight:700; }
 
 /* ── FILTER BAR ── */
@@ -75,7 +75,7 @@
     font-size:13px;font-weight:600;color:#666;cursor:pointer;
     background:#fff;transition:all .2s;font-family:'Exo 2',sans-serif;
 }
-.cp-tier-tab.on{ border-color:#F5A623;background:rgba(245,166,35,.08);color:#d4890e; }
+.cp-tier-tab.on{ border-color:#7DFF00;background:rgba(245,166,35,.08);color:#d4890e; }
 .cp-search-wrap{
     display:flex;align-items:stretch;border:1.5px solid #e5e9f2;border-radius:8px;
     overflow:hidden;margin-left:auto;
@@ -85,7 +85,7 @@
     width:220px;font-family:'Exo 2',sans-serif;
 }
 .cp-search-btn{
-    background:#F5A623;border:none;padding:0 14px;color:#000;cursor:pointer;font-size:14px;
+    background:#7DFF00;border:none;padding:0 14px;color:#000;cursor:pointer;font-size:14px;
 }
 
 /* ── CONTENT ── */
@@ -94,7 +94,7 @@
 .cp-section-head{
     font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;
     color:#1a1a2e;margin:0 0 20px;padding-bottom:8px;
-    border-bottom:2px solid #F5A623;display:inline-block;
+    border-bottom:2px solid #7DFF00;display:inline-block;
 }
 .cp-grid{
     display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px;
@@ -139,7 +139,7 @@
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:8px;color:#fff;
 }
-.cp-lock-overlay i{ font-size:28px;color:#F5A623; }
+.cp-lock-overlay i{ font-size:28px;color:#7DFF00; }
 .cp-lock-overlay span{ font-size:12px;font-weight:600; }
 
 .cp-card-body{ padding:14px 16px;flex:1;display:flex;flex-direction:column; }
@@ -159,7 +159,7 @@
 }
 .cp-card-action{
     display:inline-flex;align-items:center;gap:5px;
-    font-size:13px;font-weight:700;color:#F5A623;
+    font-size:13px;font-weight:700;color:#7DFF00;
     font-family:'Rajdhani',sans-serif;letter-spacing:.03em;transition:gap .2s;
 }
 .cp-card-action:hover{ gap:9px; }
@@ -194,7 +194,7 @@
     font-size:clamp(22px,3vw,36px);color:#fff;margin:0 0 10px;
     position:relative;
 }
-.cp-bottom-cta h2 span{ color:#F5A623; }
+.cp-bottom-cta h2 span{ color:#7DFF00; }
 .cp-bottom-cta p{ color:rgba(255,255,255,.6);margin:0 0 24px;font-size:14px;position:relative; }
 
 @media(max-width:768px){
@@ -233,7 +233,7 @@
     @if($userSubscription && $userSubscription->isActive())
     <div class="cp-sub-banner cp-anim">
         <div class="cp-sub-banner-text">
-            <i class="las la-check-circle" style="color:#F5A623;font-size:18px;"></i>
+            <i class="las la-check-circle" style="color:#7DFF00;font-size:18px;"></i>
             You are on the
             <span class="cp-sub-badge">{{ strtoupper($userSubscription->plan->name) }}</span>
             plan — expires {{ $userSubscription->expires_at->format('d M Y') }}
@@ -246,7 +246,7 @@
     @elseif(auth()->check())
     <div class="cp-sub-banner cp-anim">
         <div class="cp-sub-banner-text">
-            <i class="las la-info-circle" style="color:#F5A623;font-size:18px;"></i>
+            <i class="las la-info-circle" style="color:#7DFF00;font-size:18px;"></i>
             You are on the <span class="cp-sub-badge">FREE</span> plan.
             Upgrade to unlock all analysis tools.
         </div>

@@ -40,7 +40,7 @@
 .cr-search-wrap { display:flex; align-items:stretch; border:1px solid #dde2ee; border-radius:7px; overflow:hidden; margin-left:auto; transition:border-color .2s; }
 .cr-search-wrap:focus-within { border-color:#1a56db; }
 .cr-search-input { border:none; padding:8px 14px; font-size:13px; color:#2d3a4e; outline:none; width:210px; font-family:'Exo 2',sans-serif; background:#fff; }
-.cr-search-btn { background:#f5a623; border:none; padding:0 16px; color:#fff; font-size:14px; cursor:pointer; transition:background .2s; display:flex; align-items:center; }
+.cr-search-btn { background:#7DFF00; border:none; padding:0 16px; color:#fff; font-size:14px; cursor:pointer; transition:background .2s; display:flex; align-items:center; }
 .cr-search-btn:hover { background:#d4890e; }
 .cr-reset-btn { font-size:12px; color:#e53935; font-weight:600; background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px; white-space:nowrap; }
 .cr-reset-btn:hover { color:#b71c1c; }
@@ -64,7 +64,7 @@
 .cr-thumb { position:relative; aspect-ratio:16/9; overflow:hidden; background:#0f1b2d; flex-shrink:0; }
 .cr-thumb img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s; }
 .cr-card:hover .cr-thumb img { transform:scale(1.05); }
-.cr-featured-star { position:absolute; top:10px; left:10px; background:#f5a623; color:#fff; font-size:10px; font-weight:700; padding:3px 9px; border-radius:4px; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:4px; }
+.cr-featured-star { position:absolute; top:10px; left:10px; background:#7DFF00; color:#fff; font-size:10px; font-weight:700; padding:3px 9px; border-radius:4px; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:4px; }
 .cr-status-badge { position:absolute; top:10px; right:10px; font-size:10px; font-weight:700; letter-spacing:.06em; padding:4px 10px; border-radius:4px; text-transform:uppercase; }
 .cr-status-badge.ongoing  { background:#fb8c00; color:#fff; }
 .cr-status-badge.upcoming { background:#43a047; color:#fff; }
@@ -76,7 +76,7 @@
 .cr-title a:hover { color:#1a56db; }
 .cr-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
 .cr-tag { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:#5a6678; background:#f4f6fb; padding:3px 9px; border-radius:5px; border:1px solid #eaecf2; white-space:nowrap; }
-.cr-tag i { font-size:10px; color:#f5a623; }
+.cr-tag i { font-size:10px; color:#7DFF00; }
 .cr-tag.cert { background:#fff8e1; border-color:#ffe082; color:#f57f17; }
 .cr-tag.cert i { color:#f57f17; }
 .cr-tag.dur  { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
@@ -88,7 +88,7 @@
 .cr-price .cr-price-free { font-size:17px; font-weight:700; color:#43a047; }
 .cr-price .cr-price-orig { text-decoration:line-through; color:#b0b8c9; font-size:12px; margin-left:4px; }
 .cr-price .cr-price-disc { font-size:11px; font-weight:700; color:#43a047; background:#e8f5e9; padding:2px 6px; border-radius:4px; margin-left:4px; }
-.cr-enroll-btn { font-size:12.5px; font-weight:700; color:#f5a623; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; transition:gap .2s,color .2s; border:none; background:none; padding:0; cursor:pointer; font-family:'Exo 2',sans-serif; }
+.cr-enroll-btn { font-size:12.5px; font-weight:700; color:#7DFF00; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; transition:gap .2s,color .2s; border:none; background:none; padding:0; cursor:pointer; font-family:'Exo 2',sans-serif; }
 .cr-enroll-btn:hover { gap:9px; color:#d4890e; }
 .cr-curriculum-strip { display:flex; gap:10px; align-items:center; padding:7px 16px 9px; background:#f8f9fd; border-top:1px solid #eef0f8; }
 .cr-cs-item { display:flex; align-items:center; gap:4px; font-size:11.5px; color:#7a8499; }

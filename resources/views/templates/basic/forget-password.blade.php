@@ -44,7 +44,7 @@
         {{-- ── STEP 2: Success ── --}}
         <div class="ql-step" id="stepForgotDone">
             <div style="text-align:center; padding:20px 0;">
-                <div style="width:70px;height:70px;border-radius:50%;background:#F5A623;
+                <div style="width:70px;height:70px;border-radius:50%;background:#7DFF00;
                             display:flex;align-items:center;justify-content:center;
                             margin:0 auto 20px; font-size:30px; color:#fff;">
                     <i class="fas fa-paper-plane"></i>

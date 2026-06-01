@@ -27,7 +27,7 @@
     position: sticky; top:0; z-index:300;
     background:#1a1a2e;
     display:flex; align-items:center; justify-content:center;
-    gap:0; border-bottom:2px solid #F5A623;
+    gap:0; border-bottom:2px solid #7DFF00;
     overflow-x:auto;
 }
 .qos-nav-link {
@@ -36,9 +36,9 @@
     white-space:nowrap; transition:all .2s; border:none; background:none;
     font-family:'Exo 2',sans-serif; letter-spacing:.04em;
 }
-.qos-nav-link.on, .qos-nav-link:hover { color:#F5A623; }
+.qos-nav-link.on, .qos-nav-link:hover { color:#7DFF00; }
 .qos-nav-cta {
-    margin-left:auto; padding:10px 22px; background:#F5A623;
+    margin-left:auto; padding:10px 22px; background:#7DFF00;
     color:#000; font-weight:700; font-size:13px; border:none; cursor:pointer;
     font-family:'Exo 2',sans-serif; white-space:nowrap; flex-shrink:0;
     transition:background .2s;
@@ -73,7 +73,7 @@
 .qos-hero-badge {
     display:inline-flex;align-items:center;gap:8px;
     background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.35);
-    color:#F5A623;font-size:11px;font-weight:700;padding:6px 16px;
+    color:#7DFF00;font-size:11px;font-weight:700;padding:6px 16px;
     border-radius:30px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;
 }
 .qos-hero-sub {
@@ -87,7 +87,7 @@
     line-height:1.0;margin-bottom:16px;
 }
 .qos-hero-title .white{color:#fff;}
-.qos-hero-title .gold {color:#F5A623;}
+.qos-hero-title .gold {color:#7DFF00;}
 .qos-hero-date {
     font-size:16px;font-weight:600;color:#fff;margin-bottom:6px;
 }
@@ -97,7 +97,7 @@
 .qos-hero-btns { display:flex;gap:14px;flex-wrap:wrap; }
 .qos-btn-primary {
     display:inline-flex;align-items:center;gap:8px;
-    background:#F5A623;color:#000;font-weight:700;font-size:15px;
+    background:#7DFF00;color:#000;font-weight:700;font-size:15px;
     padding:14px 32px;border-radius:10px;border:none;cursor:pointer;
     font-family:'Rajdhani',sans-serif;letter-spacing:.05em;transition:background .2s,transform .15s;
 }
@@ -109,7 +109,7 @@
     padding:13px 28px;border-radius:10px;cursor:pointer;background:transparent;
     font-family:'Exo 2',sans-serif;transition:all .2s;
 }
-.qos-btn-ghost:hover{border-color:#F5A623;color:#F5A623;}
+.qos-btn-ghost:hover{border-color:#7DFF00;color:#7DFF00;}
 
 /* right: promo card */
 .qos-hero-card {
@@ -122,13 +122,13 @@
 }
 .qos-hero-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
 .qos-hero-card-title {
-    font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#F5A623;margin-bottom:6px;
+    font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#7DFF00;margin-bottom:6px;
 }
 .qos-hero-card-tag {
     font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.08em;margin-bottom:16px;
 }
 .qos-hero-card-cta {
-    width:100%;padding:12px;background:#F5A623;color:#000;font-weight:700;
+    width:100%;padding:12px;background:#7DFF00;color:#000;font-weight:700;
     font-size:14px;border:none;border-radius:8px;cursor:pointer;
     font-family:'Rajdhani',sans-serif;letter-spacing:.05em;transition:background .2s;
 }
@@ -153,7 +153,7 @@
     text-align:center;margin:0 0 10px;color:#000;
 }
 .qos-sec-line {
-    width:56px;height:3px;background:#F5A623;border-radius:2px;
+    width:56px;height:3px;background:#7DFF00;border-radius:2px;
     margin:0 auto 48px;
 }
 
@@ -176,10 +176,10 @@
 .qos-about-card-img{width:100%;aspect-ratio:4/3;overflow:hidden;}
 .qos-about-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
 .qos-about-card-body{padding:20px 22px;}
-.qos-about-card-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#F5A623;margin-bottom:6px;}
+.qos-about-card-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#7DFF00;margin-bottom:6px;}
 .qos-about-card-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:14px;}
 .qos-about-card-btn{
-    width:100%;padding:11px;background:#F5A623;color:#000;font-weight:700;
+    width:100%;padding:11px;background:#7DFF00;color:#000;font-weight:700;
     font-size:13px;border:none;border-radius:8px;cursor:pointer;
     font-family:'Rajdhani',sans-serif;letter-spacing:.04em;
 }
@@ -204,8 +204,8 @@
     display:flex;align-items:center;justify-content:center;
 }
 .qos-benefit-icon img{width:100%;height:100%;object-fit:cover;}
-.qos-benefit-icon i{font-size:26px;color:#F5A623;}
-.qos-benefit-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#F5A623;margin-bottom:4px;}
+.qos-benefit-icon i{font-size:26px;color:#7DFF00;}
+.qos-benefit-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#7DFF00;margin-bottom:4px;}
 .qos-benefit-label{font-size:13px;color:#555;font-weight:500;line-height:1.4;}
 
 /* =========================================
@@ -226,12 +226,12 @@
 .qos-speaker-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.08);}
 .qos-speaker-av {
     width:88px;height:88px;border-radius:50%;margin:0 auto 12px;overflow:hidden;
-    border:3px solid #F5A623;background:#f0efed;
+    border:3px solid #7DFF00;background:#f0efed;
     display:flex;align-items:center;justify-content:center;font-size:28px;color:#ccc;
 }
 .qos-speaker-av img{width:100%;height:100%;object-fit:cover;display:block;}
 .qos-speaker-name{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:3px;}
-.qos-speaker-role{font-size:11.5px;color:#F5A623;font-weight:600;margin-bottom:4px;}
+.qos-speaker-role{font-size:11.5px;color:#7DFF00;font-weight:600;margin-bottom:4px;}
 .qos-speaker-creds{font-size:11px;color:#888;background:#f5f5f7;border-radius:20px;padding:3px 10px;display:inline-block;}
 .qos-speaker-topic{font-size:11.5px;color:#555;margin-top:8px;line-height:1.45;}
 
@@ -248,13 +248,13 @@
     cursor:pointer;border:none;background:#fff;color:#666;
     transition:all .2s;font-family:'Exo 2',sans-serif;
 }
-.qos-sched-tab.on{background:#1a1a2e;color:#F5A623;}
+.qos-sched-tab.on{background:#1a1a2e;color:#7DFF00;}
 .qos-sched-panel{display:none;}
 .qos-sched-panel.on{display:block;animation:qosFadeUp .4s ease both;}
 
 .qos-sched-table{width:100%;border-collapse:collapse;}
 .qos-sched-table th{
-    background:#1a1a2e;color:#F5A623;font-family:'Rajdhani',sans-serif;
+    background:#1a1a2e;color:#7DFF00;font-family:'Rajdhani',sans-serif;
     font-size:14px;font-weight:700;letter-spacing:.05em;
     padding:14px 18px;text-align:left;
 }
@@ -264,7 +264,7 @@
 }
 .qos-sched-table tr:last-child td{border-bottom:none;}
 .qos-sched-table tr:hover td{background:#fafafa;}
-.qos-sched-break td{background:#fff8e8 !important;color:#F5A623;font-weight:600;}
+.qos-sched-break td{background:#fff8e8 !important;color:#7DFF00;font-weight:600;}
 .qos-sched-time{font-weight:700;color:#1a1a2e;white-space:nowrap;}
 .qos-sched-dur {color:#888;white-space:nowrap;}
 .qos-sched-spk {font-weight:600;color:#1a1a2e;}
@@ -284,7 +284,7 @@
     border-bottom:1px solid #eee;font-size:14px;color:#333;cursor:pointer;
 }
 .qos-price-option:last-child{border-bottom:none;}
-.qos-price-option i{color:#F5A623;font-size:16px;flex-shrink:0;}
+.qos-price-option i{color:#7DFF00;font-size:16px;flex-shrink:0;}
 .qos-price-card{
     background:linear-gradient(135deg,#0d1b2a,#1a2f50);
     border:1px solid rgba(245,166,35,.3);border-radius:18px;
@@ -294,7 +294,7 @@
 }
 .qos-price-card-title{
     font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
-    color:#F5A623;margin-bottom:6px;
+    color:#7DFF00;margin-bottom:6px;
 }
 .qos-price-card-sub{font-size:12px;color:rgba(255,255,255,.45);margin-bottom:28px;}
 .qos-price-amount{
@@ -307,7 +307,7 @@
     font-size:18px;margin-bottom:28px;
 }
 .qos-price-pay-btn{
-    width:100%;padding:16px;background:#F5A623;color:#000;
+    width:100%;padding:16px;background:#7DFF00;color:#000;
     font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;
     border:none;border-radius:10px;cursor:pointer;letter-spacing:.05em;
     transition:background .2s,transform .15s;
@@ -315,7 +315,7 @@
 .qos-price-pay-btn:hover{background:#d4890e;}
 .qos-price-pay-btn:active{transform:scale(.97);}
 .qos-tnc-link{font-size:12px;color:#888;margin-top:20px;text-align:center;display:block;}
-.qos-tnc-link a{color:#F5A623;text-decoration:underline;}
+.qos-tnc-link a{color:#7DFF00;text-decoration:underline;}
 
 /* =========================================
    7. KNOW MORE / DOWNLOAD
@@ -333,10 +333,10 @@
     font-family:'Rajdhani',sans-serif;font-size:clamp(24px,3vw,36px);
     font-weight:700;color:#fff;margin-bottom:20px;line-height:1.2;
 }
-.qos-know-title span{color:#F5A623;}
+.qos-know-title span{color:#7DFF00;}
 .qos-know-cta-btn{
     display:inline-flex;align-items:center;gap:10px;
-    background:#F5A623;color:#000;font-weight:700;font-size:15px;
+    background:#7DFF00;color:#000;font-weight:700;font-size:15px;
     padding:14px 28px;border-radius:10px;border:none;cursor:pointer;
     font-family:'Rajdhani',sans-serif;letter-spacing:.05em;transition:background .2s;
 }
@@ -352,7 +352,7 @@
     padding:12px 22px;border-radius:10px;cursor:pointer;background:transparent;
     font-size:22px;transition:all .2s;
 }
-.qos-dl-btn:hover{border-color:#F5A623;color:#F5A623;}
+.qos-dl-btn:hover{border-color:#7DFF00;color:#7DFF00;}
 
 /* =========================================
    8. PAST EXPERTS ATTENDEE
@@ -407,7 +407,7 @@
     z-index:200;display:flex;flex-direction:column;gap:0;
 }
 .qos-side-btn {
-    width:44px;padding:10px 0;background:#F5A623;color:#000;
+    width:44px;padding:10px 0;background:#7DFF00;color:#000;
     text-align:center;font-size:16px;cursor:pointer;transition:background .2s;
     border-bottom:1px solid rgba(0,0,0,.1);
 }
@@ -443,11 +443,11 @@
                 <span class="white">Option </span><span class="gold">{{ $symposium['title'] }}</span>
             </h1>
             <div class="qos-hero-date">
-                <i class="fas fa-calendar-alt" style="color:#F5A623;margin-right:8px;"></i>
+                <i class="fas fa-calendar-alt" style="color:#7DFF00;margin-right:8px;"></i>
                 {{ $symposium['date'] }}
             </div>
             <div class="qos-hero-loc">
-                <i class="fas fa-map-marker-alt" style="color:#F5A623;margin-right:8px;"></i>
+                <i class="fas fa-map-marker-alt" style="color:#7DFF00;margin-right:8px;"></i>
                 {{ $symposium['location'] }}
             </div>
             <div class="qos-hero-btns">
@@ -610,7 +610,7 @@
                 @foreach($symposium['pricing_options'] as $po)
                 <div class="qos-price-option">
                     <i class="fas {{ $po['selected'] ? 'fa-check-circle' : 'fa-circle' }}"
-                       style="{{ $po['selected'] ? 'color:#F5A623' : 'color:#ccc' }}"></i>
+                       style="{{ $po['selected'] ? 'color:#7DFF00' : 'color:#ccc' }}"></i>
                     <span>{{ $po['label'] }}</span>
                 </div>
                 @endforeach

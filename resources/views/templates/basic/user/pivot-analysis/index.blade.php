@@ -23,7 +23,7 @@
     font-size:clamp(26px,3.5vw,42px); font-weight:700;
     color:#1a1a2e; margin:0 0 8px; line-height:1.1;
 }
-.pv-hero-left h1 span { color:#F5A623; }
+.pv-hero-left h1 span { color:#7DFF00; }
 .pv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:560px; }
 .pv-hero-formulas { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
 .pv-pill {
@@ -37,7 +37,7 @@
     width:80px; height:80px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
     display:flex; align-items:center; justify-content:center;
-    font-size:36px; color:#F5A623; flex-shrink:0;
+    font-size:36px; color:#7DFF00; flex-shrink:0;
 }
 @media(max-width:768px){
     .pv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
@@ -66,9 +66,9 @@
     font-size:12px; font-weight:700; color:#666; cursor:pointer;
     background:#fff; transition:all .2s; font-family:'Exo 2',sans-serif;
 }
-.pv-inst-tab:hover { border-color:#F5A623; color:#c97f00; }
+.pv-inst-tab:hover { border-color:#7DFF00; color:#c97f00; }
 .pv-inst-tab.on-stock  { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
-.pv-inst-tab.on-fut    { border-color:#F5A623; background:rgba(245,166,35,.08); color:#c97f00; }
+.pv-inst-tab.on-fut    { border-color:#7DFF00; background:rgba(245,166,35,.08); color:#c97f00; }
 .pv-inst-tab.on-option { border-color:#7c3aed; background:rgba(124,58,237,.08); color:#6d28d9; }
 
 /* Symbol select */
@@ -78,7 +78,7 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
     appearance:none; cursor:pointer; outline:none; min-width:140px;
 }
-.pv-sym-select:focus { border-color:#F5A623; }
+.pv-sym-select:focus { border-color:#7DFF00; }
 
 /* Date input */
 .pv-date-wrap { display:flex; align-items:center; gap:4px; }
@@ -87,13 +87,13 @@
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.pv-date-input:focus { border-color:#F5A623; }
+.pv-date-input:focus { border-color:#7DFF00; }
 .pv-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.pv-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.pv-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .pv-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Status badge */
@@ -102,7 +102,7 @@
 
 /* Buttons */
 .pv-load-btn {
-    background:#F5A623; color:#000; border:none; border-radius:8px;
+    background:#7DFF00; color:#000; border:none; border-radius:8px;
     padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
     font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
 }
@@ -213,7 +213,7 @@
 
 /* Cell styles */
 .c-num   { font-size:9px; color:#ccc; }
-.c-time  { font-size:12px; font-weight:700; color:#F5A623; }
+.c-time  { font-size:12px; font-weight:700; color:#7DFF00; }
 .c-sym   { font-size:11px; font-weight:700; color:#1a56db; }
 .c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
 .c-o     { color:#aab; font-size:10px; }
@@ -251,7 +251,7 @@
 }
 .pv-spinner {
     width:36px; height:36px; border:3px solid #f0f0f0;
-    border-top:3px solid #F5A623; border-radius:50%;
+    border-top:3px solid #7DFF00; border-radius:50%;
     animation:pvSpin 1s linear infinite;
 }
 .pv-loading-text { color:#aab; margin-top:12px; font-size:13px; }

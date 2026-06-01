@@ -44,11 +44,11 @@
     display:flex;align-items:center;gap:6px;
     font-size:13px;color:rgba(255,255,255,.65);
 }
-.cps-plan-meta-item i{ color:#F5A623;font-size:14px; }
+.cps-plan-meta-item i{ color:#7DFF00;font-size:14px; }
 .cps-plan-actions{ display:flex;flex-direction:column;gap:10px;align-items:flex-end; }
 .cps-btn-gold{
     display:inline-flex;align-items:center;gap:7px;
-    background:#F5A623;color:#000;padding:11px 24px;border-radius:9px;
+    background:#7DFF00;color:#000;padding:11px 24px;border-radius:9px;
     font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;
     letter-spacing:.04em;transition:background .2s;white-space:nowrap;
 }
@@ -91,7 +91,7 @@
 }
 .cps-analysis-item i{ color:#059669;font-size:14px;flex-shrink:0; }
 .cps-analysis-item a{ color:#1a1a2e;font-weight:600; }
-.cps-analysis-item a:hover{ color:#F5A623; }
+.cps-analysis-item a:hover{ color:#7DFF00; }
 
 /* Payment history table */
 .cps-payments-wrap{ background:#fff;border-radius:16px;border:1px solid #e8e8e8;overflow:hidden; }
@@ -213,7 +213,7 @@
         {{-- Accessible analyses --}}
         <div class="cps-card">
             <div class="cps-card-title">
-                <i class="las la-brain" style="color:#F5A623;"></i>
+                <i class="las la-brain" style="color:#7DFF00;"></i>
                 Your Analysis Tools
                 <span style="float:right;font-size:13px;font-weight:400;color:#aab;">
                     {{ $accessibleAnalyses->count() }} available
@@ -244,7 +244,7 @@
         {{-- Plan comparison summary --}}
         <div class="cps-card">
             <div class="cps-card-title">
-                <i class="las la-list" style="color:#F5A623;"></i>
+                <i class="las la-list" style="color:#7DFF00;"></i>
                 Plan Comparison
             </div>
             @foreach($plans as $plan)
@@ -276,7 +276,7 @@
             @endforeach
             <div style="margin-top:14px;">
                 <a href="{{ route('cp.pricing') }}"
-                   style="font-size:13px;color:#F5A623;font-weight:600;">
+                   style="font-size:13px;color:#7DFF00;font-weight:600;">
                     View full plan details →
                 </a>
             </div>
@@ -287,7 +287,7 @@
     {{-- ══ PAYMENT HISTORY ══ --}}
     <div class="cps-payments-wrap cps-anim">
         <h3 class="cps-payments-title">
-            <i class="las la-receipt" style="color:#F5A623;"></i>
+            <i class="las la-receipt" style="color:#7DFF00;"></i>
             Payment History
         </h3>
         @if($payments->isEmpty())

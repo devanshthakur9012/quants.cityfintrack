@@ -14,9 +14,9 @@
 /* ── HERO ── */
 .nb-hero { background:#fff; border-bottom:1px solid #e8e8e8; padding:32px 48px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
 .nb-hero-left h1 { font-size:clamp(24px,3.5vw,40px); font-weight:700; color:#1a1a2e; margin:0 0 8px; line-height:1.1; }
-.nb-hero-left h1 span { color:#F5A623; }
+.nb-hero-left h1 span { color:#7DFF00; }
 .nb-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:640px; }
-.nb-hero-icon { width:76px; height:76px; border-radius:16px; background:linear-gradient(135deg,#0f1b2d,#1a3050); display:flex; align-items:center; justify-content:center; font-size:32px; color:#F5A623; flex-shrink:0; }
+.nb-hero-icon { width:76px; height:76px; border-radius:16px; background:linear-gradient(135deg,#0f1b2d,#1a3050); display:flex; align-items:center; justify-content:center; font-size:32px; color:#7DFF00; flex-shrink:0; }
 @media(max-width:768px){ .nb-hero{ flex-direction:column; padding:24px 16px; text-align:center; } .nb-hero-icon{ display:none; } }
 
 /* ── FILTER BAR ── */
@@ -32,7 +32,7 @@
     background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 9px center;
     appearance:none; cursor:pointer; outline:none; min-width:120px;
 }
-.nb-select:focus { border-color:#F5A623; }
+.nb-select:focus { border-color:#7DFF00; }
 
 /* Date controls — same as pivot */
 .nb-date-wrap { display:flex; align-items:center; gap:4px; }
@@ -41,13 +41,13 @@
     font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
     color:#333; outline:none; cursor:pointer;
 }
-.nb-date-input:focus { border-color:#F5A623; }
+.nb-date-input:focus { border-color:#7DFF00; }
 .nb-date-nav {
     width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
     background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
     display:flex; align-items:center; justify-content:center; transition:.2s;
 }
-.nb-date-nav:hover { border-color:#F5A623; color:#F5A623; }
+.nb-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
 .nb-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
 
 /* Status badge */
@@ -56,14 +56,14 @@
 
 /* Threshold slider */
 .nb-thresh-wrap { display:flex; align-items:center; gap:8px; }
-.nb-thresh-disp { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:#F5A623; min-width:40px; text-align:center; background:rgba(245,166,35,.08); border:1px solid rgba(245,166,35,.3); border-radius:6px; padding:2px 7px; }
-input[type=range].nb-range { accent-color:#F5A623; width:120px; cursor:pointer; }
+.nb-thresh-disp { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:#7DFF00; min-width:40px; text-align:center; background:rgba(245,166,35,.08); border:1px solid rgba(245,166,35,.3); border-radius:6px; padding:2px 7px; }
+input[type=range].nb-range { accent-color:#7DFF00; width:120px; cursor:pointer; }
 
 /* Buttons */
-.nb-analyze-btn { background:#F5A623; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
+.nb-analyze-btn { background:#7DFF00; color:#000; border:none; border-radius:8px; padding:8px 22px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s; white-space:nowrap; }
 .nb-analyze-btn:hover { background:#d4890e; }
 .nb-reset-btn { background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; font-family:'Exo 2',sans-serif; }
-.nb-reset-btn:hover { border-color:#F5A623; color:#c97f00; }
+.nb-reset-btn:hover { border-color:#7DFF00; color:#c97f00; }
 .nb-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 .nb-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
 .nb-upd-text  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
@@ -125,7 +125,7 @@ input[type=range].nb-range { accent-color:#F5A623; width:120px; cursor:pointer; 
 .nb-group-row.gr-pe td { background:linear-gradient(90deg,rgba(220,38,38,.06),rgba(220,38,38,.01)) !important; border-top-color:rgba(220,38,38,.15) !important; color:#b91c1c !important; }
 
 .c-num  { font-size:9px; color:#ccc; }
-.c-date { font-size:11px; font-weight:700; color:#F5A623; }
+.c-date { font-size:11px; font-weight:700; color:#7DFF00; }
 .c-sym  { font-size:12px; font-weight:800; color:#1a56db; }
 .c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
 .c-val  { font-size:11px; font-weight:700; color:#1a1a2e; }
@@ -144,7 +144,7 @@ input[type=range].nb-range { accent-color:#F5A623; width:120px; cursor:pointer; 
 .nb-empty i { font-size:2.5rem; display:block; margin-bottom:12px; color:#e5e9f2; }
 .nb-empty p { font-size:13px; }
 .nb-spinner-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:48px; color:#aab; font-size:13px; }
-.nb-spinner { width:28px; height:28px; border:3px solid #f0f0f0; border-top:3px solid #F5A623; border-radius:50%; animation:nbSpin 1s linear infinite; flex-shrink:0; }
+.nb-spinner { width:28px; height:28px; border:3px solid #f0f0f0; border-top:3px solid #7DFF00; border-radius:50%; animation:nbSpin 1s linear infinite; flex-shrink:0; }
 </style>
 
 <div class="nb-wrap">
@@ -447,7 +447,7 @@ function nbAnalyze() {
             '<span style="color:#047857;">CE: ' + res.ce_count + '</span>'
             + ' &nbsp;·&nbsp; '
             + '<span style="color:#b91c1c;">PE: ' + res.pe_count + '</span>'
-            + ' &nbsp;·&nbsp; Threshold: <span style="color:#F5A623;">' + res.threshold + 'pts</span>';
+            + ' &nbsp;·&nbsp; Threshold: <span style="color:#7DFF00;">' + res.threshold + 'pts</span>';
         txt('nb-subtitle', date + ' · ' + res.message);
         txt('nb-upd', 'Updated ' + new Date().toLocaleTimeString());
     })

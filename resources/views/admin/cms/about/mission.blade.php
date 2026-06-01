@@ -21,7 +21,7 @@
                         <textarea name="body" class="form-control" rows="5">{{ old('body', $data->body ?? '') }}</textarea>
                     </div>
 
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Value Items <small class="text-muted fw-normal">(icon, label, description rows)</small></h6>
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Value Items <small class="text-muted fw-normal">(icon, label, description rows)</small></h6>
                     <div class="row g-1 mb-1" style="font-size:11px;color:#999;font-weight:700;text-transform:uppercase;">
                         <div class="col-2">Icon (fa-...)</div><div class="col-3">Label</div><div class="col-6">Description</div><div class="col-1"></div>
                     </div>

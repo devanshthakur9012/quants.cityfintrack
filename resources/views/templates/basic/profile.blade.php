@@ -20,7 +20,7 @@
 .up-main    { flex:1; min-width:0; }
 /* Sidebar profile box */
 .up-profile-box { background:linear-gradient(135deg,#0f1b2d,#1a3050); border-radius:12px; padding:24px 18px 18px; text-align:center; margin-bottom:12px; border:1px solid rgba(245,166,35,.2); }
-.up-avatar-wrap { width:68px; height:68px; border-radius:50%; margin:0 auto 12px; border:3px solid #f5a623; overflow:hidden; background:#f5a623; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; color:#0f1b2d; cursor:pointer; position:relative; }
+.up-avatar-wrap { width:68px; height:68px; border-radius:50%; margin:0 auto 12px; border:3px solid #7DFF00; overflow:hidden; background:#7DFF00; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; color:#0f1b2d; cursor:pointer; position:relative; }
 .up-avatar-wrap img { width:100%; height:100%; object-fit:cover; }
 .up-avatar-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; border-radius:50%; color:#fff; font-size:16px; }
 .up-avatar-wrap:hover .up-avatar-overlay { opacity:1; }
@@ -49,13 +49,13 @@
 .up-invalid-msg { font-size:12px; color:#e53935; margin-top:4px; }
 .up-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .up-btn { display:inline-flex; align-items:center; gap:7px; padding:11px 24px; border-radius:8px; border:none; font-family:'Exo 2',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
-.up-btn.primary   { background:#f5a623; color:#0f1b2d; }
+.up-btn.primary   { background:#7DFF00; color:#0f1b2d; }
 .up-btn.primary:hover   { background:#d4890e; transform:translateY(-1px); }
 .up-btn.secondary { background:#f0f2f7; color:#5a6678; }
 .up-btn.secondary:hover { background:#e5e9f2; }
 /* Avatar upload area */
 .up-avatar-upload { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
-.up-avatar-large  { width:72px; height:72px; border-radius:50%; border:3px solid #f5a623; overflow:hidden; background:#f5a623; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:#0f1b2d; flex-shrink:0; }
+.up-avatar-large  { width:72px; height:72px; border-radius:50%; border:3px solid #7DFF00; overflow:hidden; background:#7DFF00; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:#0f1b2d; flex-shrink:0; }
 .up-avatar-large img { width:100%; height:100%; object-fit:cover; }
 /* Verify badges */
 .up-vbadge { font-size:11px; padding:2px 7px; border-radius:4px; font-weight:600; display:inline-flex; align-items:center; gap:3px; margin-left:5px; }
@@ -69,7 +69,7 @@
 
 <div class="up-header">
     <div class="up-header-inner">
-        <h1><i class="fas fa-user-circle" style="color:#f5a623;margin-right:8px;font-size:22px;"></i>Profile Settings</h1>
+        <h1><i class="fas fa-user-circle" style="color:#7DFF00;margin-right:8px;font-size:22px;"></i>Profile Settings</h1>
         <p>Manage your personal information and contact details.</p>
     </div>
 </div>

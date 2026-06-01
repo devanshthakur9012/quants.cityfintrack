@@ -57,7 +57,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <strong style="font-size:15px;">{{ $f->name }}</strong>
-                                <div style="font-size:12px;color:#F5A623;">{{ $f->role }}</div>
+                                <div style="font-size:12px;color:#7DFF00;">{{ $f->role }}</div>
                                 <div style="font-size:11px;color:#aaa;">{{ $f->credentials }}</div>
                             </div>
                             <div class="d-flex gap-2">

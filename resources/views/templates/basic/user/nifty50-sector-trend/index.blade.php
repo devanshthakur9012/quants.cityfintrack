@@ -266,7 +266,7 @@
         <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#dc3545;"><small>🔴 Bearish</small><strong id="stat_bearish" style="color:#dc3545;">0</strong></div></div>
         <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#6c757d;"><small>⚪ Neutral</small><strong id="stat_neutral" style="color:#6c757d;">0</strong></div></div>
         <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#667eea;"><small>Bull Weight</small><strong id="stat_bull_wt" style="color:#667eea;">0%</strong></div></div>
-        <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#f5a623;"><small>Bear Weight</small><strong id="stat_bear_wt" style="color:#f5a623;">0%</strong></div></div>
+        <div class="col-md-2 col-6"><div class="stats-box" style="border-left-color:#7DFF00;"><small>Bear Weight</small><strong id="stat_bear_wt" style="color:#7DFF00;">0%</strong></div></div>
     </div>
 
     {{-- Bias Summary --}}

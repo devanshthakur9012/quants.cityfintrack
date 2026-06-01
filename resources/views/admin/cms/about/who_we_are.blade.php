@@ -21,7 +21,7 @@
                         <textarea name="body" class="form-control" rows="5">{{ old('body', $data->body ?? '') }}</textarea>
                     </div>
 
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Pillars <small class="text-muted fw-normal">(shown as pills below text)</small></h6>
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">Pillars <small class="text-muted fw-normal">(shown as pills below text)</small></h6>
                     <div id="pillarsContainer">
                         @php $pillars = $data->pillars ?? []; @endphp
                         @foreach($pillars as $i => $p)

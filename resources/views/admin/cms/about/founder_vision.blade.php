@@ -16,7 +16,7 @@
                         <div class="col-md-3 text-center">
                             @if($vision && $vision->avatar_url)
                                 <img src="{{ $vision->avatar_url }}"
-                                     style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #F5A623;display:block;margin:0 auto 8px;">
+                                     style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #7DFF00;display:block;margin:0 auto 8px;">
                             @else
                                 <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#1a3a6e,#d4840e);display:flex;align-items:center;justify-content:center;font-size:36px;color:#fff;margin:0 auto 8px;"><i class="fas fa-user-tie"></i></div>
                             @endif
@@ -54,7 +54,7 @@
                         </div>
                     </div>
 
-                    <h6 style="color:#F5A623;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
+                    <h6 style="color:#7DFF00;border-bottom:1px solid #f0f2f7;padding-bottom:8px;margin-bottom:16px;">
                         Vision Paragraphs <small class="text-muted fw-normal">(each textarea = one paragraph)</small>
                     </h6>
 
