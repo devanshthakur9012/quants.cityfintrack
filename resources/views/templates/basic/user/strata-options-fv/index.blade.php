@@ -25,15 +25,6 @@ body { background:#f7f8fc; }
 }
 .sfv-hero-left h1 span { color:#F5A623; }
 .sfv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:580px; }
-.sfv-hero-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
-.sfv-pill {
-    display:inline-block; padding:3px 10px; border-radius:4px;
-    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
-}
-.sfv-pill-bs   { background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
-.sfv-pill-over { background:rgba(185,28,28,.08);  color:#b91c1c; border:1px solid rgba(185,28,28,.2); }
-.sfv-pill-und  { background:rgba(4,120,87,.08);   color:#047857; border:1px solid rgba(4,120,87,.25); }
-.sfv-pill-tol  { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
 .sfv-hero-icon {
     width:80px; height:80px; border-radius:16px;
     background:linear-gradient(135deg,#0f1b2d,#1a3050);
@@ -42,7 +33,6 @@ body { background:#f7f8fc; }
 }
 @media(max-width:768px){
     .sfv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
-    .sfv-hero-pills { justify-content:center; }
 }
 
 /* ── FILTER BAR ── */
@@ -178,7 +168,6 @@ body { background:#f7f8fc; }
 
 /* ── TABLE ── */
 .sfv-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; min-width:960px; }
-
 .sfv-table thead tr.th-group th {
     padding:9px 10px 5px; text-align:center;
     font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800;
@@ -192,17 +181,13 @@ body { background:#f7f8fc; }
     background:#f4f6fb; color:#aab;
     border-bottom:2px solid #e8e8e8; white-space:nowrap;
 }
-
-/* Group heading colours */
-.g-meta   { color:#888 !important; }
-.g-ce     { color:#047857 !important; }
-.g-pe     { color:#b91c1c !important; }
-.g-iv     { color:#c97f00 !important; }
-
-/* Column separators */
-.sep-ce    { border-left:2px solid rgba(4,120,87,.2)  !important; }
-.sep-pe    { border-left:2px solid rgba(185,28,28,.2)  !important; }
-.sep-dash  { border-left:1px dashed #e8e8e8 !important; }
+.g-meta { color:#888 !important; }
+.g-ce   { color:#047857 !important; }
+.g-pe   { color:#b91c1c !important; }
+.g-iv   { color:#c97f00 !important; }
+.sep-ce   { border-left:2px solid rgba(4,120,87,.2)  !important; }
+.sep-pe   { border-left:2px solid rgba(185,28,28,.2)  !important; }
+.sep-dash { border-left:1px dashed #e8e8e8 !important; }
 
 .sfv-table tbody td {
     padding:8px 10px; text-align:center; font-size:11px;
@@ -212,11 +197,7 @@ body { background:#f7f8fc; }
 .sfv-table tbody tr:hover { background:#fafbff !important; }
 .tr-even { background:#fff; }
 .tr-odd  { background:#fbfcff; }
-.tr-over-ce  { background:rgba(185,28,28,.03) !important; }
-.tr-over-pe  { background:rgba(185,28,28,.03) !important; }
-.tr-under-ce { background:rgba(4,120,87,.03)  !important; }
 
-/* Cell styles */
 .c-num  { font-size:9px; color:#ccc; }
 .c-time { font-size:12px; font-weight:700; color:#F5A623; }
 .c-spot { font-size:12px; font-weight:700; color:#1a1a2e; }
@@ -228,14 +209,11 @@ body { background:#f7f8fc; }
     display:inline-block; padding:1px 5px; border-radius:3px; font-size:7px; font-weight:700;
     background:#fff3e0; color:#e65100; border:1px solid #ffcc80; margin-top:2px;
 }
-
-/* Valuation badge */
 .vb { display:inline-block; padding:2px 8px; border-radius:5px; font-size:9px; font-weight:700; }
 .vb-over  { background:rgba(185,28,28,.1);  color:#b91c1c; border:1px solid rgba(185,28,28,.25); }
 .vb-under { background:rgba(4,120,87,.1);   color:#047857; border:1px solid rgba(4,120,87,.25);  }
 .vb-fair  { background:#f4f6fb; color:#aab; border:1px solid #e5e9f2; }
 .vb-na    { color:#ccc; font-size:9px; }
-
 .dp { color:#b91c1c; font-weight:700; }
 .dn { color:#047857; font-weight:700; }
 .dz { color:#ccc; }
@@ -262,16 +240,10 @@ body { background:#f7f8fc; }
     <div class="sfv-hero-left">
         <h1>Options <span>Fair Value</span></h1>
         <p>
-            Black-Scholes fair price vs market LTP for CE &amp; PE —
-            cross-leg IV derivation eliminates circular mispricing bias.
-            Powered by live 15min candle data.
+            Black-Scholes fair price vs market LTP for CE &amp; PE options —
+            using cross-leg IV derivation to eliminate circular mispricing bias
+            and surface genuine valuation signals.
         </p>
-        <div class="sfv-hero-pills">
-            <span class="sfv-pill sfv-pill-bs">Fair = BS(Spot, Strike, ATM IV, DTE)</span>
-            <span class="sfv-pill sfv-pill-over">OVERPRICED: LTP &gt; Fair</span>
-            <span class="sfv-pill sfv-pill-und">UNDERPRICED: LTP &lt; Fair</span>
-            <span class="sfv-pill sfv-pill-tol">Tolerance ±5%</span>
-        </div>
     </div>
     <div class="sfv-hero-icon">
         <i class="las la-balance-scale"></i>
@@ -281,6 +253,14 @@ body { background:#f7f8fc; }
 {{-- ══ FILTER BAR ══ --}}
 <div class="sfv-filter-bar">
     <div class="sfv-filter-inner">
+
+        {{-- Symbol --}}
+        <span class="sfv-filter-label">Symbol</span>
+        <select id="sfv-sym" class="sfv-select" onchange="sfvRunAnalysis()">
+            <option value="">— All Symbols —</option>
+        </select>
+
+        <div class="sfv-filter-sep"></div>
 
         {{-- Date --}}
         <span class="sfv-filter-label">Date</span>
@@ -304,14 +284,6 @@ body { background:#f7f8fc; }
             <div class="sfv-sp active" data-val="ATM">ATM</div>
             <div class="sfv-sp" data-val="ATM+1">ATM+1</div>
         </div>
-
-        <div class="sfv-filter-sep"></div>
-
-        {{-- Symbol --}}
-        <span class="sfv-filter-label">Symbol</span>
-        <select id="sfv-sym" class="sfv-select" onchange="sfvRunAnalysis()">
-            <option value="">— All Symbols —</option>
-        </select>
 
         {{-- Sort --}}
         <select id="sfv-sort" class="sfv-select">
@@ -344,27 +316,25 @@ body { background:#f7f8fc; }
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="sfv-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config with symbols.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
 
     {{-- Stats --}}
     <div class="sfv-stats" id="sfv-stats" style="display:none;">
-        <div class="sfv-stat-box s-total"><small>Total Rows</small><strong id="st-total" style="color:#F5A623;">0</strong></div>
-        <div class="sfv-stat-box s-ce"><small>CE Overpriced</small><strong id="st-ce-over"  style="color:#b91c1c;">0</strong></div>
-        <div class="sfv-stat-box s-ce"><small>CE Underpriced</small><strong id="st-ce-under" style="color:#047857;">0</strong></div>
-        <div class="sfv-stat-box s-pe"><small>PE Overpriced</small><strong id="st-pe-over"  style="color:#b91c1c;">0</strong></div>
-        <div class="sfv-stat-box s-pe"><small>PE Underpriced</small><strong id="st-pe-under" style="color:#047857;">0</strong></div>
+        <div class="sfv-stat-box s-total"><small>Total Rows</small>   <strong id="st-total"    style="color:#F5A623;">0</strong></div>
+        <div class="sfv-stat-box s-ce">  <small>CE Overpriced</small> <strong id="st-ce-over"  style="color:#b91c1c;">0</strong></div>
+        <div class="sfv-stat-box s-ce">  <small>CE Underpriced</small><strong id="st-ce-under" style="color:#047857;">0</strong></div>
+        <div class="sfv-stat-box s-pe">  <small>PE Overpriced</small> <strong id="st-pe-over"  style="color:#b91c1c;">0</strong></div>
+        <div class="sfv-stat-box s-pe">  <small>PE Underpriced</small><strong id="st-pe-under" style="color:#047857;">0</strong></div>
     </div>
 
     {{-- Table card --}}
     <div class="sfv-card">
         <div class="sfv-card-header">
-            <div class="sfv-card-title" id="sfv-card-title">
-                &#9670; Strata Fair Value &nbsp;·&nbsp; 15 Min
-            </div>
-            <span class="sfv-card-subtitle" id="sfv-card-subtitle"></span>
+            <div class="sfv-card-title" id="sfv-card-title">&#9670; Strata Fair Value</div>
+            <span class="sfv-card-subtitle" id="sfv-card-subtitle">Detecting last available date…</span>
         </div>
         <div class="sfv-table-scroll">
             <table class="sfv-table">
@@ -382,13 +352,11 @@ body { background:#f7f8fc; }
                         <th class="g-meta" style="text-align:left;padding-left:14px;">Symbol</th>
                         <th class="g-meta">Spot</th>
                         <th class="g-meta">Strike<br><span style="font-size:7px;opacity:.5;font-weight:400;">Level · DTE</span></th>
-                        {{-- CE --}}
                         <th class="g-ce sep-ce">LTP</th>
                         <th class="g-ce">Fair ₹</th>
                         <th class="g-ce">Status</th>
                         <th class="g-ce sep-dash">Diff ₹</th>
                         <th class="g-ce">Diff %</th>
-                        {{-- PE --}}
                         <th class="g-pe sep-pe">LTP</th>
                         <th class="g-pe">Fair ₹</th>
                         <th class="g-pe">Status</th>
@@ -400,9 +368,9 @@ body { background:#f7f8fc; }
                 </thead>
                 <tbody id="sfv-tbody">
                     <tr><td colspan="17">
-                        <div class="sfv-empty">
-                            <i class="las la-chart-line"></i>
-                            Select date and click Analyze
+                        <div class="sfv-loading">
+                            <div class="sfv-spinner"></div>
+                            <div class="sfv-loading-text">Detecting last available date…</div>
                         </div>
                     </td></tr>
                 </tbody>
@@ -423,21 +391,21 @@ body { background:#f7f8fc; }
 
 var SFV_ANALYZE_URL = '{{ route("strata-options-fv.analyze") }}';
 var SFV_SYM_URL     = '{{ route("strata-options-fv.symbols") }}';
+var SFV_LASTDATE    = '{{ route("strata-options-fv.last.date") }}';
 var SFV_TODAY       = '{{ now()->toDateString() }}';
 
 var sfvCurStrike = 'ATM';
 var sfvSymCache  = null;
 var sfvAutoTimer = null;
 
-// Vanilla helpers
 function sfvHtml(id, h) { var e = document.getElementById(id); if (e) e.innerHTML  = h; }
 function sfvText(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
 
-document.addEventListener('DOMContentLoaded', function () {
-    sfvUpdateDateBadge();
-    sfvLoadSymbols();
-    sfvRunAnalysis();
+// ═══════════════════════════════════════════════════════════════
+//  BOOT — detect last available date then auto-analyze
+// ═══════════════════════════════════════════════════════════════
 
+document.addEventListener('DOMContentLoaded', function () {
     // Strike pill clicks
     document.querySelectorAll('.sfv-sp').forEach(function (pill) {
         pill.addEventListener('click', function () {
@@ -450,7 +418,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sort change
     document.getElementById('sfv-sort').addEventListener('change', sfvRunAnalysis);
+
+    // Detect last date → load symbols → analyze
+    sfvResolveLastDateAndLoad();
 });
+
+function sfvResolveLastDateAndLoad() {
+    fetch(SFV_LASTDATE, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.last_date) {
+                document.getElementById('sfv-date').value = res.last_date;
+            }
+            sfvUpdateDateBadge();
+            sfvLoadSymbols(function () { sfvRunAnalysis(); });
+        })
+        .catch(function () {
+            sfvUpdateDateBadge();
+            sfvLoadSymbols(function () { sfvRunAnalysis(); });
+        });
+}
 
 // ── Date helpers ──────────────────────────────────────────────
 
@@ -482,8 +469,12 @@ function sfvUpdateDateBadge() {
 
 // ── Symbol helpers ────────────────────────────────────────────
 
-function sfvLoadSymbols() {
-    if (sfvSymCache !== null) { sfvRebuildSym(sfvSymCache); return; }
+function sfvLoadSymbols(callback) {
+    if (sfvSymCache !== null) {
+        sfvRebuildSym(sfvSymCache);
+        if (callback) callback();
+        return;
+    }
 
     fetch(SFV_SYM_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); })
@@ -491,13 +482,17 @@ function sfvLoadSymbols() {
             if (res.no_config) {
                 sfvShowWarn(res.message);
                 sfvRebuildSym([]);
-                return;
+            } else {
+                sfvHideWarn();
+                sfvSymCache = res.symbols || [];
+                sfvRebuildSym(sfvSymCache);
             }
-            sfvHideWarn();
-            sfvSymCache = res.symbols || [];
-            sfvRebuildSym(sfvSymCache);
+            if (callback) callback();
         })
-        .catch(function () { sfvRebuildSym([]); });
+        .catch(function () {
+            sfvRebuildSym([]);
+            if (callback) callback();
+        });
 }
 
 function sfvRebuildSym(syms) {
@@ -542,8 +537,6 @@ function sfvRunAnalysis() {
     var date = document.getElementById('sfv-date').value;
 
     sfvUpdateDateBadge();
-
-    // Hide sort when single symbol is selected
     document.getElementById('sfv-sort').style.display = sym ? 'none' : '';
 
     sfvShowLoading();
@@ -563,15 +556,8 @@ function sfvRunAnalysis() {
         return r.json();
     })
     .then(function (res) {
-        if (res.no_config) {
-            sfvShowWarn(res.message);
-            sfvEmptyTable();
-            return;
-        }
-        if (!res.success) {
-            sfvEmptyTable(res.message);
-            return;
-        }
+        if (res.no_config) { sfvShowWarn(res.message); sfvEmptyTable(); return; }
+        if (!res.success)  { sfvEmptyTable(res.message); return; }
 
         sfvHideWarn();
         sfvRenderStats(res.summary, res.total_rows);
@@ -580,9 +566,8 @@ function sfvRunAnalysis() {
         sfvHtml('sfv-info',
             'Date: <span style="color:#c97f00">' + res.trade_date + '</span>'
             + ' &nbsp;·&nbsp; Time: <span style="color:#047857">' + (res.latest_time || '—') + '</span>'
-            + ' &nbsp;·&nbsp; TF: <span style="color:#F5A623">15min</span>'
         );
-        sfvText('sfv-card-subtitle', res.total_rows + ' row(s)');
+        sfvText('sfv-card-subtitle', res.total_rows + ' row(s) · ' + res.trade_date);
         sfvText('sfv-upd', 'Updated ' + new Date().toLocaleTimeString());
     })
     .catch(function (err) {
@@ -709,7 +694,7 @@ function sfvEmptyTable(msg) {
     sfvHtml('sfv-tbody',
         '<tr><td colspan="17">'
         + '<div class="sfv-empty"><i class="las la-chart-line"></i>'
-        + (msg || 'Select date and click Analyze')
+        + (msg || 'No data found for this date.')
         + '</div></td></tr>'
     );
     var el = document.getElementById('sfv-stats');

@@ -11,23 +11,10 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 /**
- * Strata — Options Fair Value Engine
+ * Strata — Options Fair Value Engine (internal timeframe: 15min)
  *
  * Black-Scholes fair price vs market LTP for CE and PE.
- *
- * ── Root Cause Fix (circular IV loop) ────────────────────────────────────────
- * The original code derived ATM IV from the CE LTP, then computed BS fair price
- * for CE using that same IV → BS(IV_from_CE) ≈ CE_LTP → diff ≈ 0 always.
- *
- * Fix: Cross-leg IV (industry standard)
- *   • ce_iv_for_bs  = IV solved from ATM PE price  → used to price CE fairly
- *   • pe_iv_for_bs  = IV solved from ATM CE price  → used to price PE fairly
- *   • displayed_iv  = average of both legs          → shown in ATM IV column
- *
- * This is equivalent to implied-vol parity: the market's consensus IV for the
- * underlying, not for the specific option being evaluated.  Any CE/PE mispricing
- * now shows up as a real non-zero diff.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Cross-leg IV derivation eliminates circular mispricing bias.
  */
 class StrataOptionsFairValueController extends Controller
 {
@@ -44,6 +31,51 @@ class StrataOptionsFairValueController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    //  Last Available Date
+    //  Returns the most recent trade_date that has CE/PE option data.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function lastDate(Request $request)
+    {
+        try {
+            $config = $this->getActiveConfig();
+
+            $lastDate = null;
+            if ($config) {
+                $lastDate = DB::table('cp_option_ohlc_15min')
+                    ->where('analysis_config_id', $config->id)
+                    ->whereIn('instrument_type', ['CE', 'PE'])
+                    ->where('is_missing', false)
+                    ->max(DB::raw('DATE(trade_date)'));
+            }
+
+            // Fall back: any option data regardless of config
+            if (!$lastDate) {
+                $lastDate = DB::table('cp_option_ohlc_15min')
+                    ->whereIn('instrument_type', ['CE', 'PE'])
+                    ->max(DB::raw('DATE(trade_date)'));
+            }
+
+            $today    = Carbon::today()->toDateString();
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json([
+                'success'   => true,
+                'last_date' => $lastDate,
+                'is_today'  => $lastDate === $today,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('StrataOptionsFV lastDate: ' . $e->getMessage());
+            return response()->json([
+                'success'   => false,
+                'last_date' => Carbon::today()->toDateString(),
+                'is_today'  => true,
+            ]);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     //  Symbols
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -56,14 +88,13 @@ class StrataOptionsFairValueController extends Controller
                 'success'   => true,
                 'symbols'   => [],
                 'no_config' => true,
-                'message'   => 'No active Analysis Config for [' . self::TF . '].',
+                'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
             ]);
         }
 
         return response()->json([
-            'success'   => true,
-            'symbols'   => $this->getConfigSymbols($config->id),
-            'timeframe' => self::TF,
+            'success' => true,
+            'symbols' => $this->getConfigSymbols($config->id),
         ]);
     }
 
@@ -84,7 +115,7 @@ class StrataOptionsFairValueController extends Controller
                 return response()->json([
                     'success'   => false,
                     'no_config' => true,
-                    'message'   => 'No active Analysis Config for [' . self::TF . '].',
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
                 ]);
             }
 
@@ -165,7 +196,6 @@ class StrataOptionsFairValueController extends Controller
                     'is_today'      => $isToday,
                     'mode'          => 'single',
                     'strike_filter' => $strikeFilter,
-                    'timeframe'     => self::TF,
                     'total_rows'    => count($rows),
                     'summary'       => $this->buildSummary($rows),
                     'rows'          => $rows,
@@ -200,7 +230,6 @@ class StrataOptionsFairValueController extends Controller
                 'is_today'      => $isToday,
                 'mode'          => 'all',
                 'strike_filter' => $strikeFilter,
-                'timeframe'     => self::TF,
                 'total_rows'    => count($rows),
                 'summary'       => $this->buildSummary($rows),
                 'rows'          => $rows,
@@ -214,25 +243,6 @@ class StrataOptionsFairValueController extends Controller
 
     // ─────────────────────────────────────────────────────────────────────────
     //  Build one row
-    //
-    //  IV ISOLATION (the critical fix):
-    //
-    //  The ATM strike's CE and PE options share the same underlying. We use
-    //  put-call parity logic to get a cross-leg IV:
-    //
-    //    ce_iv_for_bs = IV solved from ATM PE price  → price CE with this IV
-    //    pe_iv_for_bs = IV solved from ATM CE price  → price PE with this IV
-    //
-    //  Why this works:
-    //    • Both CE and PE at ATM reflect the SAME underlying volatility.
-    //    • Using the opposite leg's IV to price the target leg breaks the
-    //      circular loop (IV → BS → same price → diff = 0).
-    //    • Any difference between the fair price and the market price is now a
-    //      genuine mispricing signal, not a mathematical identity.
-    //
-    //  For ATM+1 / ATM-1 strikes:
-    //    • We still solve IV from the ATM CE and ATM PE candles (not the OTM
-    //      candle's own price). Same cross-leg logic applies.
     // ─────────────────────────────────────────────────────────────────────────
 
     private function buildRow(
@@ -246,7 +256,6 @@ class StrataOptionsFairValueController extends Controller
         string $futTable
     ): ?array {
 
-        // ── Spot from FUT ─────────────────────────────────────────────────
         $futRow = DB::table($futTable)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
@@ -264,7 +273,6 @@ class StrataOptionsFairValueController extends Controller
         }
         if ($spot <= 0) return null;
 
-        // ── ATM + target strike ───────────────────────────────────────────
         $atm = $futRow && $futRow->atm_strike > 0
             ? (float) $futRow->atm_strike
             : round($spot / $step) * $step;
@@ -275,7 +283,6 @@ class StrataOptionsFairValueController extends Controller
             default => $atm,
         };
 
-        // ── Expiry + DTE ──────────────────────────────────────────────────
         $expiryRow = DB::table($optTable)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
@@ -292,18 +299,12 @@ class StrataOptionsFairValueController extends Controller
             ? (int) max(1, Carbon::parse($date)->diffInDays(Carbon::parse($expiry)))
             : 30;
 
-        // ── ATM CE and PE candles (always from ATM strike) ────────────────
-        // Even when strikeFilter = ATM+1/ATM-1, we still solve IV from ATM,
-        // then apply that IV to the target OTM/ITM strike.
         $atmCeCnd = $this->getOptionCandle($symbol, $date, $candleTime, 'CE', $atm, $expiry, $configId, $optTable);
         $atmPeCnd = $this->getOptionCandle($symbol, $date, $candleTime, 'PE', $atm, $expiry, $configId, $optTable);
 
         $atmCeLtp = $atmCeCnd ? (float) $atmCeCnd->close : 0;
         $atmPeLtp = $atmPeCnd ? (float) $atmPeCnd->close : 0;
 
-        // ── CROSS-LEG IV DERIVATION ───────────────────────────────────────
-        // iv_from_ce = solve IV using ATM CE price  → used to price PE
-        // iv_from_pe = solve IV using ATM PE price  → used to price CE
         $ivFromCe = $atmCeLtp > 0
             ? OptionFairPriceCalculator::calcIV($spot, $atm, $daysToExpiry, $atmCeLtp, 'CE')
             : null;
@@ -312,7 +313,6 @@ class StrataOptionsFairValueController extends Controller
             ? OptionFairPriceCalculator::calcIV($spot, $atm, $daysToExpiry, $atmPeLtp, 'PE')
             : null;
 
-        // Displayed ATM IV = average of both legs (consensus IV for the underlying)
         $displayIv = null;
         if ($ivFromCe !== null && $ivFromPe !== null) {
             $displayIv = ($ivFromCe + $ivFromPe) / 2;
@@ -322,19 +322,15 @@ class StrataOptionsFairValueController extends Controller
             $displayIv = $ivFromPe;
         }
 
-        // Fall back to symbol default if both legs fail
         $defaultIvMap = [
             'NIFTY' => 0.15, 'BANKNIFTY' => 0.18, 'FINNIFTY' => 0.16,
             'MIDCPNIFTY' => 0.20, 'SENSEX' => 0.15, 'BANKEX' => 0.18,
         ];
         $defaultIv = $defaultIvMap[strtoupper($symbol)] ?? 0.20;
 
-        // IV to use for CE fair-price = IV derived from PE (cross-leg)
-        // IV to use for PE fair-price = IV derived from CE (cross-leg)
         $ivForCe = $ivFromPe ?? $displayIv ?? $defaultIv;
         $ivForPe = $ivFromCe ?? $displayIv ?? $defaultIv;
 
-        // ── Target strike candles ─────────────────────────────────────────
         $ceCnd = $this->getOptionCandle($symbol, $date, $candleTime, 'CE', $targetStrike, $expiry, $configId, $optTable);
         $peCnd = $this->getOptionCandle($symbol, $date, $candleTime, 'PE', $targetStrike, $expiry, $configId, $optTable);
 
@@ -347,7 +343,6 @@ class StrataOptionsFairValueController extends Controller
             ? substr($ceCnd->interval_time, 11, 5)
             : ($peCnd ? substr($peCnd->interval_time, 11, 5) : $candleTime);
 
-        // ── CE fair price (priced using PE-derived IV) ────────────────────
         $ceFairPrice = null;
         $ceDiff      = null;
         $ceDiffPct   = null;
@@ -364,7 +359,6 @@ class StrataOptionsFairValueController extends Controller
             }
         }
 
-        // ── PE fair price (priced using CE-derived IV) ────────────────────
         $peFairPrice = null;
         $peDiff      = null;
         $peDiffPct   = null;
@@ -381,7 +375,6 @@ class StrataOptionsFairValueController extends Controller
             }
         }
 
-        // ── Expected move ─────────────────────────────────────────────────
         $expectedMove = $displayIv !== null
             ? OptionFairPriceCalculator::expectedMove($spot, $displayIv, $daysToExpiry)
             : null;
@@ -395,19 +388,16 @@ class StrataOptionsFairValueController extends Controller
             'strike_level'   => $strikeFilter,
             'days_to_expiry' => $daysToExpiry,
             'expiry_date'    => $expiry,
-            // CE
             'ce_ltp'         => $ceLtp > 0 ? round($ceLtp, 2) : null,
             'ce_fair'        => $ceFairPrice,
             'ce_status'      => $ceStatus,
             'ce_diff'        => $ceDiff,
             'ce_diff_pct'    => $ceDiffPct,
-            // PE
             'pe_ltp'         => $peLtp > 0 ? round($peLtp, 2) : null,
             'pe_fair'        => $peFairPrice,
             'pe_status'      => $peStatus,
             'pe_diff'        => $peDiff,
             'pe_diff_pct'    => $peDiffPct,
-            // shared
             'atm_iv'         => $displayIv !== null ? round($displayIv * 100, 2) : null,
             'iv_from_ce'     => $ivFromCe  !== null ? round($ivFromCe  * 100, 2) : null,
             'iv_from_pe'     => $ivFromPe  !== null ? round($ivFromPe  * 100, 2) : null,
@@ -416,7 +406,7 @@ class StrataOptionsFairValueController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Dynamic step map (cp_option_ohlc gaps → zerodha_instruments → 50)
+    //  Dynamic step map
     // ─────────────────────────────────────────────────────────────────────────
 
     private function buildStepMap(array $symbols, string $date, string $optTable, int $configId): array
@@ -452,7 +442,6 @@ class StrataOptionsFairValueController extends Controller
             $stepMap[$sym] = null;
         }
 
-        // Fill missing from zerodha_instruments
         $missing = array_unique(array_merge(
             array_keys(array_filter($stepMap, fn($v) => $v === null)),
             array_diff($symbols, array_keys($stepMap))

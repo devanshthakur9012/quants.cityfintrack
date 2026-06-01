@@ -49,7 +49,7 @@
     border-bottom: 3px solid transparent; margin-bottom: -2px;
     transition: all .2s; font-family: 'Exo 2',sans-serif; white-space: nowrap;
 }
-.qa-main-tab.on { color: #F5A623; border-bottom-color: #F5A623; }
+.qa-main-tab.on { color: #7DFF00; border-bottom-color: #7DFF00; }
 .qa-main-tab:hover:not(.on) { color: #333; }
 .qa-dropdowns-row {
     display: flex; align-items: flex-end; gap: 14px;
@@ -67,7 +67,7 @@
     appearance: none; -webkit-appearance: none; cursor: pointer;
     font-family: 'Exo 2',sans-serif; min-width: 90px;
 }
-.qa-filter-select:focus { outline: none; border-color: #F5A623; }
+.qa-filter-select:focus { outline: none; border-color: #7DFF00; }
 .qa-search-wrap {
     display: flex; align-items: stretch; overflow: hidden;
     border: 1px solid #ddd; border-radius: 6px; margin-left: auto;
@@ -77,7 +77,7 @@
     outline: none; width: 200px; font-family: 'Exo 2',sans-serif;
 }
 .qa-search-btn {
-    background: #F5A623; border: none; padding: 0 16px;
+    background: #7DFF00; border: none; padding: 0 16px;
     color: #fff; font-size: 14px; cursor: pointer;
     display: flex; align-items: center;
 }
@@ -95,7 +95,7 @@
 .qa-section-head {
     font-family: 'Rajdhani',sans-serif; font-size: 20px; font-weight: 700;
     color: #1a1a2e; margin: 0 0 20px; padding-bottom: 8px;
-    border-bottom: 2px solid #F5A623; display: inline-block;
+    border-bottom: 2px solid #7DFF00; display: inline-block;
 }
 .qa-wgrid {
     display: grid; grid-template-columns: repeat(3,1fr);
@@ -150,7 +150,7 @@
 }
 .qa-price-text .disc { font-size: 11px; color: #81c784; margin-left: 4px; }
 .qa-view-link {
-    font-size: 12px; color: #F5A623; font-weight: 600;
+    font-size: 12px; color: #7DFF00; font-weight: 600;
     display: inline-flex; align-items: center; gap: 4px;
     white-space: nowrap; transition: gap .2s;
 }
@@ -170,7 +170,7 @@
 .qa-wcard-type.paid { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
 .qa-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; }
 .qa-meta-row  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
-.qa-meta-row i { color: #F5A623; font-size: 11px; width: 14px; text-align: center; }
+.qa-meta-row i { color: #7DFF00; font-size: 11px; width: 14px; text-align: center; }
 .qa-meta-row .meta-v { color: #333; font-weight: 500; }
 .qa-meta-row .past-d { color: #e53935; font-weight: 500; }
 .qa-wcard-footer {
@@ -188,7 +188,7 @@
 }
 .qa-footer-price .pct { font-size: 11px; color: #43a047; font-weight: 700; margin-left: 4px; }
 .qa-footer-link {
-    font-size: 12px; color: #F5A623; font-weight: 600;
+    font-size: 12px; color: #7DFF00; font-weight: 600;
     display: inline-flex; align-items: center; gap: 4px;
     white-space: nowrap; transition: gap .2s; flex-shrink: 0;
 }
@@ -217,7 +217,7 @@
 .qa-login-prompt p  { color: #888; font-size: 14px; margin-bottom: 26px; }
 .qa-login-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #F5A623; color: #000; font-weight: 700;
+    background: #7DFF00; color: #000; font-weight: 700;
     padding: 13px 30px; border-radius: 9px;
     font-family: 'Rajdhani',sans-serif; font-size: 16px;
     letter-spacing: .04em; transition: background .2s;
@@ -500,7 +500,7 @@
                     You have not registered for any webinars yet.
                     <br><br>
                     <a href="{{ route('webinars.index') }}"
-                       style="color:#F5A623;font-weight:600;">
+                       style="color:#7DFF00;font-weight:600;">
                         Browse Webinars →
                     </a>
                 </div>

@@ -1434,9 +1434,10 @@ Route::controller('SiteController')->group(function () {
     });
 
     Route::middleware(['auth'])->prefix('strata-options-fv')->name('strata-options-fv.')->group(function () {
-        Route::get('/index',   [StrataOptionsFairValueController::class, 'index'])->name('index');
-        Route::get('/symbols', [StrataOptionsFairValueController::class, 'getSymbols'])->name('symbols');
-        Route::get('/analyze', [StrataOptionsFairValueController::class, 'analyze'])->name('analyze');
+        Route::get('/index',     [StrataOptionsFairValueController::class, 'index'])->name('index');
+        Route::get('/last-date', [StrataOptionsFairValueController::class, 'lastDate'])->name('last.date');  // ← ADD
+        Route::get('/symbols',   [StrataOptionsFairValueController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',   [StrataOptionsFairValueController::class, 'analyze'])->name('analyze');
     });
 
     Route::middleware(['auth'])->prefix('quantedge-smc')->name('quantedge-smc.')->group(function () {

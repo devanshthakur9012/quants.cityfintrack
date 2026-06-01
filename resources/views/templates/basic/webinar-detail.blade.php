@@ -14,7 +14,7 @@
 
 /* BREADCRUMB */
 .wd-crumb { background:#f8f9fc; border-bottom:1px solid #eee; padding:12px 48px; font-size:13px; color:#888; }
-.wd-crumb a { color:#F5A623; }
+.wd-crumb a { color:#7DFF00; }
 .wd-crumb span { margin:0 6px; }
 @media(max-width:768px){ .wd-crumb { padding:12px 16px; } }
 
@@ -54,7 +54,7 @@
 
 .wd-meta-row  { display:flex; flex-wrap:wrap; gap:18px; margin-bottom:18px; }
 .wd-meta-item { display:flex; align-items:center; gap:8px; font-size:14px; color:#555; }
-.wd-meta-item i { color:#F5A623; width:16px; text-align:center; }
+.wd-meta-item i { color:#7DFF00; width:16px; text-align:center; }
 .wd-meta-item strong { color:#1a1a2e; }
 
 /* Seats bar */
@@ -64,7 +64,7 @@
 }
 .wd-seats-label { font-size:13px; color:#555; margin-bottom:6px; }
 .wd-seats-progress { height:6px; background:#e0e0e0; border-radius:3px; }
-.wd-seats-fill { height:100%; border-radius:3px; background:#F5A623; }
+.wd-seats-fill { height:100%; border-radius:3px; background:#7DFF00; }
 .wd-seats-low { color:#e53935; font-weight:700; }
 
 /* Address box */
@@ -73,7 +73,7 @@
     background:#f8f9fc; border:1px solid #e8e8e8; border-radius:8px;
     padding:12px 14px; margin-bottom:16px; font-size:13px; color:#555;
 }
-.wd-address-box i { color:#F5A623; margin-top:2px; flex-shrink:0; }
+.wd-address-box i { color:#7DFF00; margin-top:2px; flex-shrink:0; }
 
 /* REG CARD */
 .wd-reg-card {
@@ -94,7 +94,7 @@
     font-family:'Rajdhani',sans-serif; letter-spacing:.04em;
     border:none; cursor:pointer; transition:background .2s;
 }
-.wd-reg-btn.paid-btn     { background:#F5A623; color:#000; }
+.wd-reg-btn.paid-btn     { background:#7DFF00; color:#000; }
 .wd-reg-btn.paid-btn:hover { background:#d4890e; }
 .wd-reg-btn.free-btn     { background:#43a047; color:#fff; }
 .wd-reg-btn.free-btn:hover { background:#2e7d32; }
@@ -105,7 +105,7 @@
 .wd-seats-note { text-align:center; font-size:12px; margin-top:8px; }
 .wd-reg-meta { margin-top:16px; display:flex; flex-direction:column; gap:9px; }
 .wd-reg-meta-row { display:flex; align-items:center; gap:10px; font-size:13px; color:#555; }
-.wd-reg-meta-row i { color:#F5A623; width:16px; text-align:center; }
+.wd-reg-meta-row i { color:#7DFF00; width:16px; text-align:center; }
 
 /* BODY SECTIONS */
 .wd-body { padding:0 48px 60px; }
@@ -134,7 +134,7 @@
 }
 .wd-speaker-avatar img { width:100%; height:100%; object-fit:cover; }
 .wd-speaker-name { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:#1a1a2e; margin-bottom:2px; }
-.wd-speaker-role { font-size:12px; color:#F5A623; font-weight:600; margin-bottom:8px; text-transform:uppercase; letter-spacing:.04em; }
+.wd-speaker-role { font-size:12px; color:#7DFF00; font-weight:600; margin-bottom:8px; text-transform:uppercase; letter-spacing:.04em; }
 .wd-speaker-bio  { font-size:13px; color:#666; line-height:1.6; }
 
 /* FAQ */
@@ -172,7 +172,7 @@
 .wd-rel-card-body { padding:10px 12px; }
 .wd-rel-card-title { font-size:13px; font-weight:600; color:#1a1a2e; line-height:1.3; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .wd-rel-card-meta  { font-size:11px; color:#999; }
-.wd-rel-card-price { padding:0 12px 10px; font-size:13px; font-weight:700; color:#F5A623; }
+.wd-rel-card-price { padding:0 12px 10px; font-size:13px; font-weight:700; color:#7DFF00; }
 
 /* Mobile sticky bar */
 .wd-sticky-bar {
@@ -182,9 +182,9 @@
     box-shadow:0 -4px 20px rgba(0,0,0,.2);
 }
 @media(max-width:940px){ .wd-sticky-bar { display:flex; } }
-.wd-sticky-price { color:#F5A623; font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
+.wd-sticky-price { color:#7DFF00; font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
 .wd-sticky-btn {
-    background:#F5A623; color:#000; font-weight:700; padding:11px 24px;
+    background:#7DFF00; color:#000; font-weight:700; padding:11px 24px;
     border-radius:9px; border:none; cursor:pointer; font-size:15px;
     font-family:'Rajdhani',sans-serif; white-space:nowrap; transition:background .2s;
 }
@@ -279,7 +279,7 @@
         @else
         <div class="wd-seats-bar">
             <div class="wd-seats-label">
-                <i class="fas fa-users" style="color:#F5A623;"></i>
+                <i class="fas fa-users" style="color:#7DFF00;"></i>
                 <strong>{{ $webinar->total_enrolled }}</strong> people registered
             </div>
         </div>
@@ -483,7 +483,7 @@ function handleEnroll() {
             name:        appName,
             description: data.webinar_name,
             prefill:     { name: data.user_name, email: data.user_email, contact: data.user_phone },
-            theme:       { color: '#F5A623' },
+            theme:       { color: '#7DFF00' },
             handler: function(response) {
                 fetch(verifyUrl, {
                     method: 'POST',
