@@ -224,7 +224,7 @@
 .cq-hero-cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .cq-btn-primary {
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--c-lime); color: #000;
+    background: var(--c-lime); color: #000 !important;
     font-family: var(--f-display);
     font-size: 14px; font-weight: 700; letter-spacing: .04em;
     padding: 12px 28px; border-radius: 6px; border: none;
@@ -261,6 +261,7 @@
 /* Right side — mini dashboard card */
 .cq-hero-right { flex: 0 0 420px; }
 .cq-hero-card {
+    max-width:500px;
     background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 12px;
@@ -931,20 +932,6 @@
             <div class="cq-hero-cta cq-anim d3">
                 <a href="{{ $hero['webapp'] ?? '#' }}" class="cq-btn-primary">
                     <i class="fas fa-chart-line"></i> Launch Platform
-                </a>
-                <a href="#about" class="cq-btn-outline">
-                    <i class="fas fa-play-circle"></i> Watch Demo
-                </a>
-            </div>
-            <div class="cq-hero-stores cq-anim d4">
-                <a href="{{ $hero['appstore'] ?? '#' }}" class="cq-store-chip">
-                    <i class="fab fa-apple"></i> App Store
-                </a>
-                <a href="{{ $hero['playstore'] ?? '#' }}" class="cq-store-chip">
-                    <i class="fab fa-google-play"></i> Play Store
-                </a>
-                <a href="{{ $hero['webapp'] ?? '#' }}" class="cq-store-chip">
-                    <i class="fas fa-globe"></i> Web App
                 </a>
             </div>
         </div>
