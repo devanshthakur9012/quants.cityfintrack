@@ -199,26 +199,16 @@ Route::controller(\App\Http\Controllers\EventController::class)
     });
 
 // LOGIN START
-Route::get('/login',                [LoginController::class, 'showLogin'])->name('user.login');
-Route::post('/login/send-otp',      [LoginController::class, 'sendLoginOtp'])->name('user.login.send-otp');
-Route::post('/login/verify-otp',    [LoginController::class, 'verifyLoginOtp'])->name('user.login.verify-otp');
-Route::post('/login/password',      [LoginController::class, 'loginWithPassword'])->name('user.login.password');
+Route::get('/login',             [LoginController::class, 'showLogin'])        ->name('user.login');
+Route::post('/login/send-otp',   [LoginController::class, 'sendLoginOtp'])     ->name('user.login.send-otp');
+Route::post('/login/verify-otp', [LoginController::class, 'verifyLoginOtp'])   ->name('user.login.verify-otp');
+Route::post('/login/password',   [LoginController::class, 'loginWithPassword'])->name('user.login.password');
  
-// Register
-Route::get('/register',             [LoginController::class, 'showRegister'])->name('user.register');
-Route::post('/register',            [LoginController::class, 'register'])->name('user.register.store');
- 
-// Email verification + set password
-Route::get('/verify-email/{token}', [LoginController::class, 'verifyEmail'])->name('user.verify.email');
-Route::post('/set-password',        [LoginController::class, 'setPassword'])->name('user.set.password');
- 
-// Forgot password
-Route::get('/forgot-password',      [LoginController::class, 'showForgotPassword'])->name('user.forgot.password');
-Route::post('/forgot-password',     [LoginController::class, 'sendResetLink'])->name('user.forgot.password.send');
- 
-// Reset password
-Route::get('/reset-password/{token}', [LoginController::class, 'showResetPassword'])->name('user.reset.password');
-Route::post('/reset-password',        [LoginController::class, 'resetPassword'])->name('user.reset.password.store');
+// Forgot / reset password (optional — users rarely need this since OTP = passwordless)
+Route::get('/forgot-password',        [LoginController::class, 'showForgotPassword'])->name('user.forgot.password');
+Route::post('/forgot-password',       [LoginController::class, 'sendResetLink'])     ->name('user.forgot.password.send');
+Route::get('/reset-password/{token}', [LoginController::class, 'showResetPassword']) ->name('user.reset.password');
+Route::post('/reset-password',        [LoginController::class, 'resetPassword'])      ->name('user.reset.password.store');
 // LOGIN END
 
 Route::get('/', [HomePageController::class, 'index'])->name('home');
