@@ -445,7 +445,7 @@
                             <th class="g-sig sep-sig">Signal</th>
                             <th class="g-sig">Score CE/PE</th>
                             <th class="g-sig">Factors</th>
-                            <th class="g-sig">Reason</th>
+                            {{-- <th class="g-sig">Reason</th> --}}
                         </tr>
                     </thead>
                     <tbody id="ss-tbody">
@@ -746,9 +746,9 @@ function ssRenderSummary(res) {
             + '<td>' + ssScoreBars(r.ce_score, r.pe_score) + '</td>'
             + '<td>' + ssFactorDots(r.factors) + '</td>'
             + '<td style="font-size:9px;color:#aab;text-align:left;max-width:200px;white-space:normal;padding:7px 10px;">'
-            + ssEsc(r.reason || '—') + '</td>'
             + '</tr>';
     });
+    //   + ssEsc(r.reason || '—') + '</td>'
 
     ssHtml('ss-tbody', html || ssEmptyRows(15, 'No data for the selected filters.'));
     document.getElementById('ss-stats').style.display = '';
