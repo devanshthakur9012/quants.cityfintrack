@@ -104,13 +104,13 @@
 /* ── SHARED BUTTONS ────────────────────────── */
 .cps-btn-lime {
     display: inline-flex; align-items: center; gap: 7px;
-    background: var(--c-lime); color: #000;
+    background: var(--c-lime); color: #000 !important;
     font-family: var(--f-display); font-size: 13px; font-weight: 700;
     letter-spacing: .05em; padding: 10px 22px; border-radius: 7px;
     border: none; cursor: pointer; transition: all .2s;
     box-shadow: 0 0 16px rgba(125,255,0,.2); white-space: nowrap;
 }
-.cps-btn-lime:hover { background: #8FFF1A; color: #000; box-shadow: 0 0 26px rgba(125,255,0,.35); transform: translateY(-1px); }
+.cps-btn-lime:hover { background: #8FFF1A; color: #000 !important; box-shadow: 0 0 26px rgba(125,255,0,.35); transform: translateY(-1px); }
 .cps-btn-ghost {
     display: inline-flex; align-items: center; gap: 7px;
     background: transparent; color: var(--c-muted);
