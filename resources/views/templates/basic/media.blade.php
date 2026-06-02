@@ -503,7 +503,7 @@
     ══════════════════════════════════════════════════════ --}}
     <div class="qmd-cta-strip qmd-anim d4">
         <div>
-            <h3>{{ $mediaCms->cta_title ?? 'Press &amp; Media Enquiries' }}</h3>
+            <h3>{{ $mediaCms->cta_title ?? 'Press & Media Enquiries' }}</h3>
             <p>{{ $mediaCms->cta_description ?? 'For interviews, features, podcast invitations or press kits — reach out to our media team directly.' }}</p>
         </div>
         <a href="mailto:{{ $mediaCms->cta_email ?? 'media@cityquants.com' }}" class="qmd-cta-btn">

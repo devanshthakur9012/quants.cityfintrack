@@ -411,21 +411,16 @@ class HomePageController extends Controller
         $mediaCms = MediaPageCms::getData();
 
         $categories = \App\Models\MediaCategory::where('is_active', true)
-            ->withCount(['mediaItems' => fn($q) => $q->where('is_active', true)])
-            ->having('media_items_count', '>', 0)
+        ->withCount(['mediaItems' => fn($q) => $q->where('is_active', true)])
+        ->with(['mediaItems' => fn($q) => $q
+            ->where('is_active', true)
             ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
-        $categories->each(function ($cat) {
-            $cat->setRelation('mediaItems',
-                $cat->mediaItems()
-                    ->where('is_active', true)
-                    ->orderBy('sort_order')
-                    ->orderByDesc('created_at')
-                    ->get()
-            );
-        });
+            ->orderByDesc('created_at')
+        ])
+        ->having('media_items_count', '>', 0)
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
 
         return view($this->activeTemplate . 'media', compact('pageTitle', 'categories', 'mediaCms'));
     }
