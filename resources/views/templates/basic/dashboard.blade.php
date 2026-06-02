@@ -641,7 +641,7 @@
                     <div class="ud-empty-icon"><i class="fas fa-book-open"></i></div>
                     <h4>No Courses Yet</h4>
                     <p>You haven't enrolled in any courses.<br>Browse our catalogue and start learning today.</p>
-                    <a href="{{ route('courses') }}" class="ud-empty-btn">
+                    <a href="{{ route('courses') }}" class="ud-empty-btn text-dark">
                         <i class="fas fa-search"></i> Browse Courses
                     </a>
                 </div>
