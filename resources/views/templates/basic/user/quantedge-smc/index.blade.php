@@ -395,11 +395,6 @@
             SMC signals on 15min candles — Liquidity sweeps, Fair Value Gaps,
             Order Blocks and EMA-20 confluence for high-probability trade setups.
         </p>
-        <div class="smc-hero-pills">
-            <span class="smc-pill smc-pill-buy">BUY: Sweep Low + Bullish FVG + Volume + Above EMA-20</span>
-            <span class="smc-pill smc-pill-sell">SELL: Sweep High + Bearish FVG + Volume + Below EMA-20</span>
-            <span class="smc-pill smc-pill-tf">15 Min · 60-candle rolling window</span>
-        </div>
     </div>
     <div class="smc-hero-icon">
         <i class="las la-chart-area"></i>
