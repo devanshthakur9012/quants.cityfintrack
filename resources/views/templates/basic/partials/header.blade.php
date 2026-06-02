@@ -56,7 +56,7 @@
     text-decoration: none;
 }
 .cq-logo img {
-    height: 34px; width: auto;
+    height: 50px; width: auto;
     display: block;
     transition: opacity .2s;
 }
