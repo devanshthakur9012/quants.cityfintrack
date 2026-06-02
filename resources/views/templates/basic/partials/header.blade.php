@@ -291,7 +291,7 @@ body.has-cq-header.no-ticker { padding-top: var(--h-height); }
             <img src="{{ getImage(getFilePath('logoIcon') . '/logo.png') }}" alt="CityQuants">
         </a>
 
-        <div class="d-flex justify-content-end align-items-center">
+        <div class="d-flex me-3 justify-content-end align-items-center w-100">
             {{-- Option Analysis pill (desktop) --}}
             <a href="{{ route('cp.analyses.index') }}" class="cq-oa-pill d-none d-xl-inline-flex">
                 <span class="cq-oa-pill-dot"></span>
