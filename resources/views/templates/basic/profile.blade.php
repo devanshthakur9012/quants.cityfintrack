@@ -1,75 +1,299 @@
 {{-- FILE: resources/views/themes/{activeTemplate}/profile.blade.php --}}
 @extends($activeTemplate.'layouts.frontend')
-
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-.up { font-family:'Exo 2',sans-serif; background:#f4f6fb; min-height:80vh; }
-.up *,.up *::before,.up *::after { box-sizing:border-box; }
-.up h1,.up h2,.up h3,.up h4 { font-family:'Rajdhani',sans-serif; letter-spacing:.02em; }
-.up a { text-decoration:none; color:inherit; }
-/* Header */
-.up-header { background:linear-gradient(135deg,#0f1b2d,#1a3050); padding:32px 24px; }
-.up-header-inner { max-width:960px; margin:0 auto; }
-.up-header h1 { font-size:26px; font-weight:700; color:#fff; margin:0 0 4px; }
-.up-header p  { font-size:13.5px; color:rgba(255,255,255,.5); margin:0; }
-/* Layout */
-.up-layout { max-width:960px; margin:0 auto; padding:28px 24px 72px; display:flex; gap:24px; align-items:flex-start; }
-.up-sidebar { flex-shrink:0; width:240px; position:sticky; top:20px; }
-.up-main    { flex:1; min-width:0; }
-/* Sidebar profile box */
-.up-profile-box { background:linear-gradient(135deg,#0f1b2d,#1a3050); border-radius:12px; padding:24px 18px 18px; text-align:center; margin-bottom:12px; border:1px solid rgba(245,166,35,.2); }
-.up-avatar-wrap { width:68px; height:68px; border-radius:50%; margin:0 auto 12px; border:3px solid #7DFF00; overflow:hidden; background:#7DFF00; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; color:#0f1b2d; cursor:pointer; position:relative; }
-.up-avatar-wrap img { width:100%; height:100%; object-fit:cover; }
-.up-avatar-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; border-radius:50%; color:#fff; font-size:16px; }
-.up-avatar-wrap:hover .up-avatar-overlay { opacity:1; }
-.up-profile-name  { font-size:15px; font-weight:700; color:#fff; margin-bottom:2px; }
-.up-profile-email { font-size:12px; color:rgba(255,255,255,.45); }
-/* Sidebar nav */
-.up-nav { background:#fff; border-radius:10px; border:1px solid #e5e9f2; overflow:hidden; }
-.up-nav-item { display:flex; align-items:center; gap:10px; padding:12px 16px; font-size:13.5px; font-weight:500; color:#5a6678; border-bottom:1px solid #f0f2f7; transition:all .2s; }
-.up-nav-item:last-child { border-bottom:none; }
-.up-nav-item:hover,.up-nav-item.active { background:#f0f5ff; color:#1a56db; }
-.up-nav-item.danger { color:#e53935; }
-.up-nav-item.danger:hover { background:#fff5f5; color:#b71c1c; }
-.up-nav-item i { width:18px; text-align:center; font-size:15px; flex-shrink:0; }
-/* Cards */
-.up-card { background:#fff; border-radius:12px; border:1px solid #e5e9f2; overflow:hidden; margin-bottom:20px; }
-.up-card-header { padding:18px 22px; border-bottom:1px solid #f0f2f7; display:flex; align-items:center; gap:10px; }
-.up-card-header h3 { font-size:17px; font-weight:700; color:#0f1b2d; margin:0; }
-.up-card-header i  { color:#1a56db; font-size:17px; }
-.up-card-body   { padding:22px; }
-.up-card-footer { padding:14px 22px; border-top:1px solid #f0f2f7; background:#fafbff; display:flex; justify-content:flex-end; gap:10px; }
-/* Form */
-.up-label { font-size:12.5px; font-weight:600; color:#5a6678; margin-bottom:5px; display:block; }
-.up-input { width:100%; border:1px solid #dde2ee; border-radius:7px; padding:10px 13px; font-size:13.5px; color:#2d3a4e; font-family:'Exo 2',sans-serif; outline:none; transition:border-color .2s; background:#fff; }
-.up-input:focus { border-color:#1a56db; }
-.up-input[readonly] { background:#f8f9fd; color:#8a94a6; cursor:not-allowed; }
-.up-invalid-msg { font-size:12px; color:#e53935; margin-top:4px; }
-.up-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.up-btn { display:inline-flex; align-items:center; gap:7px; padding:11px 24px; border-radius:8px; border:none; font-family:'Exo 2',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
-.up-btn.primary   { background:#7DFF00; color:#0f1b2d; }
-.up-btn.primary:hover   { background:#d4890e; transform:translateY(-1px); }
-.up-btn.secondary { background:#f0f2f7; color:#5a6678; }
-.up-btn.secondary:hover { background:#e5e9f2; }
-/* Avatar upload area */
-.up-avatar-upload { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
-.up-avatar-large  { width:72px; height:72px; border-radius:50%; border:3px solid #7DFF00; overflow:hidden; background:#7DFF00; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:#0f1b2d; flex-shrink:0; }
-.up-avatar-large img { width:100%; height:100%; object-fit:cover; }
-/* Verify badges */
-.up-vbadge { font-size:11px; padding:2px 7px; border-radius:4px; font-weight:600; display:inline-flex; align-items:center; gap:3px; margin-left:5px; }
-.up-vbadge.yes { background:#e8f5e9; color:#2e7d32; }
-.up-vbadge.no  { background:#fce4ec; color:#c62828; }
-/* Responsive */
-@media(max-width:768px) { .up-layout{flex-direction:column;padding:16px 14px 56px;} .up-sidebar{width:100%;position:static;} .up-form-grid{grid-template-columns:1fr;} }
+/* ══════════════════════════════════════════════
+   CITYQUANTS — PROFILE SETTINGS  v2.0
+   Dark terminal · Matches dashboard design system
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --c-bg:       #0B0E11;
+    --c-surface:  #131722;
+    --c-panel:    #1C2030;
+    --c-border:   rgba(255,255,255,.06);
+    --c-border2:  rgba(255,255,255,.11);
+    --c-lime:     #7DFF00;
+    --c-lime-dim: rgba(125,255,0,.1);
+    --c-blue:     #00B8D4;
+    --c-red:      #EF5350;
+    --c-teal:     #26A69A;
+    --c-amber:    #FFA726;
+    --c-text:     #D1D4DC;
+    --c-muted:    #787B86;
+    --c-faint:    rgba(255,255,255,.03);
+    --f-sans:     'DM Sans', system-ui, sans-serif;
+    --f-display:  'Syne', sans-serif;
+    --f-mono:     'Space Grotesk', monospace;
+}
+
+.up { font-family: var(--f-sans); background: var(--c-bg); color: var(--c-text); min-height: 80vh; }
+.up * { box-sizing: border-box; }
+.up a { text-decoration: none; color: inherit; }
+
+@keyframes upFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+.up-anim    { animation: upFadeUp .45s ease both; }
+.up-anim.d1 { animation-delay: .06s; }
+.up-anim.d2 { animation-delay: .12s; }
+
+/* ── PAGE HEADER ───────────────────────────── */
+.up-header {
+    position: relative; overflow: hidden;
+    background: var(--c-bg);
+    padding: 44px 24px 36px;
+    border-bottom: 1px solid var(--c-border);
+}
+.up-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(125,255,0,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125,255,0,.022) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 80% at 25% 50%, black, transparent);
+    pointer-events: none;
+}
+.up-header::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 38% 70% at 5% 50%, rgba(125,255,0,.04), transparent 70%);
+    pointer-events: none;
+}
+.up-header-inner {
+    position: relative; z-index: 1;
+    max-width: 1000px; margin: 0 auto;
+}
+.up-header h1 {
+    font-family: var(--f-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 800; color: #fff; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 10px;
+}
+.up-header h1 i { color: var(--c-lime); font-size: 22px; }
+.up-header p { font-size: 13px; color: var(--c-muted); }
+
+/* ── LAYOUT ────────────────────────────────── */
+.up-layout {
+    max-width: 1000px; margin: 0 auto;
+    padding: 28px 24px 80px;
+    display: flex; gap: 22px; align-items: flex-start;
+}
+.up-sidebar { flex-shrink: 0; width: 240px; position: sticky; top: 96px; }
+.up-main    { flex: 1; min-width: 0; }
+
+/* ── SIDEBAR PROFILE BOX ───────────────────── */
+.up-profile-box {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px; padding: 22px 16px 16px;
+    text-align: center; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+}
+.up-profile-box::before {
+    content: '';
+    position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-lime), transparent);
+    opacity: .5;
+}
+.up-profile-box::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(125,255,0,.04), transparent 70%);
+    pointer-events: none;
+}
+.up-avatar-wrap {
+    width: 64px; height: 64px; border-radius: 50%;
+    margin: 0 auto 12px; position: relative; z-index: 1;
+    border: 2px solid var(--c-lime);
+    background: var(--c-lime);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--f-display); font-size: 22px; font-weight: 800; color: #000;
+    overflow: hidden; cursor: pointer;
+    box-shadow: 0 0 16px rgba(125,255,0,.2);
+    transition: box-shadow .2s;
+}
+.up-avatar-wrap:hover { box-shadow: 0 0 24px rgba(125,255,0,.35); }
+.up-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.up-avatar-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .2s; color: #fff; font-size: 15px;
+}
+.up-avatar-wrap:hover .up-avatar-overlay { opacity: 1; }
+.up-profile-name  { font-family: var(--f-display); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; position: relative; z-index: 1; }
+.up-profile-email { font-size: 11px; color: var(--c-muted); word-break: break-all; position: relative; z-index: 1; }
+
+/* ── SIDEBAR NAV ───────────────────────────── */
+.up-sidebar-nav {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px; overflow: hidden;
+}
+.up-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    font-size: 13px; font-weight: 500; color: var(--c-muted);
+    border-bottom: 1px solid var(--c-border);
+    border-left: 2px solid transparent;
+    transition: all .2s;
+}
+.up-nav-item:last-child { border-bottom: none; }
+.up-nav-item:hover { background: var(--c-faint); color: var(--c-text); border-left-color: var(--c-border2); }
+.up-nav-item.active { background: var(--c-lime-dim); color: var(--c-lime); border-left-color: var(--c-lime); }
+.up-nav-item i { width: 16px; text-align: center; font-size: 14px; flex-shrink: 0; }
+.up-nav-item.danger { color: rgba(239,83,80,.7); }
+.up-nav-item.danger:hover { background: rgba(239,83,80,.07); color: var(--c-red); border-left-color: var(--c-red); }
+
+/* ── ALERT / NOTIFY ────────────────────────── */
+.up-alert {
+    display: flex; align-items: center; gap: 9px;
+    padding: 12px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; margin-bottom: 16px;
+}
+.up-alert.success { background: rgba(38,166,154,.1); border: 1px solid rgba(38,166,154,.25); color: #4DB6AC; }
+.up-alert.error   { background: rgba(239,83,80,.1);  border: 1px solid rgba(239,83,80,.25);  color: #EF9A9A; }
+
+/* ── FORM CARDS ────────────────────────────── */
+.up-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px; overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+}
+.up-card::before {
+    content: '';
+    position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-lime), transparent);
+    opacity: .3;
+}
+.up-card-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex; align-items: center; gap: 10px;
+}
+.up-card-header h3 {
+    font-family: var(--f-display); font-size: 15px;
+    font-weight: 700; color: var(--c-text); margin: 0;
+}
+.up-card-header i { color: var(--c-lime); font-size: 16px; }
+.up-card-body   { padding: 22px; }
+.up-card-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--c-border);
+    background: rgba(0,0,0,.15);
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* ── FORM ELEMENTS ─────────────────────────── */
+.up-label {
+    display: block; font-size: 11px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--c-muted); margin-bottom: 7px;
+}
+.up-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border2);
+    border-radius: 8px;
+    font-size: 13.5px; color: var(--c-text);
+    font-family: var(--f-sans); outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+.up-input::placeholder { color: var(--c-muted); }
+.up-input:focus {
+    border-color: rgba(125,255,0,.45);
+    box-shadow: 0 0 0 3px rgba(125,255,0,.08);
+}
+.up-input[readonly] {
+    background: rgba(0,0,0,.2); color: var(--c-muted);
+    cursor: not-allowed; border-color: var(--c-border);
+}
+.up-invalid-msg { font-size: 12px; color: #EF9A9A; margin-top: 5px; }
+
+.up-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Telegram prefix */
+.up-input-prefix {
+    position: relative;
+}
+.up-input-prefix-sym {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--c-muted); font-size: 13px; pointer-events: none;
+}
+.up-input-prefix .up-input { padding-left: 26px; }
+
+/* ── AVATAR UPLOAD ─────────────────────────── */
+.up-avatar-upload { display: flex; align-items: center; gap: 16px; }
+.up-avatar-large {
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 2px solid var(--c-lime);
+    background: var(--c-lime);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--f-display); font-size: 22px; font-weight: 800; color: #000;
+    overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(125,255,0,.2);
+}
+.up-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+.up-upload-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--c-panel); color: var(--c-text);
+    border: 1px solid var(--c-border2);
+    font-family: var(--f-sans); font-size: 13px; font-weight: 600;
+    padding: 9px 18px; border-radius: 7px; cursor: pointer;
+    transition: all .2s;
+}
+.up-upload-btn:hover { border-color: rgba(125,255,0,.3); color: var(--c-lime); }
+.up-upload-hint { font-size: 11.5px; color: var(--c-muted); margin-top: 5px; }
+
+/* ── VERIFY BADGES ─────────────────────────── */
+.up-vbadge {
+    font-size: 10px; font-weight: 700; letter-spacing: .05em;
+    padding: 2px 8px; border-radius: 100px; margin-left: 6px;
+    display: inline-flex; align-items: center; gap: 3px;
+    font-family: var(--f-mono);
+}
+.up-vbadge.yes { background: rgba(38,166,154,.12); color: #4DB6AC; }
+.up-vbadge.no  { background: rgba(239,83,80,.1);   color: #EF9A9A; }
+
+/* ── BUTTONS ───────────────────────────────── */
+.up-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 22px; border-radius: 8px; border: none;
+    font-family: var(--f-display); font-size: 13px; font-weight: 700;
+    letter-spacing: .04em; cursor: pointer; transition: all .2s;
+}
+.up-btn.primary {
+    background: var(--c-lime); color: #000;
+    box-shadow: 0 0 16px rgba(125,255,0,.2);
+}
+.up-btn.primary:hover { background: #8FFF1A; box-shadow: 0 0 26px rgba(125,255,0,.35); transform: translateY(-1px); }
+.up-btn.secondary {
+    background: var(--c-panel); color: var(--c-muted);
+    border: 1px solid var(--c-border2);
+}
+.up-btn.secondary:hover { color: var(--c-text); border-color: var(--c-border2); }
+
+/* ── RESPONSIVE ────────────────────────────── */
+@media (max-width: 768px) {
+    .up-layout  { flex-direction: column; padding: 20px 16px 60px; }
+    .up-sidebar { width: 100%; position: static; }
+    .up-form-grid { grid-template-columns: 1fr; }
+    .up-header  { padding: 32px 16px 26px; }
+}
 </style>
 
 <div class="up">
 
+{{-- PAGE HEADER --}}
 <div class="up-header">
-    <div class="up-header-inner">
-        <h1><i class="fas fa-user-circle" style="color:#7DFF00;margin-right:8px;font-size:22px;"></i>Profile Settings</h1>
+    <div class="up-header-inner up-anim">
+        <h1><i class="fas fa-user-circle"></i> Profile Settings</h1>
         <p>Manage your personal information and contact details.</p>
     </div>
 </div>
@@ -77,7 +301,7 @@
 <div class="up-layout">
 
     {{-- ── SIDEBAR ── --}}
-    <div class="up-sidebar">
+    <div class="up-sidebar up-anim">
         <div class="up-profile-box">
             <div class="up-avatar-wrap" onclick="document.getElementById('profilePicInput').click()">
                 @if($user->profile_pic)
@@ -92,9 +316,18 @@
             <div class="up-profile-email">{{ $user->email }}</div>
         </div>
 
-        <div class="up-nav">
+        <nav class="up-sidebar-nav">
             <a href="{{ route('user.dashboard') }}" class="up-nav-item">
-                <i class="fas fa-th-large"></i> Dashboard
+                <i class="fas fa-th-large"></i> My Dashboard
+            </a>
+            <a href="{{ route('cp.my-subscription') }}" class="up-nav-item">
+                <i class="fas fa-crown"></i> My Subscription
+            </a>
+            <a href="{{ route('cp.analyses.index') }}" class="up-nav-item">
+                <i class="fas fa-chart-line"></i> Option Analysis
+            </a>
+            <a href="{{ route('courses') }}" class="up-nav-item">
+                <i class="fas fa-book-open"></i> Browse Courses
             </a>
             <a href="{{ route('user.profile') }}" class="up-nav-item active">
                 <i class="fas fa-user-circle"></i> Profile Settings
@@ -105,17 +338,17 @@
             <a href="{{ route('user.logout') }}" class="up-nav-item danger">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
-        </div>
+        </nav>
     </div>
 
-    {{-- ── FORM ── --}}
-    <div class="up-main">
+    {{-- ── MAIN FORM ── --}}
+    <div class="up-main up-anim d1">
 
+        {{-- Session notifications --}}
         @if(session('notify'))
             @foreach(session('notify') as $n)
-            <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;
-                 background:{{ $n[0]==='success'?'#e8f5e9':'#fce4ec' }};color:{{ $n[0]==='success'?'#2e7d32':'#c62828' }};">
-                <i class="fas fa-{{ $n[0]==='success'?'check-circle':'exclamation-circle' }}"></i>
+            <div class="up-alert {{ $n[0] }}">
+                <i class="fas fa-{{ $n[0]==='success' ? 'check-circle' : 'exclamation-circle' }}"></i>
                 {{ $n[1] }}
             </div>
             @endforeach
@@ -124,9 +357,12 @@
         <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            {{-- Photo --}}
+            {{-- Profile Photo --}}
             <div class="up-card">
-                <div class="up-card-header"><i class="fas fa-image"></i><h3>Profile Photo</h3></div>
+                <div class="up-card-header">
+                    <i class="fas fa-image"></i>
+                    <h3>Profile Photo</h3>
+                </div>
                 <div class="up-card-body">
                     <div class="up-avatar-upload">
                         <div class="up-avatar-large">
@@ -138,32 +374,35 @@
                             @endif
                         </div>
                         <div>
-                            <label for="profilePicInput" class="up-btn secondary" style="cursor:pointer;margin-bottom:6px;">
+                            <label for="profilePicInput" class="up-upload-btn">
                                 <i class="fas fa-upload"></i> Choose Photo
                             </label>
                             <input type="file" name="profile_pic" id="profilePicInput"
                                    accept="image/jpeg,image/png,image/webp" style="display:none;">
-                            <p style="font-size:12px;color:#9aa3b5;margin:4px 0 0;">JPG, PNG, WEBP — max 2 MB</p>
+                            <div class="up-upload-hint">JPG, PNG, WEBP — max 2 MB</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Personal Info --}}
+            {{-- Personal Information --}}
             <div class="up-card">
-                <div class="up-card-header"><i class="fas fa-user"></i><h3>Personal Information</h3></div>
+                <div class="up-card-header">
+                    <i class="fas fa-user"></i>
+                    <h3>Personal Information</h3>
+                </div>
                 <div class="up-card-body">
 
                     <div class="up-form-grid" style="margin-bottom:16px;">
                         <div>
-                            <label class="up-label">First Name <span style="color:#e53935;">*</span></label>
+                            <label class="up-label">First Name <span style="color:var(--c-red);">*</span></label>
                             <input type="text" name="firstname"
                                    class="up-input {{ $errors->has('firstname') ? 'is-invalid' : '' }}"
                                    value="{{ old('firstname', $user->firstname) }}" required>
                             @error('firstname')<div class="up-invalid-msg">{{ $message }}</div>@enderror
                         </div>
                         <div>
-                            <label class="up-label">Last Name <span style="color:#e53935;">*</span></label>
+                            <label class="up-label">Last Name <span style="color:var(--c-red);">*</span></label>
                             <input type="text" name="lastname"
                                    class="up-input {{ $errors->has('lastname') ? 'is-invalid' : '' }}"
                                    value="{{ old('lastname', $user->lastname) }}" required>
@@ -182,7 +421,7 @@
                                 @endif
                             </label>
                             <input type="email" class="up-input" value="{{ $user->email }}" readonly>
-                            <small style="font-size:11.5px;color:#9aa3b5;">Contact support to change email.</small>
+                            <div style="font-size:11px;color:var(--c-muted);margin-top:4px;">Contact support to change.</div>
                         </div>
                         <div>
                             <label class="up-label">
@@ -203,19 +442,23 @@
 
                     <div>
                         <label class="up-label">Telegram Username</label>
-                        <div style="position:relative;">
-                            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9aa3b5;">@</span>
-                            <input type="text" name="telegram_username" class="up-input" style="padding-left:26px;"
+                        <div class="up-input-prefix">
+                            <span class="up-input-prefix-sym">@</span>
+                            <input type="text" name="telegram_username" class="up-input"
                                    value="{{ old('telegram_username', $user->telegram_username) }}"
                                    placeholder="yourusername">
                         </div>
                     </div>
+
                 </div>
             </div>
 
             {{-- Address --}}
             <div class="up-card">
-                <div class="up-card-header"><i class="fas fa-map-marker-alt"></i><h3>Address</h3></div>
+                <div class="up-card-header">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Address</h3>
+                </div>
                 <div class="up-card-body">
                     <div style="margin-bottom:16px;">
                         <label class="up-label">Street Address</label>
@@ -242,7 +485,7 @@
                                    value="{{ old('zip', optional($user->address)->zip) }}" placeholder="400001">
                         </div>
                         <div>
-                            <label class="up-label">Username <small style="color:#9aa3b5;">(read only)</small></label>
+                            <label class="up-label">Username <small style="color:var(--c-muted);text-transform:none;letter-spacing:0;">(read only)</small></label>
                             <input type="text" class="up-input" value="{{ $user->username }}" readonly>
                         </div>
                     </div>
@@ -256,24 +499,24 @@
             </div>
 
         </form>
-    </div>
-</div>
-</div>
+    </div>{{-- /up-main --}}
 
+</div>{{-- /up-layout --}}
+</div>{{-- /up --}}
+
+{{-- ── AVATAR PREVIEW SCRIPT — LOGIC IDENTICAL ── --}}
 <script>
 document.getElementById('profilePicInput').addEventListener('change', function () {
     var file = this.files[0];
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function (e) {
-        // main preview
         var prev = document.getElementById('avatarPreview');
         var init = document.getElementById('avatarInit');
         if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
         if (init) init.style.display = 'none';
-        // sidebar preview
-        var sb   = document.getElementById('sbAvatar');
-        var sbi  = document.getElementById('sbInit');
+        var sb  = document.getElementById('sbAvatar');
+        var sbi = document.getElementById('sbInit');
         if (sb)  { sb.src = e.target.result; sb.style.display = 'block'; }
         if (sbi) sbi.style.display = 'none';
     };

@@ -14,13 +14,13 @@
 
 /* ── HERO ── */
 .ss-hero {
-    background:#fff; border-bottom:1px solid #e8e8e8;
+    background:#09141b; border-bottom:1px solid #e8e8e8;
     padding:32px 48px; display:flex; align-items:center;
     justify-content:space-between; gap:24px;
 }
 .ss-hero-left h1 {
     font-size:clamp(26px,3.5vw,42px); font-weight:700;
-    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
+    color:#fff; margin:0 0 8px; line-height:1.1;
 }
 .ss-hero-left h1 span { color:#7DFF00; }
 .ss-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:560px; }
