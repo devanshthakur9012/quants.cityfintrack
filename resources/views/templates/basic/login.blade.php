@@ -438,8 +438,7 @@
                 <div class="cq-login-divider">or</div>
 
                 <p style="font-size:12px;color:var(--l-muted);text-align:center;line-height:1.65;">
-                    A 4-digit OTP will be sent to your email.<br>
-                    No account? One is created automatically.
+                    A 4-digit OTP will be sent to your email.
                 </p>
             </div>
 
