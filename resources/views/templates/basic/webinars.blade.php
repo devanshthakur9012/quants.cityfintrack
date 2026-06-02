@@ -1,250 +1,410 @@
 {{-- FILE: resources/views/themes/{active_theme}/webinars.blade.php --}}
 @extends($activeTemplate.'layouts.frontend')
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
-.qa-wrap {
-    font-family: 'Exo 2', sans-serif; color: #1a1a2e;
-    display: block; background: #f7f8fc;
+/* ══════════════════════════════════════════════
+   CITYQUANTS — WEBINARS PAGE  v2.0
+   Dark terminal · Matches homepage design system
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --c-bg:       #0B0E11;
+    --c-surface:  #131722;
+    --c-panel:    #1C2030;
+    --c-border:   rgba(255,255,255,.06);
+    --c-border2:  rgba(255,255,255,.11);
+    --c-lime:     #7DFF00;
+    --c-lime-dim: rgba(125,255,0,.1);
+    --c-lime-glo: rgba(125,255,0,.06);
+    --c-blue:     #00B8D4;
+    --c-red:      #EF5350;
+    --c-teal:     #26A69A;
+    --c-amber:    #FFA726;
+    --c-green:    #66BB6A;
+    --c-text:     #D1D4DC;
+    --c-muted:    #787B86;
+    --f-sans:     'DM Sans', system-ui, sans-serif;
+    --f-display:  'Syne', sans-serif;
+    --f-mono:     'Space Grotesk', monospace;
 }
+
+.qa-wrap { font-family: var(--f-sans); color: var(--c-text); background: var(--c-bg); display: block; }
 .qa-wrap * { box-sizing: border-box; }
-.qa-wrap h1,.qa-wrap h2,.qa-wrap h3,.qa-wrap h4 { font-family: 'Rajdhani', sans-serif; letter-spacing: .03em; }
 .qa-wrap a { text-decoration: none; }
-@keyframes qaFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-.qa-anim { animation: qaFadeUp .6s ease both; }
+
+@keyframes qaFadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+.qa-anim    { animation: qaFadeUp .55s ease both; }
+.qa-anim.d1 { animation-delay: .08s; }
+.qa-anim.d2 { animation-delay: .16s; }
 @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
+
+/* ── BREADCRUMB ── */
+.qa-breadcrumb {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    padding: 12px 32px;
+}
+.qa-breadcrumb-inner {
+    font-size: 12px; color: var(--c-muted);
+    display: flex; align-items: center; gap: 7px; font-family: var(--f-mono);
+}
+.qa-breadcrumb-inner a { color: var(--c-lime); font-weight: 600; transition: opacity .2s; }
+.qa-breadcrumb-inner a:hover { opacity: .75; }
+.qa-breadcrumb-inner i { font-size: 10px; color: var(--c-border2); }
 
 /* ── HERO ── */
 .qa-wb-hero {
-    background: #fff; border-bottom: 1px solid #e8e8e8;
-    padding: 36px 48px; display: flex; align-items: center;
-    justify-content: space-between; gap: 28px; overflow: hidden;
+    position: relative; overflow: hidden;
+    background: var(--c-bg);
+    border-bottom: 1px solid var(--c-border);
+    padding: 64px 48px 56px;
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+}
+.qa-wb-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(125,255,0,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125,255,0,.022) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 80% at 20% 50%, black, transparent);
+    pointer-events: none;
+}
+.qa-wb-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 45% 80% at 5% 50%, rgba(125,255,0,.04), transparent 70%);
+    pointer-events: none;
+}
+.qa-wb-hero-left { position: relative; z-index: 1; flex: 1; }
+.qa-hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--c-lime); margin-bottom: 14px;
+    font-family: var(--f-mono);
+}
+.qa-hero-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: var(--c-lime); }
+.qa-hero-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--c-lime);
+    display: inline-block; animation: pulseDot 1.4s ease infinite; flex-shrink: 0;
 }
 .qa-wb-hero-left h1 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: clamp(30px,4vw,48px); font-weight: 700;
-    color: #1a1a2e; margin: 0 0 14px; line-height: 1.05;
+    font-family: var(--f-display);
+    font-size: clamp(26px, 4vw, 46px);
+    font-weight: 800; color: #fff;
+    margin: 0 0 14px; line-height: 1.08; letter-spacing: -.02em;
 }
 .qa-wb-hero-left p {
-    font-size: 14px; color: #555; line-height: 1.78;
-    max-width: 600px; margin: 0;
+    font-size: 14px; color: var(--c-muted); line-height: 1.78;
+    max-width: 580px; margin: 0;
 }
-.qa-wb-hero-right   { flex-shrink: 0; width: 210px; }
-.qa-wb-hero-right img { width: 100%; object-fit: contain; display: block; }
-@media(max-width:768px){
-    .qa-wb-hero { flex-direction: column; padding: 28px 20px; text-align: center; }
-    .qa-wb-hero-right { width: 160px; }
+.qa-wb-hero-right {
+    position: relative; z-index: 1;
+    flex-shrink: 0; width: 200px;
+    background: var(--c-surface); border: 1px solid var(--c-border2);
+    border-radius: 14px; padding: 8px; overflow: hidden;
+    box-shadow: 0 0 40px rgba(125,255,0,.06);
+}
+.qa-wb-hero-right img { width: 100%; border-radius: 8px; object-fit: contain; display: block; }
+
+@media(max-width:768px) {
+    .qa-wb-hero { flex-direction: column; padding: 36px 20px 32px; text-align: center; }
+    .qa-hero-eyebrow { justify-content: center; }
+    .qa-wb-hero-right { width: 140px; }
 }
 
-/* ── FILTER BAR ── */
+/* ── FILTER BAR (sticky tabs + dropdowns) ── */
 .qa-filter-bar {
-    background: #fff; border-bottom: 1px solid #e8e8e8;
-    padding: 0 48px; position: sticky; top: 0; z-index: 200;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    padding: 0 48px;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3);
 }
-.qa-main-tabs { display: flex; border-bottom: 2px solid #f0f0f0; }
+.qa-main-tabs { display: flex; border-bottom: 1px solid var(--c-border); }
 .qa-main-tab {
-    padding: 15px 22px; font-size: 14px; font-weight: 600; color: #666;
+    padding: 14px 22px; font-size: 13px; font-weight: 600; color: var(--c-muted);
     cursor: pointer; border: none; background: none;
-    border-bottom: 3px solid transparent; margin-bottom: -2px;
-    transition: all .2s; font-family: 'Exo 2',sans-serif; white-space: nowrap;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all .2s; font-family: var(--f-mono); white-space: nowrap;
+    letter-spacing: .04em;
 }
-.qa-main-tab.on { color: #7DFF00; border-bottom-color: #7DFF00; }
-.qa-main-tab:hover:not(.on) { color: #333; }
+.qa-main-tab.on { color: var(--c-lime); border-bottom-color: var(--c-lime); }
+.qa-main-tab:hover:not(.on) { color: var(--c-text); }
+
 .qa-dropdowns-row {
     display: flex; align-items: flex-end; gap: 14px;
-    padding: 13px 0 12px; flex-wrap: wrap;
+    padding: 12px 0 11px; flex-wrap: wrap;
 }
-.qa-filter-group { display: flex; flex-direction: column; gap: 3px; }
+.qa-filter-group { display: flex; flex-direction: column; gap: 4px; }
 .qa-filter-label {
-    font-size: 10.5px; color: #999; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .06em;
+    font-size: 10px; color: var(--c-muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em; font-family: var(--f-mono);
 }
 .qa-filter-select {
-    border: 1px solid #ddd; border-radius: 6px; padding: 7px 30px 7px 10px;
-    font-size: 13px; color: #333;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance: none; -webkit-appearance: none; cursor: pointer;
-    font-family: 'Exo 2',sans-serif; min-width: 90px;
+    background: var(--c-panel); border: 1px solid var(--c-border2);
+    border-radius: 7px; padding: 7px 26px 7px 11px;
+    font-size: 12px; color: var(--c-text); font-family: var(--f-mono);
+    font-weight: 600;
+    appearance: none; cursor: pointer; outline: none; min-width: 90px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23787B86'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center;
+    transition: border-color .2s;
 }
-.qa-filter-select:focus { outline: none; border-color: #7DFF00; }
+.qa-filter-select:focus { border-color: rgba(125,255,0,.45); }
+.qa-filter-select option { background: var(--c-panel); }
+
+/* search */
 .qa-search-wrap {
     display: flex; align-items: stretch; overflow: hidden;
-    border: 1px solid #ddd; border-radius: 6px; margin-left: auto;
+    border: 1px solid var(--c-border2); border-radius: 7px;
+    margin-left: auto; background: var(--c-panel);
 }
 .qa-search-input {
-    border: none; padding: 8px 14px; font-size: 13px; color: #333;
-    outline: none; width: 200px; font-family: 'Exo 2',sans-serif;
+    border: none; padding: 8px 14px; font-size: 12px;
+    color: var(--c-text); outline: none; width: 200px;
+    font-family: var(--f-mono); background: transparent;
 }
+.qa-search-input::placeholder { color: var(--c-muted); }
 .qa-search-btn {
-    background: #7DFF00; border: none; padding: 0 16px;
-    color: #fff; font-size: 14px; cursor: pointer;
-    display: flex; align-items: center;
+    background: var(--c-lime); border: none; padding: 0 14px;
+    color: #000; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; transition: background .2s;
 }
-@media(max-width:768px){
+.qa-search-btn:hover { background: #8FFF1A; }
+
+@media(max-width:768px) {
     .qa-filter-bar { padding: 0 16px; }
     .qa-search-wrap { margin-left: 0; width: 100%; }
     .qa-search-input { width: 100%; }
 }
 
-/* ── CONTENT ── */
+/* ── CONTENT AREA ── */
 .qa-webinars-wrap {
-    background: #f7f8fc; padding: 32px 48px 72px; min-height: 60vh;
+    background: var(--c-bg); padding: 32px 48px 72px; min-height: 60vh;
 }
-@media(max-width:768px){ .qa-webinars-wrap { padding: 20px 16px 56px; } }
+@media(max-width:768px) { .qa-webinars-wrap { padding: 20px 16px 56px; } }
+
+/* section heading — lime underline style */
 .qa-section-head {
-    font-family: 'Rajdhani',sans-serif; font-size: 20px; font-weight: 700;
-    color: #1a1a2e; margin: 0 0 20px; padding-bottom: 8px;
-    border-bottom: 2px solid #7DFF00; display: inline-block;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 20px; margin-top: 4px;
 }
+.qa-section-head h2 {
+    font-family: var(--f-display); font-size: 16px; font-weight: 700;
+    color: #fff; margin: 0; white-space: nowrap;
+}
+.qa-section-head::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(125,255,0,.4) 0%, transparent 100%);
+}
+
+/* ── CARD GRID ── */
 .qa-wgrid {
-    display: grid; grid-template-columns: repeat(3,1fr);
-    gap: 20px; margin-bottom: 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px; margin-bottom: 40px;
 }
-@media(max-width:1000px){ .qa-wgrid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:1050px) { .qa-wgrid { grid-template-columns: repeat(2,1fr); } }
 @media(max-width:580px)  { .qa-wgrid { grid-template-columns: 1fr; } }
 
-/* ── CARD ── */
+/* ── WEBINAR CARD ── */
 .qa-wcard {
-    background: #fff; border-radius: 10px; overflow: hidden;
-    border: 1px solid #e8e8e8; transition: transform .25s, box-shadow .25s;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px; overflow: hidden;
     display: flex; flex-direction: column;
+    position: relative;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
 }
-.qa-wcard:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,.1); }
+.qa-wcard::before {
+    content: '';
+    position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-lime), transparent);
+    opacity: 0; transition: opacity .3s; z-index: 2;
+}
+.qa-wcard:hover {
+    border-color: rgba(125,255,0,.2);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+.qa-wcard:hover::before { opacity: 1; }
+
+/* thumbnail */
 .qa-wcard-thumb {
     position: relative; aspect-ratio: 16/9; overflow: hidden;
-    background: #1a1a2e; flex-shrink: 0;
+    background: var(--c-panel); flex-shrink: 0;
 }
 .qa-wcard-thumb img {
     width: 100%; height: 100%; object-fit: cover; display: block;
     transition: transform .4s;
 }
 .qa-wcard:hover .qa-wcard-thumb img { transform: scale(1.04); }
+
+/* status badge */
 .qa-badge {
     position: absolute; top: 10px; left: 10px;
-    font-size: 10px; font-weight: 700; letter-spacing: .06em;
-    padding: 4px 10px; border-radius: 4px; text-transform: uppercase;
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    padding: 4px 10px; border-radius: 5px; text-transform: uppercase;
     display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--f-mono); backdrop-filter: blur(6px);
 }
-.qa-badge.live     { background: #e53935; color: #fff; }
-.qa-badge.upcoming { background: #43a047; color: #fff; }
+.qa-badge.live     { background: rgba(239,83,80,.85); color: #fff; border: 1px solid rgba(239,83,80,.5); }
+.qa-badge.upcoming { background: rgba(38,166,154,.85); color: #fff; border: 1px solid rgba(38,166,154,.5); }
 .qa-live-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: #fff;
-    display: inline-block; animation: pulseDot 1.2s ease-in-out infinite;
+    width: 7px; height: 7px; border-radius: 50%; background: #fff; display: inline-block;
+    animation: pulseDot 1.2s ease-in-out infinite;
 }
+
+/* enrolled badge */
 .qa-enrolled-badge {
     position: absolute; top: 10px; right: 10px;
-    background: #43a047; color: #fff; font-size: 10px; font-weight: 700;
-    padding: 3px 8px; border-radius: 4px; letter-spacing: .04em;
+    background: rgba(38,166,154,.85); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: .05em;
+    font-family: var(--f-mono); backdrop-filter: blur(6px);
 }
+
+/* thumb price overlay */
 .qa-thumb-price {
     position: absolute; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,.78) 0%, transparent 100%);
-    padding: 22px 12px 9px;
+    background: linear-gradient(to top, rgba(11,14,17,.92) 0%, transparent 100%);
+    padding: 22px 12px 10px;
     display: flex; align-items: flex-end; justify-content: space-between;
 }
-.qa-price-text { color: #fff; font-size: 13px; font-weight: 700; }
+.qa-price-text { color: #fff; font-size: 13px; font-weight: 700; font-family: var(--f-mono); }
 .qa-price-text .strike {
-    text-decoration: line-through; color: rgba(255,255,255,.5);
+    text-decoration: line-through; color: rgba(255,255,255,.45);
     margin: 0 3px; font-weight: 400; font-size: 12px;
 }
-.qa-price-text .disc { font-size: 11px; color: #81c784; margin-left: 4px; }
+.qa-price-text .disc { font-size: 11px; color: #80CBC4; margin-left: 4px; }
 .qa-view-link {
-    font-size: 12px; color: #7DFF00; font-weight: 600;
+    font-size: 11px; color: var(--c-lime); font-weight: 700;
     display: inline-flex; align-items: center; gap: 4px;
-    white-space: nowrap; transition: gap .2s;
+    white-space: nowrap; transition: gap .2s; font-family: var(--f-mono);
+    letter-spacing: .04em;
 }
 .qa-view-link:hover { gap: 7px; }
+
+/* card body */
 .qa-wcard-body {
-    padding: 14px 16px; flex: 1; display: flex; flex-direction: column;
+    padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 10px;
 }
 .qa-wcard-title {
-    font-family: 'Rajdhani',sans-serif; font-size: 15px; font-weight: 700;
-    color: #1a1a2e; line-height: 1.35; margin-bottom: 10px; flex: 1;
+    font-family: var(--f-display); font-size: 14px; font-weight: 700;
+    color: #fff; line-height: 1.35; flex: 1;
 }
+
+/* type pill */
 .qa-wcard-type {
-    display: inline-block; font-size: 11px; font-weight: 700;
-    padding: 3px 11px; border-radius: 20px; margin-bottom: 11px; letter-spacing: .03em;
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 3px 11px; border-radius: 100px; letter-spacing: .06em;
+    font-family: var(--f-mono);
 }
-.qa-wcard-type.free { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-.qa-wcard-type.paid { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.qa-wcard-type.free { background: rgba(38,166,154,.12); color: #4DB6AC; border: 1px solid rgba(38,166,154,.25); }
+.qa-wcard-type.paid { background: rgba(255,167,38,.1);  color: var(--c-amber); border: 1px solid rgba(255,167,38,.25); }
+
+/* meta grid */
 .qa-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; }
-.qa-meta-row  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
-.qa-meta-row i { color: #7DFF00; font-size: 11px; width: 14px; text-align: center; }
-.qa-meta-row .meta-v { color: #333; font-weight: 500; }
-.qa-meta-row .past-d { color: #e53935; font-weight: 500; }
+.qa-meta-row  { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--c-muted); }
+.qa-meta-row i { color: var(--c-lime); font-size: 11px; width: 14px; text-align: center; flex-shrink: 0; }
+.qa-meta-row .meta-v { color: var(--c-text); font-weight: 500; }
+.qa-meta-row .past-d  { color: var(--c-red); font-weight: 600; }
+.text-danger { color: var(--c-red) !important; }
+.fw-bold { font-weight: 700 !important; }
+
+/* card footer */
 .qa-wcard-footer {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px; border-top: 1px solid #f0f0f0;
-    background: #fafafa; gap: 8px;
+    padding: 10px 16px; border-top: 1px solid var(--c-border);
+    background: rgba(0,0,0,.2); gap: 8px;
 }
 .qa-footer-price {
-    font-family: 'Rajdhani',sans-serif; font-size: 17px; font-weight: 700;
-    color: #1a1a2e; line-height: 1.2;
+    font-family: var(--f-display); font-size: 16px; font-weight: 700;
+    color: #fff; line-height: 1.2;
 }
-.qa-footer-price .orig {
-    text-decoration: line-through; color: #aaa;
-    font-size: 12px; margin-right: 3px; font-weight: 400;
-}
-.qa-footer-price .pct { font-size: 11px; color: #43a047; font-weight: 700; margin-left: 4px; }
+.qa-footer-price .orig { text-decoration: line-through; color: var(--c-muted); font-size: 11px; margin-right: 3px; font-weight: 400; }
+.qa-footer-price .pct  { font-size: 11px; color: #80CBC4; font-weight: 700; margin-left: 4px; font-family: var(--f-mono); }
 .qa-footer-link {
-    font-size: 12px; color: #7DFF00; font-weight: 600;
+    font-size: 11px; color: var(--c-lime); font-weight: 700;
     display: inline-flex; align-items: center; gap: 4px;
     white-space: nowrap; transition: gap .2s; flex-shrink: 0;
+    font-family: var(--f-mono); letter-spacing: .04em;
 }
 .qa-footer-link:hover { gap: 7px; }
 
-/* ── TABS ── */
+/* ── TAB PANELS ── */
 .qa-tab-panel    { display: none; }
 .qa-tab-panel.on { display: block; animation: qaFadeUp .4s ease both; }
+
+/* ── EMPTY / NO RESULTS ── */
 .qa-no-results {
-    text-align: center; padding: 70px 20px; color: #999; font-size: 15px;
+    text-align: center; padding: 64px 20px; color: var(--c-muted); font-size: 14px;
 }
-.qa-no-results i { font-size: 36px; color: #ddd; display: block; margin-bottom: 12px; }
-.qa-empty { text-align: center; padding: 50px 20px; color: #999; }
-.qa-empty i { font-size: 40px; color: #ddd; display: block; margin-bottom: 10px; }
+.qa-no-results i { font-size: 36px; color: var(--c-border2); display: block; margin-bottom: 14px; }
+
+.qa-empty {
+    text-align: center; padding: 50px 20px; color: var(--c-muted);
+}
+.qa-empty i { font-size: 38px; color: var(--c-border2); display: block; margin-bottom: 12px; }
+.qa-empty a { color: var(--c-lime); font-weight: 600; }
 
 /* ── LOGIN PROMPT ── */
 .qa-login-prompt {
-    text-align: center; padding: 90px 20px; background: #fff;
-    border-radius: 14px; border: 1px solid #e8e8e8;
+    text-align: center; padding: 80px 20px;
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: 12px; position: relative; overflow: hidden;
 }
-.qa-login-prompt i  { font-size: 52px; color: #ddd; display: block; margin-bottom: 18px; }
-.qa-login-prompt h3 {
-    font-family: 'Rajdhani',sans-serif; font-size: 26px;
-    color: #1a1a2e; margin-bottom: 10px;
+.qa-login-prompt::before {
+    content: ''; position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-lime), transparent); opacity: .35;
 }
-.qa-login-prompt p  { color: #888; font-size: 14px; margin-bottom: 26px; }
+.qa-login-prompt i  { font-size: 48px; color: var(--c-border2); display: block; margin-bottom: 18px; }
+.qa-login-prompt h3 { font-family: var(--f-display); font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.qa-login-prompt p  { color: var(--c-muted); font-size: 14px; margin-bottom: 26px; }
 .qa-login-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #7DFF00; color: #000; font-weight: 700;
-    padding: 13px 30px; border-radius: 9px;
-    font-family: 'Rajdhani',sans-serif; font-size: 16px;
-    letter-spacing: .04em; transition: background .2s;
+    background: var(--c-lime); color: #000; font-weight: 700;
+    padding: 13px 28px; border-radius: 9px;
+    font-family: var(--f-display); font-size: 14px;
+    letter-spacing: .05em; transition: all .2s;
+    box-shadow: 0 0 20px rgba(125,255,0,.2);
 }
-.qa-login-btn:hover { background: #d4890e; }
+.qa-login-btn:hover { background: #8FFF1A; box-shadow: 0 0 30px rgba(125,255,0,.35); color: #000; }
 </style>
 
 <div class="qa-wrap">
 
-{{-- ══════════════════════════════════════════════════════════
-     HERO — fully dynamic from WebinarPageCms
-══════════════════════════════════════════════════════════ --}}
+{{-- ── BREADCRUMB ── --}}
+<div class="qa-breadcrumb">
+    <div class="qa-breadcrumb-inner">
+        <a href="{{ route('home') }}">Home</a>
+        <i class="las la-angle-right"></i>
+        <span>Webinars</span>
+    </div>
+</div>
+
+{{-- ── HERO ── --}}
 <div class="qa-wb-hero">
     <div class="qa-wb-hero-left qa-anim">
+        <div class="qa-hero-eyebrow">
+            <span class="qa-hero-dot"></span>
+            Live &amp; Recorded Sessions
+        </div>
         <h1>{{ $heroBanner['title'] }}</h1>
         <p>{{ $heroBanner['description'] }}</p>
     </div>
     @if(!empty($heroBanner['illustration']))
-    <div class="qa-wb-hero-right qa-anim">
+    <div class="qa-wb-hero-right qa-anim d1">
         <img src="{{ $heroBanner['illustration'] }}" alt="{{ $heroBanner['title'] }}">
     </div>
     @endif
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     FILTER BAR — languages & proficiency from WebinarPageCms
-══════════════════════════════════════════════════════════ --}}
+{{-- ── FILTER BAR ── --}}
 <div class="qa-filter-bar">
     <div class="qa-main-tabs">
         <button class="qa-main-tab on" onclick="qaSwitchTab(0,this)">All Webinars</button>
@@ -252,7 +412,6 @@
     </div>
     <div class="qa-dropdowns-row">
 
-        {{-- Language — dynamic from WebinarPageCms --}}
         <div class="qa-filter-group">
             <span class="qa-filter-label">Language</span>
             <select class="qa-filter-select" id="filterLang" onchange="qaApplyFilters()">
@@ -263,7 +422,6 @@
             </select>
         </div>
 
-        {{-- Price --}}
         <div class="qa-filter-group">
             <span class="qa-filter-label">Price</span>
             <select class="qa-filter-select" id="filterPrice" onchange="qaApplyFilters()">
@@ -273,7 +431,6 @@
             </select>
         </div>
 
-        {{-- Proficiency — dynamic from WebinarPageCms --}}
         <div class="qa-filter-group">
             <span class="qa-filter-label">Proficiency</span>
             <select class="qa-filter-select" id="filterLevel" onchange="qaApplyFilters()">
@@ -284,10 +441,9 @@
             </select>
         </div>
 
-        {{-- Search --}}
         <div class="qa-search-wrap">
             <input class="qa-search-input" type="text" id="qaSearch"
-                   placeholder="Search webinars..." oninput="qaApplyFilters()">
+                   placeholder="Search webinars…" oninput="qaApplyFilters()">
             <button class="qa-search-btn" type="button">
                 <i class="fas fa-search"></i>
             </button>
@@ -295,16 +451,16 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     CONTENT
-══════════════════════════════════════════════════════════ --}}
+{{-- ── CONTENT ── --}}
 <div class="qa-webinars-wrap">
 
-    {{-- ── TAB 0: ALL WEBINARS ── --}}
+    {{-- ────────────────────────────────────────
+         TAB 0 — ALL WEBINARS
+    ──────────────────────────────────────── --}}
     <div class="qa-tab-panel on" id="qaPanel0">
 
         {{-- Upcoming / Live --}}
-        <div class="qa-section-head">Upcoming &amp; Live Webinars</div>
+        <div class="qa-section-head"><h2>Upcoming &amp; Live Webinars</h2></div>
 
         @if($upcomingWebinars->isEmpty())
             <div class="qa-empty" style="margin-bottom:40px;">
@@ -399,7 +555,7 @@
         @endif
 
         {{-- Past Webinars --}}
-        <div class="qa-section-head" style="margin-top:10px;">Past Webinars</div>
+        <div class="qa-section-head" style="margin-top:12px;"><h2>Past Webinars</h2></div>
 
         @if($pastWebinars->isEmpty())
             <div class="qa-empty">
@@ -432,7 +588,7 @@
                             <span class="meta-v">{{ $w->level }}</span>
                         </div>
                         <div class="qa-meta-row">
-                            <i class="fas fa-calendar-alt" style="color:#e53935;"></i>
+                            <i class="fas fa-calendar-alt" style="color:var(--c-red);"></i>
                             <span class="past-d">
                                 {{ $w->webinar_date ? $w->webinar_date->format('d M Y') : '—' }}
                             </span>
@@ -474,7 +630,7 @@
         </div>
         @endif
 
-        {{-- JS no-results message --}}
+        {{-- No results message (JS-controlled) --}}
         <div class="qa-no-results" id="qaNoResults" style="display:none;">
             <i class="fas fa-search"></i>
             No webinars found matching your filters.
@@ -482,7 +638,9 @@
 
     </div>{{-- /#qaPanel0 --}}
 
-    {{-- ── TAB 1: MY WEBINARS ── --}}
+    {{-- ────────────────────────────────────────
+         TAB 1 — MY WEBINARS
+    ──────────────────────────────────────── --}}
     <div class="qa-tab-panel" id="qaPanel1">
 
         @if($authUser)
@@ -499,13 +657,10 @@
                     <i class="fas fa-video-slash"></i>
                     You have not registered for any webinars yet.
                     <br><br>
-                    <a href="{{ route('webinars.index') }}"
-                       style="color:#7DFF00;font-weight:600;">
-                        Browse Webinars →
-                    </a>
+                    <a href="{{ route('webinars.index') }}">Browse Webinars →</a>
                 </div>
             @else
-            <div class="qa-section-head">My Registered Webinars</div>
+            <div class="qa-section-head"><h2>My Registered Webinars</h2></div>
             <div class="qa-wgrid">
                 @foreach($myWebinars as $w)
                 <div class="qa-wcard">
@@ -537,7 +692,7 @@
                         </div>
                     </div>
                     <div class="qa-wcard-footer">
-                        <span style="font-size:12px;color:#43a047;font-weight:600;">
+                        <span style="font-size:12px;color:#4DB6AC;font-weight:700;font-family:var(--f-mono);">
                             <i class="fas fa-check-circle"></i> Registered
                         </span>
                         <a href="{{ route('webinars.detail', $w->slug) }}" class="qa-footer-link">
@@ -566,7 +721,7 @@
 </div>{{-- /.qa-wrap --}}
 
 <script>
-/* ── TAB SWITCH ── */
+/* ── TAB SWITCH — identical logic ── */
 function qaSwitchTab(idx, btn) {
     document.querySelectorAll('.qa-main-tab').forEach(function(b) { b.classList.remove('on'); });
     btn.classList.add('on');
@@ -575,7 +730,7 @@ function qaSwitchTab(idx, btn) {
     });
 }
 
-/* ── FILTER ── */
+/* ── FILTER — identical logic ── */
 function qaApplyFilters() {
     var lang   = document.getElementById('filterLang').value.toLowerCase();
     var price  = document.getElementById('filterPrice').value.toLowerCase();
@@ -601,4 +756,5 @@ function qaApplyFilters() {
     if (noRes) noRes.style.display = (visible === 0) ? 'block' : 'none';
 }
 </script>
+
 @endsection
