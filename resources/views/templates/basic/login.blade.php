@@ -95,10 +95,10 @@
 
 /* ── CARD LOGO ────────────────────────────── */
 .cq-login-logo {
-    display: flex; align-items: center; gap: 11px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 11px; margin-bottom: 28px;justify-content:center;
 }
 .cq-login-logo img {
-    height: 32px; width: auto; display: block;
+    height: 50px; width: auto; display: block;
 }
 .cq-login-logo-text {}
 .cq-login-logo-name {
@@ -396,10 +396,6 @@
             {{-- Logo --}}
             <div class="cq-login-logo">
                 <img src="{{ getImage(getFilePath('logoIcon') . '/logo.png') }}" alt="CityQuants">
-                <div class="cq-login-logo-text">
-                    <div class="cq-login-logo-name">CityQuants<sup style="font-size:9px;opacity:.6;">®</sup></div>
-                    <div class="cq-login-logo-sub">Optimize Opportunities</div>
-                </div>
             </div>
 
             {{-- Step progress bar --}}
@@ -493,11 +489,10 @@
 
             <div class="cq-promo-anim">
                 <h1 class="cq-promo-heading">
-                    Options Trading<br>
-                    <span>Decoded Instantly.</span>
+                    Options <br> <span>Decoded Instantly.</span>
                 </h1>
                 <p class="cq-promo-sub">
-                    India's largest options analytics platform — 47+ tools, real-time OI data, strategy builders, and live education. Built by traders, for traders.
+                    India's largest options analytics platform. Built by traders, for traders.
                 </p>
             </div>
 
