@@ -1,262 +1,396 @@
 {{-- FILE: resources/views/themes/{active_theme}/user/pivot-analysis/index.blade.php --}}
 @extends($activeTemplate.'layouts.frontend')
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
-/* ── BASE ── */
-.pv-wrap { font-family:'Exo 2',sans-serif; color:#1a1a2e; background:#f7f8fc; }
-.pv-wrap * { box-sizing:border-box; }
-.pv-wrap h1,.pv-wrap h2,.pv-wrap h3,.pv-wrap h4 { font-family:'Rajdhani',sans-serif; letter-spacing:.03em; }
-.pv-wrap a { text-decoration:none; }
-.mono { font-family:'JetBrains Mono',monospace; }
-@keyframes pvFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-.pv-anim { animation:pvFadeUp .5s ease both; }
-@keyframes pvSpin  { to{ transform:rotate(360deg); } }
+/* ══════════════════════════════════════════════
+   CITYQUANTS — PIVOT ANALYSIS  v2.0
+   Dark terminal · Matches homepage design system
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── HERO ── */
+:root {
+    --c-bg:       #0B0E11;
+    --c-surface:  #131722;
+    --c-panel:    #1C2030;
+    --c-border:   rgba(255,255,255,.06);
+    --c-border2:  rgba(255,255,255,.11);
+    --c-lime:     #7DFF00;
+    --c-lime-dim: rgba(125,255,0,.1);
+    --c-lime-glo: rgba(125,255,0,.06);
+    --c-blue:     #00B8D4;
+    --c-red:      #EF5350;
+    --c-teal:     #26A69A;
+    --c-amber:    #FFA726;
+    --c-purple:   #AB47BC;
+    --c-text:     #D1D4DC;
+    --c-muted:    #787B86;
+    --c-faint:    rgba(255,255,255,.03);
+    /* semantic trading */
+    --c-bull:     #26A69A;
+    --c-bear:     #EF5350;
+    --c-pivot:    #FFA726;
+    --f-sans:     'DM Sans', system-ui, sans-serif;
+    --f-display:  'Syne', sans-serif;
+    --f-mono:     'Space Grotesk', monospace;
+}
+
+.pv-wrap {
+    font-family: var(--f-sans);
+    color: var(--c-text);
+    background: var(--c-bg);
+}
+.pv-wrap * { box-sizing: border-box; }
+.pv-wrap a { text-decoration: none; color: inherit; }
+.mono { font-family: var(--f-mono); }
+
+@keyframes pvFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+.pv-anim { animation: pvFadeUp .5s ease both; }
+@keyframes pvSpin  { to { transform: rotate(360deg); } }
+
+/* ══ HERO ═════════════════════════════════════ */
 .pv-hero {
-    background:#fff; border-bottom:1px solid #e8e8e8;
-    padding:32px 48px; display:flex; align-items:center;
-    justify-content:space-between; gap:24px;
+    position: relative; overflow: hidden;
+    background: var(--c-bg);
+    border-bottom: 1px solid var(--c-border);
+    padding: 36px 32px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 24px;
 }
-.pv-hero-left h1 {
-    font-size:clamp(26px,3.5vw,42px); font-weight:700;
-    color:#1a1a2e; margin:0 0 8px; line-height:1.1;
+.pv-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(125,255,0,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125,255,0,.022) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 80% at 20% 50%, black, transparent);
+    pointer-events: none;
 }
-.pv-hero-left h1 span { color:#7DFF00; }
-.pv-hero-left p { font-size:13px; color:#666; margin:0; line-height:1.7; max-width:560px; }
-.pv-hero-formulas { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.pv-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 35% 70% at 5% 50%, rgba(125,255,0,.04), transparent 70%);
+    pointer-events: none;
+}
+.pv-hero-left { position: relative; z-index: 1; }
+.pv-hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--c-lime); margin-bottom: 10px;
+}
+.pv-hero-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: var(--c-lime); }
+.pv-hero h1 {
+    font-family: var(--f-display);
+    font-size: clamp(22px, 3.5vw, 36px);
+    font-weight: 800; color: #fff;
+    line-height: 1.1; letter-spacing: -.015em; margin-bottom: 10px;
+}
+.pv-hero h1 span { color: var(--c-lime); }
+.pv-hero p { font-size: 13px; color: var(--c-muted); line-height: 1.7; max-width: 540px; }
+
+/* Formula pills */
+.pv-hero-formulas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .pv-pill {
-    display:inline-block; padding:3px 10px; border-radius:4px;
-    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+    display: inline-block; padding: 3px 10px; border-radius: 4px;
+    font-family: var(--f-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: .04em;
 }
-.pv-pill-pp  { background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
-.pv-pill-s   { background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  }
-.pv-pill-r   { background:rgba(220,38,38,.08); color:#b91c1c; border:1px solid rgba(220,38,38,.25); }
+.pv-pill-pp  { background: rgba(255,167,38,.1);  color: var(--c-amber);  border: 1px solid rgba(255,167,38,.25); }
+.pv-pill-s   { background: rgba(38,166,154,.1);  color: var(--c-teal);   border: 1px solid rgba(38,166,154,.25); }
+.pv-pill-r   { background: rgba(239,83,80,.08);  color: var(--c-red);    border: 1px solid rgba(239,83,80,.2);   }
+
+/* Hero icon */
 .pv-hero-icon {
-    width:80px; height:80px; border-radius:16px;
-    background:linear-gradient(135deg,#0f1b2d,#1a3050);
-    display:flex; align-items:center; justify-content:center;
-    font-size:36px; color:#7DFF00; flex-shrink:0;
-}
-@media(max-width:768px){
-    .pv-hero { flex-direction:column; padding:24px 16px; text-align:center; }
-    .pv-hero-formulas { justify-content:center; }
+    position: relative; z-index: 1;
+    width: 72px; height: 72px; border-radius: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--c-lime); flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(125,255,0,.1);
 }
 
-/* ── FILTER BAR ── */
+@media (max-width: 768px) {
+    .pv-hero { flex-direction: column; padding: 24px 18px; }
+    .pv-hero-formulas { flex-wrap: wrap; }
+}
+
+/* ══ FILTER BAR ═══════════════════════════════ */
 .pv-filter-bar {
-    background:#fff; border-bottom:1px solid #e8e8e8;
-    padding:0 48px; position:sticky; top:0; z-index:200;
-    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    padding: 0 32px;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3);
 }
 .pv-filter-inner {
-    display:flex; align-items:center; gap:14px;
-    padding:13px 0; flex-wrap:wrap;
+    display: flex; align-items: center;
+    gap: 12px; padding: 11px 0; flex-wrap: wrap;
 }
 .pv-filter-label {
-    font-size:10.5px; color:#999; font-weight:700;
-    text-transform:uppercase; letter-spacing:.07em;
+    font-size: 10px; color: var(--c-muted); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    font-family: var(--f-mono); flex-shrink: 0;
+}
+.pv-filter-sep {
+    width: 1px; height: 26px;
+    background: var(--c-border2); flex-shrink: 0;
 }
 
 /* Instrument tabs */
-.pv-inst-tabs { display:flex; gap:4px; }
+.pv-inst-tabs { display: flex; gap: 4px; }
 .pv-inst-tab {
-    padding:7px 16px; border-radius:6px; border:1.5px solid #e5e9f2;
-    font-size:12px; font-weight:700; color:#666; cursor:pointer;
-    background:#fff; transition:all .2s; font-family:'Exo 2',sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 6px;
+    border: 1px solid var(--c-border2);
+    font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--c-muted); cursor: pointer;
+    background: transparent; font-family: var(--f-sans);
+    transition: all .2s;
 }
-.pv-inst-tab:hover { border-color:#7DFF00; color:#c97f00; }
-.pv-inst-tab.on-stock  { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
-.pv-inst-tab.on-fut    { border-color:#7DFF00; background:rgba(245,166,35,.08); color:#c97f00; }
-.pv-inst-tab.on-option { border-color:#7c3aed; background:rgba(124,58,237,.08); color:#6d28d9; }
+.pv-inst-tab:hover { color: var(--c-text); border-color: var(--c-border2); }
+.pv-inst-tab.on-stock  { background: rgba(38,166,154,.1);  border-color: rgba(38,166,154,.3);  color: var(--c-teal);   }
+.pv-inst-tab.on-fut    { background: var(--c-lime-dim);     border-color: rgba(125,255,0,.3);   color: var(--c-lime);   }
+.pv-inst-tab.on-option { background: rgba(171,71,188,.1);  border-color: rgba(171,71,188,.3);  color: var(--c-purple); }
 
 /* Symbol select */
 .pv-sym-select {
-    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 30px 7px 10px;
-    font-size:12px; font-weight:700; color:#333; font-family:'Exo 2',sans-serif;
-    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bbb'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance:none; cursor:pointer; outline:none; min-width:140px;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border2);
+    border-radius: 7px; padding: 6px 28px 6px 11px;
+    font-size: 12px; font-weight: 600; color: var(--c-text);
+    font-family: var(--f-mono);
+    appearance: none; cursor: pointer; outline: none; min-width: 140px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23787B86'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    transition: border-color .2s;
 }
-.pv-sym-select:focus { border-color:#7DFF00; }
+.pv-sym-select:focus { border-color: rgba(125,255,0,.45); }
 
-/* Date input */
-.pv-date-wrap { display:flex; align-items:center; gap:4px; }
+/* Date controls */
+.pv-date-wrap { display: flex; align-items: center; gap: 4px; }
 .pv-date-input {
-    border:1.5px solid #e5e9f2; border-radius:7px; padding:7px 10px;
-    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
-    color:#333; outline:none; cursor:pointer;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border2);
+    border-radius: 7px; padding: 6px 10px;
+    font-family: var(--f-mono); font-size: 11px;
+    font-weight: 600; color: var(--c-text);
+    outline: none; cursor: pointer;
+    transition: border-color .2s;
 }
-.pv-date-input:focus { border-color:#7DFF00; }
+.pv-date-input:focus { border-color: rgba(125,255,0,.45); }
+/* dark calendar icon for webkit */
+.pv-date-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.4); cursor: pointer; }
 .pv-date-nav {
-    width:28px; height:32px; border:1.5px solid #e5e9f2; border-radius:6px;
-    background:#fff; color:#888; cursor:pointer; font-weight:700; font-size:14px;
-    display:flex; align-items:center; justify-content:center; transition:.2s;
+    width: 28px; height: 30px;
+    background: var(--c-panel); border: 1px solid var(--c-border2);
+    border-radius: 6px; color: var(--c-muted);
+    cursor: pointer; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s; font-family: var(--f-sans);
 }
-.pv-date-nav:hover { border-color:#7DFF00; color:#7DFF00; }
-.pv-today-btn { width:auto; padding:0 10px; font-size:10px; font-family:'Exo 2',sans-serif; font-weight:700; letter-spacing:.07em; }
+.pv-date-nav:hover { border-color: rgba(125,255,0,.3); color: var(--c-lime); }
+.pv-today-btn { width: auto; padding: 0 10px; font-size: 9px; font-family: var(--f-mono); font-weight: 700; letter-spacing: .1em; }
 
-/* Status badge */
-.pv-live-badge { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
-.pv-hist-badge { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:10px; font-size:10px; font-weight:700; padding:2px 9px; }
+/* Date / live badges */
+.pv-live-badge { background: rgba(38,166,154,.12); color: #4DB6AC; border: 1px solid rgba(38,166,154,.25); border-radius: 100px; font-size: 10px; font-weight: 700; padding: 2px 9px; font-family: var(--f-mono); }
+.pv-hist-badge { background: rgba(255,167,38,.1);  color: var(--c-amber); border: 1px solid rgba(255,167,38,.25); border-radius: 100px; font-size: 10px; font-weight: 700; padding: 2px 9px; font-family: var(--f-mono); }
 
-/* Buttons */
+/* Action buttons */
 .pv-load-btn {
-    background:#7DFF00; color:#000; border:none; border-radius:8px;
-    padding:8px 20px; font-family:'Rajdhani',sans-serif; font-size:13px;
-    font-weight:800; letter-spacing:.04em; cursor:pointer; transition:.2s;
+    background: var(--c-lime); color: #000; border: none; border-radius: 7px;
+    padding: 7px 18px; font-family: var(--f-display); font-size: 12px;
+    font-weight: 700; letter-spacing: .06em; cursor: pointer;
+    transition: all .2s; box-shadow: 0 0 14px rgba(125,255,0,.2);
+    display: inline-flex; align-items: center; gap: 6px;
 }
-.pv-load-btn:hover { background:#d4890e; }
+.pv-load-btn:hover { background: #8FFF1A; box-shadow: 0 0 22px rgba(125,255,0,.35); transform: translateY(-1px); }
 .pv-auto-btn {
-    background:#fff; border:1.5px solid #e5e9f2; color:#666; border-radius:8px;
-    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;
-    font-family:'Exo 2',sans-serif; transition:.2s;
+    background: var(--c-panel); border: 1px solid var(--c-border2);
+    color: var(--c-muted); border-radius: 7px;
+    padding: 7px 14px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: var(--f-mono);
+    transition: all .2s; letter-spacing: .05em;
 }
-.pv-auto-btn.on { border-color:#059669; background:rgba(5,150,105,.08); color:#047857; }
+.pv-auto-btn.on { border-color: rgba(38,166,154,.35); background: rgba(38,166,154,.1); color: var(--c-teal); }
+.pv-auto-btn:hover:not(.on) { border-color: var(--c-border2); color: var(--c-text); }
 
-.pv-filter-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
-.pv-info-text { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
-.pv-last-upd  { font-size:10px; color:#ccc; font-family:'JetBrains Mono',monospace; }
+.pv-filter-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.pv-info-text { font-size: 10px; color: var(--c-muted); font-family: var(--f-mono); }
+.pv-last-upd  { font-size: 10px; color: rgba(120,123,134,.5); font-family: var(--f-mono); }
 
-@media(max-width:768px){
-    .pv-filter-bar { padding:0 16px; }
-    .pv-filter-inner { gap:8px; }
-    .pv-filter-right { margin-left:0; width:100%; }
+@media (max-width: 768px) {
+    .pv-filter-bar { padding: 0 16px; }
+    .pv-filter-inner { gap: 8px; }
+    .pv-filter-right { margin-left: 0; width: 100%; }
 }
 
-/* ── CONTENT AREA ── */
-.pv-content { padding:28px 48px 64px; }
-@media(max-width:768px){ .pv-content { padding:16px 12px 48px; } }
+/* ══ CONTENT ══════════════════════════════════ */
+.pv-content { padding: 24px 32px 64px; }
+@media (max-width: 768px) { .pv-content { padding: 16px 12px 48px; } }
 
 /* Config warning */
 .pv-warn {
-    background:#fff3e0; border:1px solid #ffcc80; border-radius:10px;
-    padding:16px 20px; margin-bottom:20px;
-    display:none; align-items:center; gap:14px; font-size:13px; color:#e65100;
+    background: rgba(255,167,38,.08);
+    border: 1px solid rgba(255,167,38,.25);
+    border-radius: 9px; padding: 14px 18px; margin-bottom: 18px;
+    display: none; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--c-amber);
 }
-.pv-warn.show { display:flex; }
-.pv-warn i { font-size:20px; flex-shrink:0; }
+.pv-warn.show { display: flex; }
+.pv-warn i { font-size: 18px; flex-shrink: 0; }
+.pv-warn strong { color: #fff; }
 
-/* ── TABLE CARD ── */
+/* ══ TABLE CARD ═══════════════════════════════ */
 .pv-card {
-    background:#fff; border-radius:12px; border:1px solid #e8e8e8;
-    overflow:hidden; margin-bottom:24px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px; overflow: hidden;
+    margin-bottom: 20px; position: relative;
+}
+.pv-card::before {
+    content: '';
+    position: absolute; top: 0; left: 16px; right: 16px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-lime), transparent);
+    opacity: .3;
 }
 .pv-card-header {
-    padding:14px 20px; border-bottom:1px solid #f0f0f0;
-    display:flex; align-items:center; justify-content:space-between;
-    flex-wrap:wrap; gap:8px; background:#fafafa;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+    background: rgba(0,0,0,.2);
 }
 .pv-card-title {
-    font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
-    color:#1a1a2e; display:flex; align-items:center; gap:8px;
+    font-family: var(--f-display); font-size: 14px; font-weight: 700;
+    color: var(--c-text); display: flex; align-items: center; gap: 8px;
 }
-.pv-card-subtitle { font-size:11px; color:#aab; font-family:'JetBrains Mono',monospace; }
+.pv-card-subtitle { font-size: 10px; color: var(--c-muted); font-family: var(--f-mono); }
+
+/* Instrument label */
 .pv-inst-label {
-    display:inline-block; padding:3px 10px; border-radius:4px;
-    font-size:11px; font-weight:700; letter-spacing:.06em;
+    display: inline-block; padding: 3px 10px; border-radius: 100px;
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    font-family: var(--f-mono);
 }
-.pv-il-stock  { background:rgba(5,150,105,.1); color:#047857; border:1px solid rgba(5,150,105,.3); }
-.pv-il-fut    { background:rgba(245,166,35,.1); color:#c97f00; border:1px solid rgba(245,166,35,.3); }
-.pv-il-option { background:rgba(124,58,237,.1); color:#6d28d9; border:1px solid rgba(124,58,237,.3); }
+.pv-il-stock  { background: rgba(38,166,154,.1);  color: var(--c-teal);   border: 1px solid rgba(38,166,154,.25); }
+.pv-il-fut    { background: var(--c-lime-dim);     color: var(--c-lime);   border: 1px solid rgba(125,255,0,.25); }
+.pv-il-option { background: rgba(171,71,188,.1);  color: var(--c-purple); border: 1px solid rgba(171,71,188,.25); }
 
-/* Table scroll */
-.pv-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+/* ══ TABLES ═══════════════════════════════════ */
+.pv-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pv-table { width: 100%; border-collapse: collapse; font-family: var(--f-mono); }
+.pv-table.sf-table  { min-width: 1100px; }
+.pv-table.opt-table { min-width: 1800px; }
 
-/* ── TABLE BASE ── */
-.pv-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; }
-.pv-table.sf-table { min-width:1100px; }
-.pv-table.opt-table { min-width:1800px; }
-
-/* Header group row */
+/* Header rows */
 .pv-table thead tr.th-group th {
-    padding:9px 10px 5px; text-align:center;
-    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:800;
-    letter-spacing:.1em; text-transform:uppercase;
-    background:#f7f8fc; border-bottom:none; white-space:nowrap;
+    padding: 8px 10px 4px; text-align: center;
+    font-family: var(--f-sans); font-size: 9px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    background: var(--c-panel); border-bottom: none; white-space: nowrap;
 }
-/* Header col row */
 .pv-table thead tr.th-cols th {
-    padding:5px 10px 9px; text-align:center;
-    font-family:'Exo 2',sans-serif; font-size:9px; font-weight:700;
-    letter-spacing:.03em; text-transform:uppercase;
-    background:#f4f6fb; color:#aab;
-    border-bottom:2px solid #e8e8e8; white-space:nowrap;
+    padding: 4px 10px 8px; text-align: center;
+    font-family: var(--f-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: .05em; text-transform: uppercase;
+    background: rgba(0,0,0,.25); color: var(--c-muted);
+    border-bottom: 1px solid var(--c-border); white-space: nowrap;
 }
 
-/* Column group colors */
-.g-meta   { color:#888 !important; }
-.g-ohlc   { color:#1a56db !important; }
-.g-pivot  { color:#c97f00 !important; }
-.g-signal { color:#047857 !important; }
-.g-ce     { color:#047857 !important; }
-.g-pe     { color:#b91c1c !important; }
+/* Column group header colors */
+.g-meta   { color: var(--c-muted) !important; }
+.g-ohlc   { color: var(--c-blue)   !important; }
+.g-pivot  { color: var(--c-amber)  !important; }
+.g-signal { color: var(--c-teal)   !important; }
+.g-ce     { color: var(--c-teal)   !important; }
+.g-pe     { color: var(--c-red)    !important; }
 
-/* Column separators */
-.sep-ohlc   { border-left:2px solid rgba(26,86,219,.15) !important; }
-.sep-pivot  { border-left:2px solid rgba(245,166,35,.2) !important; }
-.sep-signal { border-left:2px solid rgba(5,150,105,.2)  !important; }
-.sep-ce     { border-left:2px solid rgba(5,150,105,.2)  !important; }
-.sep-pe     { border-left:2px solid rgba(220,38,38,.2)  !important; }
+/* Separator borders */
+.sep-ohlc   { border-left: 1px solid rgba(0,184,212,.15)  !important; }
+.sep-pivot  { border-left: 1px solid rgba(255,167,38,.15) !important; }
+.sep-signal { border-left: 1px solid rgba(38,166,154,.15) !important; }
+.sep-ce     { border-left: 1px solid rgba(38,166,154,.15) !important; }
+.sep-pe     { border-left: 1px solid rgba(239,83,80,.15)  !important; }
 
 /* Body cells */
 .pv-table tbody td {
-    padding:8px 10px; text-align:center; font-size:11px;
-    border-bottom:1px solid #f5f5f5; vertical-align:middle;
-    white-space:nowrap; color:#555;
+    padding: 7px 10px; text-align: center; font-size: 11px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: middle; white-space: nowrap;
+    color: var(--c-muted); transition: background .15s;
 }
-.pv-table tbody tr:hover { background:#fafbff !important; }
-.tr-even { background:#fff; }
-.tr-odd  { background:#fbfcff; }
-.tr-breakout  { background:rgba(5,150,105,.04) !important; }
-.tr-breakdown { background:rgba(220,38,38,.04) !important; }
+.pv-table tbody tr:hover td { background: rgba(255,255,255,.02) !important; }
+.tr-even { background: var(--c-surface); }
+.tr-odd  { background: rgba(0,0,0,.15); }
+.tr-breakout  { background: rgba(38,166,154,.04)  !important; }
+.tr-breakdown { background: rgba(239,83,80,.04)   !important; }
 
-/* Cell styles */
-.c-num   { font-size:9px; color:#ccc; }
-.c-time  { font-size:12px; font-weight:700; color:#7DFF00; }
-.c-sym   { font-size:11px; font-weight:700; color:#1a56db; }
-.c-sym small { display:block; font-size:8px; color:#aab; font-weight:400; margin-top:1px; }
-.c-o     { color:#aab; font-size:10px; }
-.c-h     { color:#c0392b; font-weight:700; }
-.c-l     { color:#27ae60; font-weight:700; }
-.c-c     { color:#1a56db; font-weight:700; }
-.c-vol   { font-size:9px; color:#ccc; }
-.c-pp    { color:#c97f00; font-weight:800; }
-.c-r1    { color:#c0392b; font-weight:700; }
-.c-r2    { color:#e74c3c; font-size:9px; }
-.c-s1    { color:#27ae60; font-weight:700; }
-.c-s2    { color:#2ecc71; font-size:9px; }
-.c-oi    { font-size:9px; color:#aab; }
-.c-atm   { font-size:10px; color:#c97f00; font-weight:700; }
+/* Cell value styles */
+.c-num  { font-size: 9px; color: rgba(120,123,134,.35); }
+.c-time { font-size: 12px; font-weight: 700; color: var(--c-lime); }
+.c-sym  { font-size: 11px; font-weight: 700; color: var(--c-blue); }
+.c-sym small { display: block; font-size: 8px; color: var(--c-muted); font-weight: 400; margin-top: 1px; }
+.c-o    { color: var(--c-muted); font-size: 10px; }
+.c-h    { color: var(--c-red);   font-weight: 700; }
+.c-l    { color: var(--c-teal);  font-weight: 700; }
+.c-c    { color: var(--c-blue);  font-weight: 700; }
+.c-vol  { font-size: 9px; color: rgba(120,123,134,.4); }
+.c-pp   { color: var(--c-amber); font-weight: 700; }
+.c-r1   { color: var(--c-red);   font-weight: 700; }
+.c-r2   { color: rgba(239,83,80,.7); font-size: 9px; }
+.c-s1   { color: var(--c-teal);  font-weight: 700; }
+.c-s2   { color: rgba(38,166,154,.7); font-size: 9px; }
+.c-oi   { font-size: 9px; color: var(--c-muted); }
+.c-atm  { font-size: 10px; color: var(--c-amber); font-weight: 700; }
 
-/* Signal badges */
-.sig { display:inline-block; border-radius:5px; padding:3px 8px; font-family:'Exo 2',sans-serif; font-size:10px; font-weight:800; letter-spacing:.04em; white-space:nowrap; }
-.sig-bull-strong { background:rgba(5,150,105,.15); color:#047857; border:1px solid rgba(5,150,105,.35); }
-.sig-bull-mod    { background:rgba(5,150,105,.08); color:#059669; border:1px solid rgba(5,150,105,.2);  }
-.sig-bull-weak   { background:rgba(5,150,105,.05); color:#34d399; border:1px solid rgba(5,150,105,.12); }
-.sig-bear-strong { background:rgba(220,38,38,.12);  color:#b91c1c; border:1px solid rgba(220,38,38,.3);  }
-.sig-bear-mod    { background:rgba(220,38,38,.07);  color:#dc2626; border:1px solid rgba(220,38,38,.18); }
-.sig-bear-weak   { background:rgba(220,38,38,.04);  color:#ef4444; border:1px solid rgba(220,38,38,.1);  }
-.sig-neutral     { background:#f4f6fb; color:#aab;   border:1px solid #e5e9f2; }
+/* ── SIGNAL BADGES ──────────────────────────── */
+.sig {
+    display: inline-block; border-radius: 4px;
+    padding: 3px 8px; font-family: var(--f-sans); font-size: 10px;
+    font-weight: 700; letter-spacing: .04em; white-space: nowrap;
+}
+.sig-bull-strong { background: rgba(38,166,154,.15); color: #4DB6AC; border: 1px solid rgba(38,166,154,.3);  }
+.sig-bull-mod    { background: rgba(38,166,154,.08); color: #80CBC4; border: 1px solid rgba(38,166,154,.18); }
+.sig-bull-weak   { background: rgba(38,166,154,.05); color: #B2DFDB; border: 1px solid rgba(38,166,154,.12); }
+.sig-bear-strong { background: rgba(239,83,80,.12);  color: #EF9A9A; border: 1px solid rgba(239,83,80,.28);  }
+.sig-bear-mod    { background: rgba(239,83,80,.07);  color: #FFCDD2; border: 1px solid rgba(239,83,80,.18);  }
+.sig-bear-weak   { background: rgba(239,83,80,.04);  color: rgba(239,83,80,.7); border: 1px solid rgba(239,83,80,.1); }
+.sig-neutral     { background: var(--c-panel); color: var(--c-muted); border: 1px solid var(--c-border2); }
 
 /* Match pills */
-.mp-yes { display:inline-block; background:rgba(5,150,105,.1);  color:#047857; border:1px solid rgba(5,150,105,.3);  border-radius:4px; padding:2px 7px; font-size:9px; font-weight:800; }
-.mp-no  { display:inline-block; background:#f7f8fc; color:#ccc; border:1px solid #e8e8e8; border-radius:4px; padding:2px 7px; font-size:9px; }
-.mp-pp  { display:inline-block; background:rgba(245,166,35,.12); color:#c97f00; border:1px solid rgba(245,166,35,.3); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:800; }
+.mp-yes { display:inline-block; background:rgba(38,166,154,.12); color:#4DB6AC; border:1px solid rgba(38,166,154,.25); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:700; }
+.mp-no  { display:inline-block; background:var(--c-panel); color:rgba(120,123,134,.4); border:1px solid var(--c-border); border-radius:4px; padding:2px 7px; font-size:9px; }
+.mp-pp  { display:inline-block; background:rgba(255,167,38,.1); color:var(--c-amber); border:1px solid rgba(255,167,38,.25); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:700; }
 
-/* Loading / empty */
+/* ── LOADING / EMPTY ────────────────────────── */
 .pv-loading {
-    display:flex; flex-direction:column; align-items:center;
-    justify-content:center; padding:60px 20px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 56px 20px;
 }
 .pv-spinner {
-    width:36px; height:36px; border:3px solid #f0f0f0;
-    border-top:3px solid #7DFF00; border-radius:50%;
-    animation:pvSpin 1s linear infinite;
+    width: 32px; height: 32px;
+    border: 2px solid var(--c-border2);
+    border-top: 2px solid var(--c-lime);
+    border-radius: 50%;
+    animation: pvSpin .9s linear infinite;
 }
-.pv-loading-text { color:#aab; margin-top:12px; font-size:13px; }
-.pv-empty { text-align:center; padding:56px 20px; color:#ccc; }
-.pv-empty i { font-size:2.5rem; display:block; margin-bottom:12px; }
+.pv-loading-text { color: var(--c-muted); margin-top: 12px; font-size: 12px; font-family: var(--f-mono); }
+
+.pv-empty {
+    text-align: center; padding: 52px 20px; color: var(--c-muted);
+}
+.pv-empty-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--c-panel); border: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px; font-size: 22px;
+}
+.pv-empty p { font-size: 12px; font-family: var(--f-mono); margin-top: 4px; }
 </style>
 
 <div class="pv-wrap">
@@ -264,8 +398,16 @@
 {{-- ══ HERO ══ --}}
 <div class="pv-hero pv-anim">
     <div class="pv-hero-left">
-        <h1 class="mb-0">Pivot Point <span>Analysis</span></h1>
+        <div class="pv-hero-eyebrow">Options Analytics</div>
+        <h1>Pivot Point <span>Analysis</span></h1>
         <p>Real-time pivot levels for Stock EQ, Futures, and ATM Options — calculated on live candle data during market hours.</p>
+        <div class="pv-hero-formulas">
+            <span class="pv-pill pv-pill-pp">PP = (H+L+C) / 3</span>
+            <span class="pv-pill pv-pill-s">S1 = (2×PP) − H</span>
+            <span class="pv-pill pv-pill-s">S2 = PP − (H−L)</span>
+            <span class="pv-pill pv-pill-r">R1 = (2×PP) − L</span>
+            <span class="pv-pill pv-pill-r">R2 = PP + (H−L)</span>
+        </div>
     </div>
     <div class="pv-hero-icon">
         <i class="las la-chart-bar"></i>
@@ -276,7 +418,6 @@
 <div class="pv-filter-bar">
     <div class="pv-filter-inner">
 
-        {{-- Instrument --}}
         <span class="pv-filter-label">Type</span>
         <div class="pv-inst-tabs">
             <button class="pv-inst-tab on-stock" data-inst="stock"
@@ -289,21 +430,19 @@
             </button>
             <button class="pv-inst-tab" data-inst="option"
                     onclick="pvSetInst('option',this)">
-                <i class="las la-layer-group"></i> Options (ATM)
+                <i class="las la-layer-group"></i> Options ATM
             </button>
         </div>
 
-        <div style="width:1px;height:28px;background:#e8e8e8;flex-shrink:0;"></div>
+        <div class="pv-filter-sep"></div>
 
-        {{-- Symbol --}}
         <span class="pv-filter-label">Symbol</span>
         <select id="pv-sym" class="pv-sym-select" onchange="pvLoad()">
             <option value="ALL">— All —</option>
         </select>
 
-        <div style="width:1px;height:28px;background:#e8e8e8;flex-shrink:0;"></div>
+        <div class="pv-filter-sep"></div>
 
-        {{-- Date --}}
         <span class="pv-filter-label">Date</span>
         <div class="pv-date-wrap">
             <button class="pv-date-nav" onclick="pvShiftDate(-1)">‹</button>
@@ -338,7 +477,7 @@
         <i class="las la-exclamation-triangle"></i>
         <div>
             <strong>No Analysis Config Found</strong>
-            <div style="font-size:12px;margin-top:3px;" id="pv-warn-msg">
+            <div style="font-size:12px;margin-top:3px;color:var(--c-muted);" id="pv-warn-msg">
                 Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
@@ -367,19 +506,16 @@
                             <th class="g-meta">#</th>
                             <th class="g-meta">Time</th>
                             <th class="g-meta">Symbol</th>
-
                             <th class="g-ohlc sep-ohlc">Open</th>
                             <th class="g-ohlc">High</th>
                             <th class="g-ohlc">Low</th>
                             <th class="g-ohlc">Close</th>
                             <th class="g-ohlc">Volume</th>
-
                             <th class="g-pivot sep-pivot">PP</th>
-                            <th class="g-pivot" style="color:#27ae60!important;">S1</th>
-                            <th class="g-pivot" style="color:#2ecc71!important;">S2</th>
-                            <th class="g-pivot" style="color:#c0392b!important;">R1</th>
-                            <th class="g-pivot" style="color:#e74c3c!important;">R2</th>
-
+                            <th class="g-pivot" style="color:var(--c-teal)!important;">S1</th>
+                            <th class="g-pivot" style="color:rgba(38,166,154,.6)!important;">S2</th>
+                            <th class="g-pivot" style="color:var(--c-red)!important;">R1</th>
+                            <th class="g-pivot" style="color:rgba(239,83,80,.6)!important;">R2</th>
                             <th class="g-signal sep-signal">Signal</th>
                             <th class="g-signal">S1 Touch</th>
                             <th class="g-signal">R1 Touch</th>
@@ -423,23 +559,21 @@
                             <th class="g-meta">Time</th>
                             <th class="g-meta">Symbol</th>
                             <th class="g-meta">ATM Strike</th>
-
                             <th class="g-ce sep-ce">Open</th>
                             <th class="g-ce">High</th>
                             <th class="g-ce">Low</th>
                             <th class="g-ce">Close</th>
-                            <th class="g-ce" style="color:#c97f00!important;">PP</th>
-                            <th class="g-ce" style="color:#27ae60!important;">S1</th>
-                            <th class="g-ce" style="color:#c0392b!important;">R1</th>
+                            <th class="g-ce" style="color:var(--c-amber)!important;">PP</th>
+                            <th class="g-ce" style="color:var(--c-teal)!important;">S1</th>
+                            <th class="g-ce" style="color:var(--c-red)!important;">R1</th>
                             <th class="g-ce">Signal</th>
-
                             <th class="g-pe sep-pe">Open</th>
                             <th class="g-pe">High</th>
                             <th class="g-pe">Low</th>
                             <th class="g-pe">Close</th>
-                            <th class="g-pe" style="color:#c97f00!important;">PP</th>
-                            <th class="g-pe" style="color:#27ae60!important;">S1</th>
-                            <th class="g-pe" style="color:#c0392b!important;">R1</th>
+                            <th class="g-pe" style="color:var(--c-amber)!important;">PP</th>
+                            <th class="g-pe" style="color:var(--c-teal)!important;">S1</th>
+                            <th class="g-pe" style="color:var(--c-red)!important;">R1</th>
                             <th class="g-pe">Signal</th>
                         </tr>
                     </thead>
@@ -463,9 +597,9 @@
 
 @push('script')
 <script>
-// ═══════════════════════════════════════════════════════════════
-//  PIVOT ANALYSIS — JS  (no jQuery dependency)
-// ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
+   PIVOT ANALYSIS — JS  (all logic identical to original)
+═══════════════════════════════════════════════════════════════ */
 
 var PV_TODAY   = '{{ now()->toDateString() }}';
 var PV_ROUTES  = {
@@ -478,53 +612,30 @@ var pvInst     = 'stock';
 var pvTimer    = null;
 var pvSymCache = {};
 
-// Helper: set innerHTML / textContent of element by id
-function pvHtml(id, html) {
-    var el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-}
-function pvText(id, txt) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = txt;
-}
+function pvHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+function pvText(id, txt)  { var el = document.getElementById(id); if (el) el.textContent = txt; }
 
-// ═══════════════════════════════════════════════════════════════
-//  BOOT — resolve last available date then auto-load
-// ═══════════════════════════════════════════════════════════════
-
+/* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', function () {
     pvResolveLastDateAndLoad();
 });
 
-/**
- * Ask the backend for the latest trade_date that has real data for the
- * current instrument, then set the date picker and fire pvLoad().
- * Falls back to today if the request fails.
- */
 function pvResolveLastDateAndLoad() {
     fetch(PV_ROUTES.lastDate + '?instrument=' + pvInst, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(function (r) { return r.json(); })
     .then(function (res) {
-        if (res.last_date) {
-            document.getElementById('pv-date').value = res.last_date;
-        }
+        if (res.last_date) document.getElementById('pv-date').value = res.last_date;
         pvLoad();
     })
-    .catch(function () {
-        // Network error — just load with whatever date is in the picker
-        pvLoad();
-    });
+    .catch(function () { pvLoad(); });
 }
 
-// ── Instrument switcher ───────────────────────────────────────
-
+/* ── INSTRUMENT SWITCHER ── */
 function pvSetInst(inst, btn) {
     pvInst = inst;
-    document.querySelectorAll('.pv-inst-tab').forEach(function(b){
-        b.className = 'pv-inst-tab';
-    });
+    document.querySelectorAll('.pv-inst-tab').forEach(function(b){ b.className = 'pv-inst-tab'; });
     btn.classList.add('on-' + inst);
 
     var isOpt = inst === 'option';
@@ -541,18 +652,13 @@ function pvSetInst(inst, btn) {
     }
 
     var cacheKey = inst;
-    if (pvSymCache[cacheKey] && pvSymCache[cacheKey].length) {
-        pvRebuildSym(pvSymCache[cacheKey]);
-    } else {
-        pvRebuildSym([]);
-    }
+    if (pvSymCache[cacheKey] && pvSymCache[cacheKey].length) pvRebuildSym(pvSymCache[cacheKey]);
+    else pvRebuildSym([]);
 
-    // When switching instruments, re-detect the last date for that instrument
     pvResolveLastDateAndLoad();
 }
 
-// ── Date ─────────────────────────────────────────────────────
-
+/* ── DATE ── */
 function pvGetDate() { return document.getElementById('pv-date').value; }
 function pvGetSym()  { return document.getElementById('pv-sym').value; }
 
@@ -578,8 +684,7 @@ function pvUpdateDateBadge(isToday) {
         : '<span class="pv-hist-badge">📅 Historical</span>';
 }
 
-// ── Symbol dropdown ───────────────────────────────────────────
-
+/* ── SYMBOL DROPDOWN ── */
 function pvRebuildSym(symbols) {
     var sel  = document.getElementById('pv-sym');
     var prev = sel.value;
@@ -592,8 +697,7 @@ function pvRebuildSym(symbols) {
     });
 }
 
-// ── Auto refresh ──────────────────────────────────────────────
-
+/* ── AUTO REFRESH ── */
 function pvToggleAuto() {
     var btn = document.getElementById('pv-auto-btn');
     if (pvTimer) {
@@ -608,11 +712,12 @@ function pvToggleAuto() {
     }
 }
 
-// ── Main loader ───────────────────────────────────────────────
-
+/* ── MAIN LOADER ── */
 function pvLoad() {
-    var date = pvGetDate();
-    var sym  = pvGetSym();
+    var date   = pvGetDate();
+    var sym    = pvGetSym();
+    var isOpt  = pvInst === 'option';
+    var colsNm = isOpt ? 20 : 17;
 
     if (date !== PV_TODAY && pvTimer) {
         clearInterval(pvTimer); pvTimer = null;
@@ -622,13 +727,10 @@ function pvLoad() {
 
     document.getElementById('pv-warn').classList.remove('show');
 
-    var isOpt  = pvInst === 'option';
-    var colsNm = isOpt ? 20 : 17;
     var loadTr = '<tr><td colspan="' + colsNm + '">'
         + '<div class="pv-loading"><div class="pv-spinner"></div>'
         + '<div class="pv-loading-text">Fetching pivot data for ' + date + '…</div></div>'
         + '</td></tr>';
-
     pvHtml(isOpt ? 'pv-opt-body' : 'pv-sf-body', loadTr);
 
     var params = new URLSearchParams({ symbol: sym, date: date });
@@ -673,10 +775,7 @@ function pvLoad() {
     });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  RENDERERS
-// ═══════════════════════════════════════════════════════════════
-
+/* ── RENDERERS (identical logic, only CSS class names updated) ── */
 function pvRenderSF(data) {
     var isFut = pvInst === 'fut';
     var html  = '';
@@ -691,8 +790,7 @@ function pvRenderSF(data) {
                 + '<td class="c-num">'  + n++ + '</td>'
                 + '<td class="c-time">' + s.time + '</td>'
                 + '<td class="c-sym">'  + esc(d.symbol)
-                    + (d.expiry ? '<small>' + d.expiry + '</small>' : '')
-                + '</td>'
+                    + (d.expiry ? '<small>' + d.expiry + '</small>' : '') + '</td>'
                 + '<td class="c-o sep-ohlc">₹' + fmt(s.open)  + '</td>'
                 + '<td class="c-h">₹'           + fmt(s.high)  + '</td>'
                 + '<td class="c-l">₹'           + fmt(s.low)   + '</td>'
@@ -727,9 +825,9 @@ function pvRenderOption(data) {
 
         var times = Object.keys(Object.assign({}, ceMap, peMap)).sort();
         times.forEach(function(t, i) {
-            var ce     = ceMap[t] || null;
-            var pe     = peMap[t] || null;
-            var zebra  = i % 2 === 0 ? 'tr-even' : 'tr-odd';
+            var ce    = ceMap[t] || null;
+            var pe    = peMap[t] || null;
+            var zebra = i % 2 === 0 ? 'tr-even' : 'tr-odd';
 
             var ceCells = ce
                 ? '<td class="c-o sep-ce">₹' + fmt(ce.open)  + '</td>'
@@ -740,7 +838,7 @@ function pvRenderOption(data) {
                 + '<td class="c-s1">₹'         + fmt(ce.S1)    + '</td>'
                 + '<td class="c-r1">₹'         + fmt(ce.R1)    + '</td>'
                 + '<td>'                        + pvSigBadge(ce.bias, ce.signal, ce.strength) + '</td>'
-                : '<td colspan="8" class="sep-ce" style="color:#ccc;font-size:9px;">— no CE data —</td>';
+                : '<td colspan="8" class="sep-ce" style="color:rgba(120,123,134,.3);font-size:9px;">— no CE data —</td>';
 
             var peCells = pe
                 ? '<td class="c-o sep-pe">₹' + fmt(pe.open)  + '</td>'
@@ -751,7 +849,7 @@ function pvRenderOption(data) {
                 + '<td class="c-s1">₹'         + fmt(pe.S1)    + '</td>'
                 + '<td class="c-r1">₹'         + fmt(pe.R1)    + '</td>'
                 + '<td>'                        + pvSigBadge(pe.bias, pe.signal, pe.strength) + '</td>'
-                : '<td colspan="8" class="sep-pe" style="color:#ccc;font-size:9px;">— no PE data —</td>';
+                : '<td colspan="8" class="sep-pe" style="color:rgba(120,123,134,.3);font-size:9px;">— no PE data —</td>';
 
             html += '<tr class="' + zebra + '">'
                 + '<td class="c-num">'  + n++ + '</td>'
@@ -759,22 +857,17 @@ function pvRenderOption(data) {
                 + '<td class="c-sym">'  + esc(d.symbol)
                     + (d.expiry ? '<small>' + d.expiry + '</small>' : '') + '</td>'
                 + '<td class="c-atm">₹' + fmtInt(d.atm_strike) + '</td>'
-                + ceCells + peCells
-                + '</tr>';
+                + ceCells + peCells + '</tr>';
         });
     });
 
     pvHtml('pv-opt-body', html || pvEmptyHtml(20));
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  BADGE HELPERS
-// ═══════════════════════════════════════════════════════════════
-
+/* ── BADGE HELPERS (identical logic) ── */
 function pvSigBadge(bias, label, strength) {
     if (!bias || bias === 'NEUTRAL')
         return '<span class="sig sig-neutral">— ' + (label || 'At Pivot') + '</span>';
-
     if (bias === 'BULLISH') {
         if (strength === 'STRONG')   return '<span class="sig sig-bull-strong">▲ ' + label + '</span>';
         if (strength === 'MODERATE') return '<span class="sig sig-bull-mod">↑ '    + label + '</span>';
@@ -794,18 +887,15 @@ function pvRowCls(bias, label) {
     if (label === 'Below S1' || label === 'Below S2') return 'tr-breakdown';
     return '';
 }
-
 function pvMatchPill(v) {
-    if (v === null || v === undefined) return '<span style="color:#ccc;font-size:9px;">—</span>';
+    if (v === null || v === undefined) return '<span style="color:rgba(120,123,134,.3);font-size:9px;">—</span>';
     return v ? '<span class="mp-yes">✓ YES</span>' : '<span class="mp-no">✗ NO</span>';
 }
-
 function pvPPCross(v) {
-    return v ? '<span class="mp-pp">⟷ CROSS</span>' : '<span style="color:#ccc;font-size:9px;">—</span>';
+    return v ? '<span class="mp-pp">⟷ CROSS</span>' : '<span style="color:rgba(120,123,134,.3);font-size:9px;">—</span>';
 }
 
-// ── Number formatters ─────────────────────────────────────────
-
+/* ── NUMBER FORMATTERS (identical) ── */
 function fmt(v) {
     if (v == null || v === '') return '—';
     return Number(v).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -818,13 +908,12 @@ function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Empty HTML ────────────────────────────────────────────────
-
+/* ── EMPTY HTML ── */
 function pvEmptyHtml(cols, msg) {
     return '<tr><td colspan="' + cols + '">'
         + '<div class="pv-empty">'
-        + '<i class="las la-chart-area"></i>'
-        + (msg || 'No pivot data found for this date / symbol.')
+        + '<div class="pv-empty-icon"><i class="las la-chart-area"></i></div>'
+        + '<p>' + (msg || 'No pivot data found for this date / symbol.') + '</p>'
         + '</div></td></tr>';
 }
 </script>
