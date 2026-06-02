@@ -4,9 +4,6 @@
 @include($activeTemplate.'partials.header')
 
 <div class="main-wrapper">
-    {{-- @if(!request()->routeIs('home') && !request()->routeIs('login') && !request()->routeIs('optionsymposium'))
-        @include($activeTemplate.'partials.bread_crumb')
-    @endif --}}
     @yield('content')
 </div>
 
@@ -16,7 +13,7 @@
 
 @if(($cookie->data_values->status == Status::ENABLE) && !\Cookie::get('gdpr_cookie'))
     <!-- cookies dark version start -->
-    <div class="cookies-card text-center hide">
+    {{-- <div class="cookies-card text-center hide">
         <div class="cookies-card__icon bg--base">
             <i class="las la-cookie-bite"></i>
         </div>
@@ -26,7 +23,7 @@
         <div class="cookies-card__btn mt-4">
             <a href="javascript:void(0)" class="btn btn--base w-100 policy">@lang('Allow')</a>
         </div>
-    </div>
+    </div> --}}
 @endif
 
 @include($activeTemplate.'partials.footer')

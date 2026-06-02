@@ -930,7 +930,7 @@
                 Real-time OI analysis, strategy builders &amp; 47+ analytical tools — everything a serious options trader needs, in one platform.
             </p>
             <div class="cq-hero-cta cq-anim d3">
-                <a href="{{ $hero['webapp'] ?? '#' }}" class="cq-btn-primary">
+                <a href="{{ $hero['webapp'] ?? 'https://cityquants.cityfintrack.com/analysis' }}" class="cq-btn-primary">
                     <i class="fas fa-chart-line"></i> Launch Platform
                 </a>
             </div>
