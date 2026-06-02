@@ -566,7 +566,7 @@ function pfRenderTable(rows) {
 
         var strikeHtml = isFired && r.strike
             ? '<span class="c-strike">' + pfFmt(r.strike) + '</span>'
-              + (r.strike_sym ? '<span class="c-strsym">' + pfEsc(r.strike_sym) + '</span>' : '')
+            //   + (r.strike_sym ? '<span class="c-strsym">' + pfEsc(r.strike_sym) + '</span>' : '')
             : pfDash();
 
         var entryHtml  = isFired && r.entry_price ? '<span class="c-entry">&#8377;'  + r.entry_price  + '</span>' : pfDash();
