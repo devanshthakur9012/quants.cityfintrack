@@ -491,9 +491,6 @@
                 <h1 class="cq-promo-heading">
                     Options <br> <span>Decoded Instantly.</span>
                 </h1>
-                <p class="cq-promo-sub">
-                    India's largest options analytics platform. Built by traders, for traders.
-                </p>
             </div>
 
             @if(!empty($promoVideo))
