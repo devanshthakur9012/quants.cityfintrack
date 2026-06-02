@@ -1245,7 +1245,7 @@
                                     @if(!empty($tab['video_date']))<i class="far fa-calendar-alt"></i> {{ $tab['video_date'] }}@endif
                                     @if(!empty($tab['video_time'])) · {{ $tab['video_time'] }}@endif
                                 </div>
-                                <div class="cq-yt-watch">Watch on <i class="fab fa-youtube"></i></div>
+                                <div class="cq-yt-watch text-dark">Watch on <i class="fab fa-youtube"></i></div>
                             </div>
                         </div>
                     </div>

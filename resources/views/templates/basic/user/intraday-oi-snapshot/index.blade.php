@@ -517,15 +517,13 @@ function iosRenderTable(data) {
                 + (r.fut_price  ? '<br><span class="c-fut">F:₹' + f(r.fut_price) + '</span>' : '')
             + '</td>'
             + '<td class="c-expiry">' + (r.expiry || '—') + '</td>'
-            + '<td class="sep-oi c-oi">' + nInt(r.ce_oi) + '<small>open: ' + nInt(r.ce_oi_prev) + '</small></td>'
+            + '<td class="sep-oi c-oi">' + nInt(r.ce_oi) + '</td>'
             + '<td>' + pctCell(r.ce_oi_pct) + '</td>'
-            + '<td class="c-oi">'    + nInt(r.pe_oi) + '<small>open: ' + nInt(r.pe_oi_prev) + '</small></td>'
+            + '<td class="c-oi">'    + nInt(r.pe_oi) + '</td>'
             + '<td>' + pctCell(r.pe_oi_pct) + '</td>'
             + '<td class="sep-signal">' + sentBadge + '</td>'
-            + '<td><span class="' + condCls + '">' + esc(cond) + '</span>'
-                + (r.reason ? '<div class="reason-tip">' + esc(r.reason) + '</div>' : '') + '</td>'
-            + '<td><span class="' + rankCls + '">' + r.strength_rank + '</span>'
-                + '<div class="rank-diff">Δ ' + r.oi_diff + '%</div></td>'
+            + '<td><span class="' + condCls + '">' + esc(cond) + '</span></td>'
+            + '<td><span class="' + rankCls + '">' + r.strength_rank + '</span></td>'
             + '<td>' + actBadge + '</td>'
             + '</tr>';
         num++;
