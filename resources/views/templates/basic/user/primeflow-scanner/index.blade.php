@@ -382,18 +382,8 @@
         <h1>PrimeFlow <span>Option Scanner</span></h1>
         <p>
             Smart Entry Engine across all configured symbols — 7-signal confluence model
-            running on live 15min option &amp; futures candle data. Entry window: 10:30–14:30.
+            running on live option &amp; futures candle data.
         </p>
-        <div class="pf-hero-pills">
-            <span class="pf-pill pf-pill-score">Threshold: {{ $thresh_hold ?? 6 }}/17</span>
-            <span class="pf-pill pf-pill-call">Prem Exp +3</span>
-            <span class="pf-pill pf-pill-call">OI Build +2</span>
-            <span class="pf-pill pf-pill-call">Vol Spike +2</span>
-            <span class="pf-pill pf-pill-put">Futures Dir +2</span>
-            <span class="pf-pill pf-pill-put">Gamma +2</span>
-            <span class="pf-pill pf-pill-put">Momentum +2</span>
-            <span class="pf-pill pf-pill-trap">MM Trap +4</span>
-        </div>
     </div>
     <div class="pf-hero-icon">PF</div>
 </div>
@@ -443,7 +433,7 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;color:var(--c-muted);" id="pf-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config with symbols.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>

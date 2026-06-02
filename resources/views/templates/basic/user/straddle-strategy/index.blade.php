@@ -444,15 +444,8 @@
         <h1>Straddle &amp; Strangle <span>Signal Engine</span></h1>
         <p>
             5-factor directional scoring for Long/Short Straddle &amp; Strangle setups —
-            powered by live 15min candle data. Minimum 3/5 factors required to fire a signal.
+            powered by live candle data. Minimum 3/5 factors required to fire a signal.
         </p>
-        <div class="ss-hero-pills">
-            <span class="ss-pill ss-pill-factor">5-FACTOR SCORING</span>
-            <span class="ss-pill ss-pill-factor">MIN 3/5 TO SIGNAL</span>
-            <span class="ss-pill ss-pill-ce">▲ BUY CE</span>
-            <span class="ss-pill ss-pill-pe">▼ BUY PE</span>
-            <span class="ss-pill ss-pill-factor">Futures · OI · Premium · PCR · Structure</span>
-        </div>
     </div>
     <div class="ss-hero-icon">
         <i class="las la-layer-group"></i>
@@ -527,7 +520,7 @@
         <div>
             <strong>No Analysis Config Found</strong>
             <div style="font-size:12px;margin-top:3px;" id="ss-warn-msg">
-                Go to Admin → Analysis Config and create a 15min config with symbols.
+                Go to Admin → Analysis Config and create a config with symbols.
             </div>
         </div>
     </div>
@@ -557,7 +550,7 @@
         <div class="ss-card">
             <div class="ss-card-header">
                 <div class="ss-card-title" id="ss-card-title">
-                    ◆ Straddle &amp; Strangle Signal Engine · 15min
+                    ◆ Straddle &amp; Strangle Signal Engine
                 </div>
                 <span class="ss-card-info" id="ss-card-info"></span>
             </div>
@@ -759,7 +752,7 @@ function ssLoad() {
         if (res.no_config) {
             document.getElementById('ss-warn').classList.add('show');
             ssTxt('ss-warn-msg', res.message || '');
-            ssShowEmptyTable('No active 15min config.');
+            ssShowEmptyTable('No active config.');
             return;
         }
 
@@ -798,7 +791,7 @@ function ssRestoreSummaryShell() {
         outputEl.innerHTML =
             '<div class="ss-card">'
             + '<div class="ss-card-header">'
-            + '<div class="ss-card-title" id="ss-card-title">◆ Straddle &amp; Strangle Signal Engine · 15min</div>'
+            + '<div class="ss-card-title" id="ss-card-title">◆ Straddle &amp; Strangle Signal Engine</div>'
             + '<span class="ss-card-info" id="ss-card-info"></span>'
             + '</div>'
             + '<div class="ss-table-scroll">'
