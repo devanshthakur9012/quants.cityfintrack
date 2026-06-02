@@ -489,7 +489,7 @@
 
             <div class="cq-promo-anim">
                 <h1 class="cq-promo-heading">
-                    Options <br> <span>Decoded Instantly.</span>
+                    Options <span>Decoded Instantly.</span>
                 </h1>
             </div>
 
