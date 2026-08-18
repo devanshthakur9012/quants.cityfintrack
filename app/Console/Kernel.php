@@ -82,6 +82,7 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/zerodha-instrument.log'));
+            
     
         // ── 15min collection: FUT + Stock + Option, 9:15 AM to 3:30 PM, Mon-Fri
         // cp:orchestrate now runs all 3 collectors in sequence.

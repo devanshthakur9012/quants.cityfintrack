@@ -32,6 +32,7 @@ class CpCollectStock extends Command
         $chunkSize  = (int) $this->option('chunk');
         $table      = "cp_stock_ohlc_{$timeframe}";
         $now        = Carbon::now();
+        
 
         $this->info("════════════════════════════════════════════");
         $this->info("  📈 CP Stock OHLC Collector [{$timeframe}]");

@@ -76,6 +76,7 @@ class CpOrchestrate extends Command
             $results['stock'] = $this->call('cp:collect-stock', $sub);
             $this->newLine();
         }
+        
     
         // 2. FUT
         if (!$this->option('skip-fut')) {
