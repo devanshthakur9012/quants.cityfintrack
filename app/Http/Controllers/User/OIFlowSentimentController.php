@@ -283,24 +283,47 @@ class OIFlowSentimentController extends Controller
 
     // ── Signal logic ──────────────────────────────────────────────────────────
 
+    // private function calcOISignal(float $cePct, float $pePct): array
+    // {
+    //     $ceUp = $cePct > 0; $ceDown = $cePct < 0;
+    //     $peUp = $pePct > 0; $peDown = $pePct < 0;
+
+    //     if ($ceUp && $peDown)
+    //         return ['sentiment' => 'BEARISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Resistance forming'];
+    //     if ($ceDown && $peUp)
+    //         return ['sentiment' => 'BULLISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Support forming'];
+    //     if ($ceUp && $peUp) {
+    //         if ($cePct > $pePct)
+    //             return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"];
+    //         return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
+    //     }
+    //     if ($ceDown && $peDown) {
+    //         if ($cePct < $pePct)
+    //             return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Short covering"];
+    //         return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Long covering"];
+    //     }
+    //     return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
+    // }
+
+    // AFTER (reversed — replace the whole function with this)
     private function calcOISignal(float $cePct, float $pePct): array
     {
         $ceUp = $cePct > 0; $ceDown = $cePct < 0;
         $peUp = $pePct > 0; $peDown = $pePct < 0;
 
         if ($ceUp && $peDown)
-            return ['sentiment' => 'BEARISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Resistance forming'];
+            return ['sentiment' => 'BULLISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Support forming'];
         if ($ceDown && $peUp)
-            return ['sentiment' => 'BULLISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Support forming'];
+            return ['sentiment' => 'BEARISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Resistance forming'];
         if ($ceUp && $peUp) {
             if ($cePct > $pePct)
-                return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bearish"];
-            return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bullish"];
+                return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bullish"];
+            return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bearish"];
         }
         if ($ceDown && $peDown) {
             if ($cePct < $pePct)
-                return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Short covering"];
-            return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Long covering"];
+                return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Long covering"];
+            return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Short covering"];
         }
         return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }

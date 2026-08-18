@@ -427,12 +427,14 @@ class GapReversalController extends Controller
 
     private function oiSentiment(float $cePct, float $pePct): string
     {
+        // Reversed per client feedback: CE up + PE down was showing as BEARISH
+        // (BUY PE) but actually plays out as bullish in practice. Swapped.
         $ceUp = $cePct > 0; $ceDown = $cePct < 0;
         $peUp = $pePct > 0; $peDown = $pePct < 0;
-        if ($ceUp && $peDown) return 'BEARISH';
-        if ($ceDown && $peUp) return 'BULLISH';
-        if ($ceUp && $peUp)   return $cePct > $pePct ? 'BEARISH' : 'BULLISH';
-        if ($ceDown && $peDown) return $cePct < $pePct ? 'BULLISH' : 'BEARISH';
+        if ($ceUp && $peDown) return 'BULLISH';
+        if ($ceDown && $peUp) return 'BEARISH';
+        if ($ceUp && $peUp)   return $cePct > $pePct ? 'BULLISH' : 'BEARISH';
+        if ($ceDown && $peDown) return $cePct < $pePct ? 'BEARISH' : 'BULLISH';
         return 'NEUTRAL';
     }
 
