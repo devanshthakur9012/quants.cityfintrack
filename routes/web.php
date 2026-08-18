@@ -1400,6 +1400,13 @@ Route::controller('SiteController')->group(function () {
         Route::get('/symbols',    [OIFlowSentimentController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',    [OIFlowSentimentController::class, 'analyze'])->name('analyze');
     });
+
+    Route::middleware(['auth'])->prefix('gap-reversal')->name('gap-reversal.')->group(function () {
+        Route::get('/index',      [GapReversalController::class, 'index'])->name('index');
+        Route::get('/last-date',  [GapReversalController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',    [GapReversalController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [GapReversalController::class, 'analyze'])->name('analyze');
+    });
  
     Route::middleware(['auth'])->prefix('intraday-oi-snapshot')->name('intraday-oi-snapshot.')->group(function () {
         Route::get('/index',      [IntradayOISnapshotController::class, 'index'])->name('index');
