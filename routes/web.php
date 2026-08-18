@@ -122,6 +122,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\CpAnalysisController;
 use App\Http\Controllers\SecureVideoController;
+use App\Http\Controllers\User\GapReversalController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
