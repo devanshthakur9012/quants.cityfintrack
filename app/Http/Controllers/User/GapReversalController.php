@@ -13,20 +13,32 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Gap Reversal Strategy Analyzer — 15min only (internal — not shown to users)
  *
- * BUY  (Gap Reversal Long / Buy CE):
- *   GAP DOWN  →  INITIAL SELL-OFF  →  HIGHER LOW  →  CE/PE OI CONFIRMATION
- *   →  OPTION REVERSAL  →  RANGE BREAKOUT        (all AND, + Volume bonus)
+ * Decision is made EARLY at 10:30, not end-of-day. Exact sequence (client spec):
  *
- * SELL (Gap Reversal Short / Buy PE):
- *   GAP UP    →  INITIAL RALLY     →  LOWER HIGH  →  CE/PE OI CONFIRMATION
- *   →  OPTION REVERSAL  →  RANGE BREAKDOWN        (all AND, + Volume bonus)
+ *   BUY (Gap Down → Buy CE):
+ *     Prev day OI baseline
+ *       → 09:15 GAP DOWN
+ *       → 09:15–09:45 Initial sell-off + OI builds
+ *       → 09:45 Low established
+ *       → 09:45–10:15 Price stops falling → Higher Low, OI starts falling
+ *       → 10:15–10:30 Short covering (OI confirms unwind)
+ *       → 10:30 Range breakout → 🟢 BUY
+ *
+ *   SELL (Gap Up → Buy PE) — mirror:
+ *     Prev day OI baseline
+ *       → 09:15 GAP UP
+ *       → 09:15–09:45 Initial rally + OI builds
+ *       → 09:45 High established
+ *       → 09:45–10:15 Price stops rising → Lower High, OI starts falling
+ *       → 10:15–10:30 Long unwinding (OI confirms unwind)
+ *       → 10:30 Range breakdown → 🔴 SELL
  *
  * Score (out of 100):
  *   Gap (Down/Up)          +20
  *   Initial Move           +10
  *   Reversal (HL / LH)     +20
  *   OI Confirmation        +20
- *   Option Reversal        +15
+ *   Option Reversal        +15   (short covering / long unwinding)
  *   Range Break(out/down)  +10
  *   Volume                 +5
  *
@@ -34,10 +46,12 @@ use Illuminate\Support\Facades\Schema;
  * (Volume is a bonus point only, not mandatory — matches the client spec
  * where the AND-list has six items and Volume appears only in the score).
  *
- * Pivot note (informational only — NOT part of the 100pt score):
- *   BUY  → CE zone tags S1/S2 (support test), PE zone tags R1/R2
- *   SELL → PE zone tags S1/S2 (support test), CE zone tags R1/R2
- * Pivots use classic floor-pivot formula from the previous day's H/L/C.
+ * Pivots (informational only — NOT part of the 100pt score) are shown as
+ * FOUR separate levels: R2, R1, S1, S2 (classic floor-pivot formula from
+ * the previous day's H/L/C), each flagged individually if today's price
+ * touched it, and tagged with which side (CE/PE) it's relevant to:
+ *   BUY  → S1/S2 tagged CE (support test), R1/R2 tagged PE
+ *   SELL → S1/S2 tagged PE (support test), R1/R2 tagged CE
  */
 class GapReversalController extends Controller
 {
@@ -45,11 +59,12 @@ class GapReversalController extends Controller
     private const OPT_TABLE = 'cp_option_ohlc_15min';
 
     // ── Session windows (candle interval_time boundaries) ──────────────────
-    private const MARKET_OPEN        = '09:15:00';
-    private const INITIAL_WINDOW_END = '10:00:00'; // initial selloff/rally window
-    private const RANGE_WINDOW_END   = '12:00:00'; // range/consolidation forms by here
-    private const ANALYSIS_TIME      = '14:45:00'; // setup evaluated as of this candle
-    private const PREV_DAY_TIME      = '15:00:00'; // previous day close reference
+    // Retimed per client sequence — decision now happens at 10:30, not EOD.
+    private const MARKET_OPEN   = '09:15:00'; // open candle — gap + OI baseline reference
+    private const INITIAL_END   = '09:45:00'; // end of Initial Sell-off/Rally window → "Low/High established"
+    private const REVERSAL_END  = '10:15:00'; // end of Higher-Low/Lower-High window → OI starts falling; also end of range-building window
+    private const ANALYSIS_TIME = '10:30:00'; // DECISION CANDLE — short covering/long unwinding + range breakout checked here
+    private const PREV_DAY_TIME = '15:00:00'; // previous day close / OI baseline reference (last candle of prior session)
 
     // ── Tunable thresholds (%) — adjust to taste without touching logic ────
     private const GAP_MIN_PCT     = 0.10; // min gap vs prev close to qualify as gap up/down
@@ -230,8 +245,8 @@ class GapReversalController extends Controller
         }
         $bias = $gapDown ? 'BUY' : 'SELL'; // BUY = gap-down reversal (long/CE), SELL = gap-up reversal (short/PE)
 
-        // ── 2. INITIAL SELL-OFF / RALLY (open → 10:00) ─────────────────────
-        $initialWindow  = $this->sliceWindow($candles, self::MARKET_OPEN, self::INITIAL_WINDOW_END);
+        // ── 2. INITIAL SELL-OFF / RALLY (09:15 → 09:45) → Low/High established ─
+        $initialWindow  = $this->sliceWindow($candles, self::MARKET_OPEN, self::INITIAL_END);
         $initialExtreme = $bias === 'BUY'
             ? $this->extremePrice($initialWindow, 'min')
             : $this->extremePrice($initialWindow, 'max');
@@ -243,8 +258,8 @@ class GapReversalController extends Controller
             ? ($initialExtreme !== null && $initialMovePct <= -self::INITIAL_MIN_PCT)
             : ($initialExtreme !== null && $initialMovePct >=  self::INITIAL_MIN_PCT);
 
-        // ── 3. HIGHER LOW / LOWER HIGH (10:00 → 12:00) ─────────────────────
-        $reversalWindow  = $this->sliceWindow($candles, self::INITIAL_WINDOW_END, self::RANGE_WINDOW_END);
+        // ── 3. HIGHER LOW / LOWER HIGH (09:45 → 10:15) — price stops falling/rising ─
+        $reversalWindow  = $this->sliceWindow($candles, self::INITIAL_END, self::REVERSAL_END);
         $reversalExtreme = $bias === 'BUY'
             ? $this->extremePrice($reversalWindow, 'min')
             : $this->extremePrice($reversalWindow, 'max');
@@ -254,12 +269,14 @@ class GapReversalController extends Controller
             ? ($reversalExtreme !== null && $initialExtreme !== null && $reversalExtreme > ($initialExtreme + $bufferAmt))
             : ($reversalExtreme !== null && $initialExtreme !== null && $reversalExtreme < ($initialExtreme - $bufferAmt));
 
-        // ── 4. RANGE (open → 12:00) + BREAKOUT/BREAKDOWN (12:00 → 14:45) ───
-        $rangeWindow = $this->sliceWindow($candles, self::MARKET_OPEN, self::RANGE_WINDOW_END);
+        // ── 4. RANGE (09:15 → 10:15) + BREAKOUT/BREAKDOWN (10:15 → 10:30) ──
+        //      Range forms across the initial + reversal windows; the final
+        //      10:15→10:30 candle(s) confirm the break — this is the decision step.
+        $rangeWindow = $this->sliceWindow($candles, self::MARKET_OPEN, self::REVERSAL_END);
         $rangeHigh   = $this->extremePrice($rangeWindow, 'max');
         $rangeLow    = $this->extremePrice($rangeWindow, 'min');
 
-        $breakoutWindow = $this->sliceWindow($candles, self::RANGE_WINDOW_END, self::ANALYSIS_TIME);
+        $breakoutWindow = $this->sliceWindow($candles, self::REVERSAL_END, self::ANALYSIS_TIME);
         $breakoutHigh   = $this->extremePrice($breakoutWindow, 'max');
         $breakoutLow    = $this->extremePrice($breakoutWindow, 'min');
 
@@ -268,7 +285,7 @@ class GapReversalController extends Controller
             ? ($breakoutHigh !== null && $rangeHigh !== null && $breakoutHigh > ($rangeHigh + $breakMinAmt))
             : ($breakoutLow  !== null && $rangeLow  !== null && $breakoutLow  < ($rangeLow  - $breakMinAmt));
 
-        // ── 5. CE/PE OI CONFIRMATION (today @14:45 vs prev day @15:00) ─────
+        // ── 5. CE/PE OI CONFIRMATION (today @10:30 decision vs prev day @15:00) ─
         $ceToday = $this->latestOi($candles, 'ce_oi', self::ANALYSIS_TIME);
         $peToday = $this->latestOi($candles, 'pe_oi', self::ANALYSIS_TIME);
         $cePrev  = $this->latestOi($prev['candles'] ?? [], 'ce_oi', self::PREV_DAY_TIME);
@@ -289,9 +306,12 @@ class GapReversalController extends Controller
         $prevTrendCe = $this->buildupTag($prevOpenCe, $cePrev);
         $prevTrendPe = $this->buildupTag($prevOpenPe, $pePrev);
 
-        // ── 6. OPTION REVERSAL (first-half OI trend vs second-half OI trend) ─
-        $ceMid   = $this->latestOi($candles, 'ce_oi', self::INITIAL_WINDOW_END);
-        $peMid   = $this->latestOi($candles, 'pe_oi', self::INITIAL_WINDOW_END);
+        // ── 6. OPTION REVERSAL — "Short Covering" (BUY) / "Long Unwinding" (SELL) ─
+        //      Phase 1 (09:15→09:45): OI builds in the gap direction.
+        //      Phase 2 (09:45→10:30): OI unwinds — "starts falling" through 10:15,
+        //      confirmed as short covering / long unwinding by the 10:30 decision candle.
+        $ceMid   = $this->latestOi($candles, 'ce_oi', self::INITIAL_END);
+        $peMid   = $this->latestOi($candles, 'pe_oi', self::INITIAL_END);
         $ceOpenT = $this->earliestOi($candles, 'ce_oi');
         $peOpenT = $this->earliestOi($candles, 'pe_oi');
 
@@ -300,9 +320,9 @@ class GapReversalController extends Controller
         $peFirstHalfPct  = $peOpenT > 0 ? (($peMid - $peOpenT) / $peOpenT) * 100 : 0;
         $peSecondHalfPct = $peMid   > 0 ? (($peToday - $peMid) / $peMid) * 100 : 0;
 
-        // BUY: CE trend flips from building(+) early to unwinding(-) later,
-        //      or PE trend flips from unwinding(-) early to building(+) later.
-        // SELL is the mirror image.
+        // BUY: CE trend flips from building(+) early to unwinding(-) later (short
+        //      covering), or PE trend flips from unwinding(-) early to building(+) later.
+        // SELL is the mirror image (long unwinding).
         $optionReversalOk = $bias === 'BUY'
             ? (($ceFirstHalfPct > 0 && $ceSecondHalfPct < 0) || ($peFirstHalfPct < 0 && $peSecondHalfPct > 0))
             : (($peFirstHalfPct > 0 && $peSecondHalfPct < 0) || ($ceFirstHalfPct < 0 && $ceSecondHalfPct > 0));
@@ -330,7 +350,9 @@ class GapReversalController extends Controller
         $mandatoryOk = ($gapDown || $gapUp) && $initialOk && $reversalOk && $oiConfirmOk && $optionReversalOk && $rangeBreakOk;
         $setup = $mandatoryOk ? $bias : 'WAIT';
 
-        // ── Pivots (previous day H/L/C, classic floor pivots) ───────────────
+        // ── Pivots (previous day H/L/C, classic floor pivots) — kept as 4 SEPARATE
+        //    levels (R2, R1, S1, S2), each individually flagged if today's price
+        //    touched it, and tagged with which side (CE/PE) it's relevant to.
         $pivots = ($prevHigh && $prevLow && $prevClose) ? $this->calcPivots($prevHigh, $prevLow, $prevClose) : null;
         $dayLow  = $this->extremePrice($candles, 'min');
         $dayHigh = $this->extremePrice($candles, 'max');
@@ -342,15 +364,15 @@ class GapReversalController extends Controller
             $touchedR1 = $dayHigh !== null && $dayHigh >= $pivots['r1'] * (1 - $tol);
             $touchedR2 = $dayHigh !== null && $dayHigh >= $pivots['r2'] * (1 - $tol);
 
-            // BUY  → CE zone tags S1/S2 (support), PE zone tags R1/R2
-            // SELL → PE zone tags S1/S2 (support), CE zone tags R1/R2
+            // BUY  → S1/S2 relevant to CE (support test), R1/R2 relevant to PE
+            // SELL → S1/S2 relevant to PE (support test), R1/R2 relevant to CE
+            $supportSide    = $bias === 'BUY' ? 'CE' : 'PE';
+            $resistanceSide = $bias === 'BUY' ? 'PE' : 'CE';
             $pivotNote = [
-                'ce_zone' => $bias === 'BUY'
-                    ? ['level' => 'S1/S2', 'touched' => $touchedS1 || $touchedS2]
-                    : ['level' => 'R1/R2', 'touched' => $touchedR1 || $touchedR2],
-                'pe_zone' => $bias === 'BUY'
-                    ? ['level' => 'R1/R2', 'touched' => $touchedR1 || $touchedR2]
-                    : ['level' => 'S1/S2', 'touched' => $touchedS1 || $touchedS2],
+                'r2' => ['touched' => $touchedR2, 'side' => $resistanceSide],
+                'r1' => ['touched' => $touchedR1, 'side' => $resistanceSide],
+                's1' => ['touched' => $touchedS1, 'side' => $supportSide],
+                's2' => ['touched' => $touchedS2, 'side' => $supportSide],
             ];
         }
 

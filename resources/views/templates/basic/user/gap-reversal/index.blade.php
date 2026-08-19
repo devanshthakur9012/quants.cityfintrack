@@ -99,7 +99,7 @@
 .gr-tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 
 /* TABLE */
-.gr-table{width:100%;border-collapse:collapse;font-family:var(--f-mono);min-width:1500px;}
+.gr-table{width:100%;border-collapse:collapse;font-family:var(--f-mono);min-width:1680px;}
 .gr-table thead tr.th-group th{padding:8px 10px 4px;text-align:center;font-family:var(--f-sans);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--c-panel);border-bottom:none;white-space:nowrap;}
 .gr-table thead tr.th-cols th{padding:4px 10px 8px;text-align:center;font-family:var(--f-mono);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;background:rgba(0,0,0,.25);color:var(--c-muted);border-bottom:1px solid var(--c-border);white-space:nowrap;}
 .g-info{color:var(--c-blue)!important;} .g-price{color:var(--c-amber)!important;} .g-oi{color:var(--c-teal)!important;} .g-pivot{color:var(--c-purple)!important;} .g-signal{color:#fff!important;}
@@ -129,10 +129,12 @@
 .score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c-red),var(--c-amber),var(--c-lime));}
 .score-txt{font-size:10px;font-weight:800;color:#fff;font-family:var(--f-display);}
 /* pivot zone tag */
-.pivot-tag{display:inline-flex;flex-direction:column;gap:2px;font-size:9px;}
-.pivot-tag .lvl{color:var(--c-text);font-weight:700;}
-.pivot-tag .touch-yes{color:var(--c-lime);}
+.pivot-tag{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;}
+.pivot-tag .lvl{color:var(--c-text);font-weight:700;font-size:11px;}
+.pivot-tag .touch-yes{color:var(--c-lime);font-weight:800;}
 .pivot-tag .touch-no{color:rgba(120,123,134,.5);}
+.pivot-tag .side-ce{background:rgba(0,184,212,.12);color:var(--c-blue);border-radius:3px;padding:0 5px;font-size:8px;font-weight:800;letter-spacing:.05em;}
+.pivot-tag .side-pe{background:rgba(239,83,80,.1);color:#EF9A9A;border-radius:3px;padding:0 5px;font-size:8px;font-weight:800;letter-spacing:.05em;}
 /* trend tag */
 .trend-buildup{color:var(--c-teal);font-weight:700;}
 .trend-unwind{color:var(--c-red);font-weight:700;}
@@ -153,7 +155,7 @@
     <div class="gr-hero-left">
         <div class="gr-eyebrow">Options Analytics</div>
         <h1>Gap Reversal <span>Strategy</span> Analyzer</h1>
-        <p>Detects gap-day reversal setups — gap down/up, initial selloff/rally, higher low/lower high, CE/PE OI confirmation, option flow reversal and range breakout/breakdown — scored out of 100.</p>
+        <p>Detects gap-day reversal setups — gap (9:15), initial selloff/rally (9:15-9:45), higher low/lower high (9:45-10:15), CE/PE OI confirmation, short covering/long unwinding, and range breakout/breakdown — decided by <strong style="color:#fff;">10:30 AM</strong>, scored out of 100.</p>
     </div>
     <div class="gr-hero-icon"><i class="las la-random"></i></div>
 </div>
@@ -191,14 +193,14 @@
     <div class="gr-warn" id="gr-warn"><i class="las la-exclamation-triangle"></i><div><strong>No Analysis Config Found</strong><div style="font-size:12px;margin-top:3px;color:var(--c-muted);" id="gr-warn-msg">Go to Admin → Analysis Config and create a config with symbols.</div></div></div>
 
     <div class="gr-legend gr-anim">
-        <span class="gr-legend-chip">Gap <b>+20</b></span>
-        <span class="gr-legend-chip">Initial Move <b>+10</b></span>
-        <span class="gr-legend-chip">Higher Low / Lower High <b>+20</b></span>
+        <span class="gr-legend-chip">Gap @9:15 <b>+20</b></span>
+        <span class="gr-legend-chip">Initial Move 9:15-9:45 <b>+10</b></span>
+        <span class="gr-legend-chip">Higher Low / Lower High 9:45-10:15 <b>+20</b></span>
         <span class="gr-legend-chip">OI Confirmation <b>+20</b></span>
-        <span class="gr-legend-chip">Option Reversal <b>+15</b></span>
-        <span class="gr-legend-chip">Range Break <b>+10</b></span>
+        <span class="gr-legend-chip">Short Covering / Long Unwinding <b>+15</b></span>
+        <span class="gr-legend-chip">Range Break @10:30 <b>+10</b></span>
         <span class="gr-legend-chip">Volume <b>+5</b></span>
-        <span class="gr-legend-chip" style="border-color:rgba(125,255,0,.3);">Total <b>100</b> — all six mandatory to fire BUY/SELL</span>
+        <span class="gr-legend-chip" style="border-color:rgba(125,255,0,.3);">Total <b>100</b> — decision locked by 10:30 AM</span>
     </div>
 
     <div class="gr-stats gr-anim">
@@ -221,27 +223,29 @@
                         <th colspan="5" class="g-info">Market Info</th>
                         <th colspan="4" class="g-price sep-price">Price Action</th>
                         <th colspan="4" class="g-oi sep-oi">OI Confirmation</th>
-                        <th colspan="2" class="g-pivot sep-pivot">Pivot Zones</th>
+                        <th colspan="4" class="g-pivot sep-pivot">Pivot Levels</th>
                         <th colspan="2" class="g-signal sep-signal">Signal</th>
                     </tr>
                     <tr class="th-cols">
                         <th>#</th><th>Date</th><th>Symbol</th><th>ATM / FUT</th><th>Expiry</th>
                         <th class="sep-price">Gap %</th>
-                        <th>Initial Move</th>
-                        <th>Reversal</th>
-                        <th>Range Break</th>
+                        <th>Initial Move<br><span style="font-size:7px;font-weight:400;opacity:.6;">9:15-9:45</span></th>
+                        <th>Reversal<br><span style="font-size:7px;font-weight:400;opacity:.6;">9:45-10:15</span></th>
+                        <th>Range Break<br><span style="font-size:7px;font-weight:400;opacity:.6;">@ 10:30</span></th>
                         <th class="sep-oi">CE% / PE%</th>
                         <th>OI Confirm</th>
                         <th>Prev Trend</th>
                         <th>Option Reversal</th>
-                        <th class="sep-pivot">CE Zone</th>
-                        <th>PE Zone</th>
+                        <th class="sep-pivot">R2</th>
+                        <th>R1</th>
+                        <th>S1</th>
+                        <th>S2</th>
                         <th class="sep-signal">Score</th>
                         <th>Setup</th>
                     </tr>
                 </thead>
                 <tbody id="gr-tbody">
-                    <tr><td colspan="17"><div class="gr-spinner-row"><div class="gr-spinner"></div>Detecting last available date…</div></td></tr>
+                    <tr><td colspan="19"><div class="gr-spinner-row"><div class="gr-spinner"></div>Detecting last available date…</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -266,7 +270,7 @@ function grGoToday(){el('gr-date').value=GR_TODAY;grAnalyze();}
 function grUpdateDateBadge(isToday){el('gr-date-badge').innerHTML=isToday?'<span class="gr-live-badge">● Live</span>':'<span class="gr-hist-badge">📅 Historical</span>';}
 function grLoadSymbols(callback){if(grSymCache!==null){grRebuildSym(grSymCache);if(callback)callback();return;}fetch(GR_SYMBOLS,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(res){if(res.no_config){grShowWarn(res.message||'');grSymCache=[];grRebuildSym([]);}else{grHideWarn();grSymCache=res.symbols||[];grRebuildSym(grSymCache);}if(callback)callback();}).catch(function(){if(callback)callback();});}
 function grRebuildSym(syms){var sel=el('gr-sym'),prev=sel.value,opts='<option value="ALL">— All Symbols —</option>';syms.forEach(function(s){opts+='<option value="'+s+'"'+(s===prev?' selected':'')+'>'+s+'</option>';});sel.innerHTML=opts;if(prev&&prev!=='ALL'){sel.value=prev;if(sel.value!==prev)sel.value='ALL';}}
-function grAnalyze(){var date=grGetDate(),setupF=el('gr-setup').value,sym=el('gr-sym').value;if(!date)return;grHideWarn();grResetStats();html('gr-tbody','<tr><td colspan="17"><div class="gr-spinner-row"><div class="gr-spinner"></div>Scanning gap reversal setups for '+date+'…</div></td></tr>');txt('gr-subtitle',date+' · Loading…');var params=new URLSearchParams({date:date,filter_setup:setupF});if(sym&&sym!=='ALL')params.append('symbols[]',sym);fetch(GR_ANALYZE+'?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){if(!r.ok)throw new Error('Server error '+r.status);return r.json();}).then(function(res){if(typeof res.is_today!=='undefined')grUpdateDateBadge(res.is_today);if(res.available_symbols&&res.available_symbols.length){grSymCache=res.available_symbols;grRebuildSym(grSymCache);if(sym&&sym!=='ALL')el('gr-sym').value=sym;}if(res.no_config){grShowWarn(res.message);grEmptyTable('No active config.');return;}if(!res.success||!res.data||!res.data.length){grEmptyTable(res.message||'No setups found for this date.');grResetStats();txt('gr-subtitle',date+' · No data found');return;}grUpdateStats(res);grRenderTable(res.data);el('gr-info').innerHTML='<span style="color:#80CBC4;">BUY: '+res.buy_count+'</span> &nbsp;·&nbsp; <span style="color:#EF9A9A;">SELL: '+res.sell_count+'</span>';txt('gr-subtitle',date+' · '+res.message);txt('gr-upd','Updated '+new Date().toLocaleTimeString());}).catch(function(err){grEmptyTable('⚠ '+err.message);});}
+function grAnalyze(){var date=grGetDate(),setupF=el('gr-setup').value,sym=el('gr-sym').value;if(!date)return;grHideWarn();grResetStats();html('gr-tbody','<tr><td colspan="19"><div class="gr-spinner-row"><div class="gr-spinner"></div>Scanning gap reversal setups for '+date+'…</div></td></tr>');txt('gr-subtitle',date+' · Loading…');var params=new URLSearchParams({date:date,filter_setup:setupF});if(sym&&sym!=='ALL')params.append('symbols[]',sym);fetch(GR_ANALYZE+'?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){if(!r.ok)throw new Error('Server error '+r.status);return r.json();}).then(function(res){if(typeof res.is_today!=='undefined')grUpdateDateBadge(res.is_today);if(res.available_symbols&&res.available_symbols.length){grSymCache=res.available_symbols;grRebuildSym(grSymCache);if(sym&&sym!=='ALL')el('gr-sym').value=sym;}if(res.no_config){grShowWarn(res.message);grEmptyTable('No active config.');return;}if(!res.success||!res.data||!res.data.length){grEmptyTable(res.message||'No setups found for this date.');grResetStats();txt('gr-subtitle',date+' · No data found');return;}grUpdateStats(res);grRenderTable(res.data);el('gr-info').innerHTML='<span style="color:#80CBC4;">BUY: '+res.buy_count+'</span> &nbsp;·&nbsp; <span style="color:#EF9A9A;">SELL: '+res.sell_count+'</span>';txt('gr-subtitle',date+' · '+res.message);txt('gr-upd','Updated '+new Date().toLocaleTimeString());}).catch(function(err){grEmptyTable('⚠ '+err.message);});}
 function grRenderTable(data){var h='',num=1;data.forEach(function(r,i){var isBuy=r.setup==='BUY',isSell=r.setup==='SELL';var rowCls=(isBuy?'tr-buy':isSell?'tr-sell':'');var zebra=i%2===0?'tr-even':'tr-odd';
 var setupBadge=isBuy?'<span class="sig-buy">▲ BUY CE</span>':isSell?'<span class="sig-sell">▼ BUY PE</span>':'<span class="sig-wait">⏸ WAIT</span>';
 var gapBadge=r.gap_type==='GAP DOWN'?'<span class="gap-down">'+r.gap_type+'</span>':r.gap_type==='GAP UP'?'<span class="gap-up">'+r.gap_type+'</span>':'<span class="pct-neu">'+r.gap_type+'</span>';
@@ -276,8 +280,10 @@ var rangeChip=chip(r.range_break_ok, r.range_break_type);
 var oiConfirmChip=chip(r.oi_confirm_ok, r.oi_sentiment);
 var optRevChip=chip(r.option_reversal_ok, r.option_reversal_ok?'Reversed':'No Flip');
 var prevTrend='<span class="'+trendCls(r.prev_ce_trend)+'">CE:'+r.prev_ce_trend+'</span><br><span class="'+trendCls(r.prev_pe_trend)+'">PE:'+r.prev_pe_trend+'</span>';
-var ceZone=pivotTag(r.pivot_note?r.pivot_note.ce_zone:null);
-var peZone=pivotTag(r.pivot_note?r.pivot_note.pe_zone:null);
+var pvR2=pivotCell('R2',r.pivots?r.pivots.r2:null,r.pivot_note?r.pivot_note.r2:null);
+var pvR1=pivotCell('R1',r.pivots?r.pivots.r1:null,r.pivot_note?r.pivot_note.r1:null);
+var pvS1=pivotCell('S1',r.pivots?r.pivots.s1:null,r.pivot_note?r.pivot_note.s1:null);
+var pvS2=pivotCell('S2',r.pivots?r.pivots.s2:null,r.pivot_note?r.pivot_note.s2:null);
 var scoreCol='<div class="score-wrap"><div class="score-track"><div class="score-fill" style="width:'+r.score+'%;"></div></div><span class="score-txt">'+r.score+'/100</span></div>';
 h+='<tr class="'+rowCls+' '+zebra+'" title="'+esc(r.reason)+'">'
 +'<td class="c-num">'+num+++'</td>'
@@ -293,20 +299,22 @@ h+='<tr class="'+rowCls+' '+zebra+'" title="'+esc(r.reason)+'">'
 +'<td>'+oiConfirmChip+'</td>'
 +'<td>'+prevTrend+'</td>'
 +'<td>'+optRevChip+'</td>'
-+'<td class="sep-pivot">'+ceZone+'</td>'
-+'<td>'+peZone+'</td>'
++'<td class="sep-pivot">'+pvR2+'</td>'
++'<td>'+pvR1+'</td>'
++'<td>'+pvS1+'</td>'
++'<td>'+pvS2+'</td>'
 +'<td class="sep-signal">'+scoreCol+'</td>'
 +'<td>'+setupBadge+'</td>'
 +'</tr>';});html('gr-tbody',h||grEmptyHtml('No results.'));}
 function chip(ok,label){return ok?'<span class="chip-ok">✓ '+esc(label)+'</span>':'<span class="chip-fail">✗ '+esc(label)+'</span>';}
 function trendCls(t){return t==='Long Buildup'?'trend-buildup':t==='Unwinding'?'trend-unwind':'trend-flat';}
-function pivotTag(z){if(!z)return'<span class="pct-neu">—</span>';return'<div class="pivot-tag"><span class="lvl">'+z.level+'</span><span class="'+(z.touched?'touch-yes':'touch-no')+'">'+(z.touched?'✓ Touched':'Not touched')+'</span></div>';}
+function pivotCell(label,price,note){if(price==null)return'<span class="pct-neu">—</span>';var sideCls=note&&note.side==='CE'?'side-ce':'side-pe';var sideTag=note?'<span class="'+sideCls+'">'+note.side+'</span>':'';var touchCls=note&&note.touched?'touch-yes':'touch-no';var touchTxt=note&&note.touched?'✓':'—';return'<div class="pivot-tag"><span class="lvl">₹'+f(price)+'</span><span class="'+touchCls+'">'+touchTxt+'</span>'+sideTag+'</div>';}
 function grUpdateStats(res){txt('st-total',res.total_records||'0');txt('st-buy',res.buy_count||'0');txt('st-sell',res.sell_count||'0');txt('st-wait',res.wait_count||'0');var avg=0;if(res.data&&res.data.length){var sum=0;res.data.forEach(function(r){sum+=r.score||0;});avg=Math.round(sum/res.data.length);}txt('st-avg',res.data&&res.data.length?avg:'—');}
 function grResetStats(){['st-total','st-buy','st-sell','st-wait','st-avg'].forEach(function(id){txt(id,'—');});}
 function grShowWarn(msg){el('gr-warn').classList.add('show');txt('gr-warn-msg',msg||'');}
 function grHideWarn(){el('gr-warn').classList.remove('show');}
 function grEmptyTable(msg){html('gr-tbody',grEmptyHtml(msg));}
-function grEmptyHtml(msg){return'<tr><td colspan="17"><div class="gr-empty"><div class="gr-empty-icon"><i class="las la-chart-line"></i></div><p>'+(msg||'No data found.')+'</p></div></td></tr>';}
+function grEmptyHtml(msg){return'<tr><td colspan="19"><div class="gr-empty"><div class="gr-empty-icon"><i class="las la-chart-line"></i></div><p>'+(msg||'No data found.')+'</p></div></td></tr>';}
 function grReset(){fetch(GR_LASTDATE,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(res){el('gr-date').value=res.last_date||GR_TODAY;el('gr-setup').value='';el('gr-sym').value='ALL';grHideWarn();grAnalyze();}).catch(function(){el('gr-date').value=GR_TODAY;el('gr-setup').value='';el('gr-sym').value='ALL';grHideWarn();grAnalyze();});}
 function pctCell(v){if(v==null)return'<span class="pct-neu">—</span>';var n=parseFloat(v)||0,cls=n>0?'pct-up':n<0?'pct-down':'pct-neu';return'<span class="'+cls+'">'+(n>0?'+':'')+n.toFixed(2)+'%</span>';}
 function f(v){return parseFloat(v||0).toFixed(2);}
