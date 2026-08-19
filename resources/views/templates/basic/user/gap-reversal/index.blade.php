@@ -294,7 +294,7 @@ function chip(ok,label){return ok?'<span class="chip-ok">✓ '+esc(label)+'</spa
 function rangeBreakChip(ok,type){if(type==='-'||!type)return'<span class="pct-neu">—</span>';var cls=type==='BREAKOUT'?'brk-out':'brk-down';var mark=ok?'✓':'✗';return'<span class="'+cls+'">'+mark+' '+type+'</span>';}
 function oiConfirmDisplay(ok,signal){var label=signal==='BUY_CE'?'Buy CE':signal==='BUY_PE'?'Buy PE':'Ignore';return chip(ok,label);}
 function trendCls(t){return t==='Buildup'?'trend-buildup':t==='Unwinding'?'trend-unwind':'trend-flat';}
-function prevTrendCell(ce,pe){var parts=[];if(ce&&ce!=='Buildup'&&ce!=='-')parts.push('<span class="'+trendCls(ce)+'">CE:'+ce+'</span>');if(pe&&pe!=='Buildup'&&pe!=='-')parts.push('<span class="'+trendCls(pe)+'">PE:'+pe+'</span>');if(!parts.length)return'<span class="pct-neu">—</span>';return parts.join('<br>');}
+function prevTrendCell(ce,pe){var ceTxt=(ce&&ce!=='-')?ce:'—';var peTxt=(pe&&pe!=='-')?pe:'—';return'<span class="'+trendCls(ce)+'">CE:'+ceTxt+'</span><br><span class="'+trendCls(pe)+'">PE:'+peTxt+'</span>';}
 function grUpdateStats(res){txt('st-total',res.total_records||'0');txt('st-buy',res.buy_count||'0');txt('st-sell',res.sell_count||'0');txt('st-wait',res.wait_count||'0');var avg=0;if(res.data&&res.data.length){var sum=0;res.data.forEach(function(r){sum+=r.score||0;});avg=Math.round(sum/res.data.length);}txt('st-avg',res.data&&res.data.length?avg:'—');}
 function grResetStats(){['st-total','st-buy','st-sell','st-wait','st-avg'].forEach(function(id){txt(id,'—');});}
 function grShowWarn(msg){el('gr-warn').classList.add('show');txt('gr-warn-msg',msg||'');}
