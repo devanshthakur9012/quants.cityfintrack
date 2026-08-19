@@ -38,6 +38,11 @@ use Illuminate\Support\Facades\Schema;
  *   CE Unwinding + PE Unwinding → Ignore        CE Unwinding + PE Buildup → Buy PE
  *   CE Buildup + PE Flat        → Buy CE        CE Flat + PE Buildup      → Buy PE
  *
+ * Pivots (previous day H/L/C, classic floor pivots) are informational only —
+ * NOT part of the 100pt score. Each of R2/R1/S1/S2 is checked individually
+ * against today's high/low with a tolerance band; the touched levels are
+ * surfaced in the "Pivot Touch" table column.
+ *
  * Score (out of 100):
  *   Gap (Down/Up)          +20
  *   Initial Move           +10
@@ -61,7 +66,6 @@ class GapReversalController extends Controller
     private const OPT_TABLE = 'cp_option_ohlc_15min';
 
     // ── Session windows (candle interval_time boundaries) ──────────────────
-    // Retimed per client sequence — decision now happens at 10:30, not EOD.
     private const MARKET_OPEN   = '09:15:00'; // open candle — gap + OI baseline reference
     private const INITIAL_END   = '09:45:00'; // end of Initial Sell-off/Rally window → "Low/High established"
     private const REVERSAL_END  = '10:15:00'; // end of Higher-Low/Lower-High window → OI starts falling; also end of range-building window
@@ -73,6 +77,7 @@ class GapReversalController extends Controller
     private const INITIAL_MIN_PCT = 0.05; // min push in initial window vs open
     private const REVERSAL_BUFFER = 0.02; // buffer for higher-low / lower-high confirmation
     private const BREAK_MIN_PCT   = 0.05; // min push beyond range to count as breakout/breakdown
+    private const PIVOT_TOUCH_TOL = 0.15; // % tolerance to consider a pivot level "touched"
 
     // ── Score weights (client spec, sums to 100) ────────────────────────────
     private const W_GAP        = 20;
@@ -177,7 +182,7 @@ class GapReversalController extends Controller
 
             // Today's full-day series (ATM CE/PE rows carry the underlying future_price)
             $todaySeries = $this->fetchDaySeries($config->id, $symbols, $date);
-            // Previous day's full-day series (prev close / prev OI trend)
+            // Previous day's full-day series (prev close / prev H-L / pivots / prev OI trend)
             $prevSeries  = $this->fetchDaySeries($config->id, $symbols, $prevDate);
 
             if (empty($todaySeries)) {
@@ -231,8 +236,10 @@ class GapReversalController extends Controller
 
         $todayOpen = $candles[$times[0]]['price'] ?? null;
 
-        // Previous day close (for gap calc)
+        // Previous day close / high / low (for gap + pivots)
         $prevClose = $this->lastPrice($prev, self::PREV_DAY_TIME) ?? $this->lastPrice($prev, null);
+        $prevHigh  = $this->extremePrice($prev['candles'] ?? [], 'max');
+        $prevLow   = $this->extremePrice($prev['candles'] ?? [], 'min');
         if (!$prevClose || !$todayOpen) return null;
 
         // ── 1. GAP ───────────────────────────────────────────────────────────
@@ -269,8 +276,6 @@ class GapReversalController extends Controller
             : ($reversalExtreme !== null && $initialExtreme !== null && $reversalExtreme < ($initialExtreme - $bufferAmt));
 
         // ── 4. RANGE (09:15 → 10:15) + BREAKOUT/BREAKDOWN (10:15 → 10:30) ──
-        //      Range forms across the initial + reversal windows; the final
-        //      10:15→10:30 candle(s) confirm the break — this is the decision step.
         $rangeWindow = $this->sliceWindow($candles, self::MARKET_OPEN, self::REVERSAL_END);
         $rangeHigh   = $this->extremePrice($rangeWindow, 'max');
         $rangeLow    = $this->extremePrice($rangeWindow, 'min');
@@ -310,9 +315,6 @@ class GapReversalController extends Controller
                     || ($bias === 'SELL' && $oiConfirmSignal === 'BUY_PE');
 
         // ── 6. OPTION REVERSAL — "Short Covering" (BUY) / "Long Unwinding" (SELL) ─
-        //      Phase 1 (09:15→09:45): OI builds in the gap direction.
-        //      Phase 2 (09:45→10:30): OI unwinds — "starts falling" through 10:15,
-        //      confirmed as short covering / long unwinding by the 10:30 decision candle.
         $ceMid   = $this->latestOi($candles, 'ce_oi', self::INITIAL_END);
         $peMid   = $this->latestOi($candles, 'pe_oi', self::INITIAL_END);
         $ceOpenT = $this->earliestOi($candles, 'ce_oi');
@@ -323,9 +325,6 @@ class GapReversalController extends Controller
         $peFirstHalfPct  = $peOpenT > 0 ? (($peMid - $peOpenT) / $peOpenT) * 100 : 0;
         $peSecondHalfPct = $peMid   > 0 ? (($peToday - $peMid) / $peMid) * 100 : 0;
 
-        // BUY: CE trend flips from building(+) early to unwinding(-) later (short
-        //      covering), or PE trend flips from unwinding(-) early to building(+) later.
-        // SELL is the mirror image (long unwinding).
         $optionReversalOk = $bias === 'BUY'
             ? (($ceFirstHalfPct > 0 && $ceSecondHalfPct < 0) || ($peFirstHalfPct < 0 && $peSecondHalfPct > 0))
             : (($peFirstHalfPct > 0 && $peSecondHalfPct < 0) || ($ceFirstHalfPct < 0 && $ceSecondHalfPct > 0));
@@ -350,14 +349,6 @@ class GapReversalController extends Controller
         $score += $rangeBreakOk ? self::W_RANGE : 0;
         $score += $volumeOk ? self::W_VOLUME : 0;
 
-        // Core = the setup genuinely exists (gap + initial move + reversal + OI
-        // confirmation all align). The last two checks (range break, option
-        // reversal) are the FINAL confirmation — the client's original spec
-        // requires both (STRONG, textbook-perfect). In real intraday data both
-        // rarely land at once, so a MODERATE grade fires when core holds AND at
-        // least one of the two final confirmations does too — still a real,
-        // principled setup, just not textbook-perfect. If core itself never
-        // forms, it stays WAIT regardless of the other two.
         $coreOk = ($gapDown || $gapUp) && $initialOk && $reversalOk && $oiConfirmOk;
         $finalConfirmCount = ($rangeBreakOk ? 1 : 0) + ($optionReversalOk ? 1 : 0);
 
@@ -367,6 +358,36 @@ class GapReversalController extends Controller
             $setup = $bias; $grade = 'MODERATE';
         } else {
             $setup = 'WAIT'; $grade = 'WAIT';
+        }
+
+        // ── Pivots (prev day H/L/C, classic floor pivots) — informational only,
+        //    NOT part of the score. Surfaced as which levels today's price touched.
+        $pivots = ($prevHigh && $prevLow && $prevClose) ? $this->calcPivots($prevHigh, $prevLow, $prevClose) : null;
+        $dayLow  = $this->extremePrice($candles, 'min');
+        $dayHigh = $this->extremePrice($candles, 'max');
+        $pivotTouch = null;
+        if ($pivots) {
+            $tol = self::PIVOT_TOUCH_TOL / 100;
+            $touchedR2 = $dayHigh !== null && $dayHigh >= $pivots['r2'] * (1 - $tol);
+            $touchedR1 = $dayHigh !== null && $dayHigh >= $pivots['r1'] * (1 - $tol);
+            $touchedS1 = $dayLow  !== null && $dayLow  <= $pivots['s1'] * (1 + $tol);
+            $touchedS2 = $dayLow  !== null && $dayLow  <= $pivots['s2'] * (1 + $tol);
+
+            $touched = [];
+            if ($touchedR2) $touched[] = 'R2';
+            if ($touchedR1) $touched[] = 'R1';
+            if ($touchedS1) $touched[] = 'S1';
+            if ($touchedS2) $touched[] = 'S2';
+
+            $pivotTouch = [
+                'touched' => $touched, // e.g. ['R1'], ['S1','S2'], or []
+                'levels'  => [
+                    'r2' => round($pivots['r2'], 2),
+                    'r1' => round($pivots['r1'], 2),
+                    's1' => round($pivots['s1'], 2),
+                    's2' => round($pivots['s2'], 2),
+                ],
+            ];
         }
 
         $atmRow = $today['atm'] ?? null;
@@ -397,6 +418,7 @@ class GapReversalController extends Controller
             'option_reversal_ok' => $optionReversalOk,
             'volume_ok'          => $volumeOk,
             'volume_available'   => $volumeAvailable,
+            'pivot_touch'        => $pivotTouch,
             'atm_strike'         => $atmRow->atm_strike ?? null,
             'fut_price'          => round($candles[end($times)]['price'], 2),
             'expiry'             => $atmRow ? substr($atmRow->expiry_date, 0, 10) : null,
@@ -413,7 +435,7 @@ class GapReversalController extends Controller
             'range_break_ok' => false, 'range_break_type' => '-', 'ce_oi' => 0, 'pe_oi' => 0,
             'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'oi_confirm_signal' => 'IGNORE', 'oi_confirm_ok' => false,
             'prev_ce_trend' => '-', 'prev_pe_trend' => '-', 'option_reversal_ok' => false,
-            'volume_ok' => false, 'volume_available' => $this->hasVolume(),
+            'volume_ok' => false, 'volume_available' => $this->hasVolume(), 'pivot_touch' => null,
             'atm_strike' => null, 'fut_price' => null, 'expiry' => null,
             'reason' => $reason,
         ];
@@ -543,6 +565,18 @@ class GapReversalController extends Controller
             if (isset($c[$field])) return (int) $c[$field];
         }
         return 0;
+    }
+
+    private function calcPivots(float $high, float $low, float $close): array
+    {
+        $pp = ($high + $low + $close) / 3;
+        return [
+            'pp' => $pp,
+            'r1' => 2 * $pp - $low,
+            'r2' => $pp + ($high - $low),
+            's1' => 2 * $pp - $high,
+            's2' => $pp - ($high - $low),
+        ];
     }
 
     private function hasVolume(): bool

@@ -116,6 +116,8 @@
 /* condition ok/fail chips */
 .chip-ok{display:inline-flex;align-items:center;gap:4px;background:rgba(38,166,154,.1);color:#4DB6AC;border:1px solid rgba(38,166,154,.25);border-radius:5px;padding:3px 8px;font-family:var(--f-sans);font-size:9px;font-weight:800;}
 .chip-fail{display:inline-flex;align-items:center;gap:4px;background:rgba(239,83,80,.08);color:#EF9A9A;border:1px solid rgba(239,83,80,.2);border-radius:5px;padding:3px 8px;font-family:var(--f-sans);font-size:9px;font-weight:700;}
+/* pivot touch chips */
+.chip-piv{display:inline-flex;align-items:center;gap:4px;background:rgba(171,71,188,.12);color:#CE93D8;border:1px solid rgba(171,71,188,.3);border-radius:5px;padding:3px 8px;font-family:var(--f-sans);font-size:9px;font-weight:800;margin:1px 2px;}
 /* gap badges */
 .gap-down{display:inline-block;background:rgba(239,83,80,.1);color:#EF9A9A;border:1px solid rgba(239,83,80,.25);border-radius:5px;padding:3px 9px;font-family:var(--f-sans);font-size:9px;font-weight:800;}
 .gap-up{display:inline-block;background:rgba(38,166,154,.1);color:#4DB6AC;border:1px solid rgba(38,166,154,.25);border-radius:5px;padding:3px 9px;font-family:var(--f-sans);font-size:9px;font-weight:800;}
@@ -218,7 +220,7 @@
                     <tr class="th-group">
                         <th colspan="5" class="g-info">Market Info</th>
                         <th colspan="4" class="g-price sep-price">Price Action</th>
-                        <th colspan="4" class="g-oi sep-oi">OI Confirmation</th>
+                        <th colspan="4" class="g-oi sep-oi">OI &amp; Pivots</th>
                         <th colspan="2" class="g-signal sep-signal">Signal</th>
                     </tr>
                     <tr class="th-cols">
@@ -228,7 +230,7 @@
                         <th>Reversal<br><span style="font-size:7px;font-weight:400;opacity:.6;">9:45-10:15</span></th>
                         <th>Break<br><span style="font-size:7px;font-weight:400;opacity:.6;">@ 10:30</span></th>
                         <th class="sep-oi">CE% / PE%</th>
-                        <th>OI Confirm</th>
+                        <th>Pivot Touch</th>
                         <th>Prev Trend</th>
                         <th>Opt Reversal</th>
                         <th class="sep-signal">Score</th>
@@ -269,7 +271,7 @@ var gapBadge=r.gap_type==='GAP DOWN'?'<span class="gap-down">'+r.gap_type+'</spa
 var initChip=chip(r.initial_ok, (r.gap_type==='GAP DOWN'?'Selloff ':'Rally ')+(r.initial_move_pct>0?'+':'')+r.initial_move_pct+'%');
 var revChip=chip(r.reversal_ok, r.reversal_type);
 var breakChip=rangeBreakChip(r.range_break_ok, r.range_break_type);
-var oiConfirmChip=oiConfirmDisplay(r.oi_confirm_ok, r.oi_confirm_signal);
+var pivotChip=pivotTouchDisplay(r.pivot_touch);
 var optRevChip=chip(r.option_reversal_ok, r.option_reversal_ok?'Reversed':'No Flip');
 var prevTrend=prevTrendCell(r.prev_ce_trend, r.prev_pe_trend);
 var scoreCol='<div class="score-wrap"><div class="score-track"><div class="score-fill" style="width:'+r.score+'%;"></div></div><span class="score-txt">'+r.score+'/100</span></div>';
@@ -284,7 +286,7 @@ h+='<tr class="'+rowCls+' '+zebra+'" title="'+esc(r.reason)+'">'
 +'<td>'+revChip+'</td>'
 +'<td>'+breakChip+'</td>'
 +'<td class="sep-oi">'+pctCell(r.ce_oi_pct)+' / '+pctCell(r.pe_oi_pct)+'</td>'
-+'<td>'+oiConfirmChip+'</td>'
++'<td>'+pivotChip+'</td>'
 +'<td>'+prevTrend+'</td>'
 +'<td>'+optRevChip+'</td>'
 +'<td class="sep-signal">'+scoreCol+'</td>'
@@ -292,9 +294,11 @@ h+='<tr class="'+rowCls+' '+zebra+'" title="'+esc(r.reason)+'">'
 +'</tr>';});html('gr-tbody',h||grEmptyHtml('No results.'));}
 function chip(ok,label){return ok?'<span class="chip-ok">✓ '+esc(label)+'</span>':'<span class="chip-fail">✗ '+esc(label)+'</span>';}
 function rangeBreakChip(ok,type){if(type==='-'||!type)return'<span class="pct-neu">—</span>';var cls=type==='BREAKOUT'?'brk-out':'brk-down';var mark=ok?'✓':'✗';return'<span class="'+cls+'">'+mark+' '+type+'</span>';}
-function oiConfirmDisplay(ok,signal){var label=signal==='BUY_CE'?'Buy CE':signal==='BUY_PE'?'Buy PE':'Ignore';return chip(ok,label);}
+/* Pivot touch: shows which of R2/R1/S1/S2 today's price touched, from the previous-day floor pivots. */
+function pivotTouchDisplay(pt){if(!pt||!pt.touched||!pt.touched.length)return'<span class="pct-neu">—</span>';var lv=pt.levels||{};return pt.touched.map(function(lbl){var price=lv[lbl.toLowerCase()];var priceTxt=(price!=null)?' '+f(price):'';return'<span class="chip-piv">✓ '+lbl+priceTxt+'</span>';}).join('');}
 function trendCls(t){return t==='Buildup'?'trend-buildup':t==='Unwinding'?'trend-unwind':'trend-flat';}
-function prevTrendCell(ce,pe){var parts=[];if(ce&&ce!=='Buildup'&&ce!=='-')parts.push('<span class="'+trendCls(ce)+'">CE:'+ce+'</span>');if(pe&&pe!=='Buildup'&&pe!=='-')parts.push('<span class="'+trendCls(pe)+'">PE:'+pe+'</span>');if(!parts.length)return'<span class="pct-neu">—</span>';return parts.join('<br>');}
+/* Prev trend: always show both CE and PE (old-code style), whatever the tag is. */
+function prevTrendCell(ce,pe){var ceTxt=(ce&&ce!=='-')?ce:'—';var peTxt=(pe&&pe!=='-')?pe:'—';return'<span class="'+trendCls(ce)+'">CE:'+ceTxt+'</span><br><span class="'+trendCls(pe)+'">PE:'+peTxt+'</span>';}
 function grUpdateStats(res){txt('st-total',res.total_records||'0');txt('st-buy',res.buy_count||'0');txt('st-sell',res.sell_count||'0');txt('st-wait',res.wait_count||'0');var avg=0;if(res.data&&res.data.length){var sum=0;res.data.forEach(function(r){sum+=r.score||0;});avg=Math.round(sum/res.data.length);}txt('st-avg',res.data&&res.data.length?avg:'—');}
 function grResetStats(){['st-total','st-buy','st-sell','st-wait','st-avg'].forEach(function(id){txt(id,'—');});}
 function grShowWarn(msg){el('gr-warn').classList.add('show');txt('gr-warn-msg',msg||'');}
