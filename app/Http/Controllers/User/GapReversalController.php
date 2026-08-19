@@ -33,6 +33,11 @@ use Illuminate\Support\Facades\Schema;
  *       → 10:15–10:30 Long unwinding (OI confirms unwind)
  *       → 10:30 Range breakdown → 🔴 SELL
  *
+ * CE/PE OI Confirmation uses the client's exact prev-day trend truth table:
+ *   CE Buildup + PE Buildup     → Ignore        CE Buildup + PE Unwinding → Buy CE
+ *   CE Unwinding + PE Unwinding → Ignore        CE Unwinding + PE Buildup → Buy PE
+ *   CE Buildup + PE Flat        → Buy CE        CE Flat + PE Buildup      → Buy PE
+ *
  * Score (out of 100):
  *   Gap (Down/Up)          +20
  *   Initial Move           +10
@@ -42,16 +47,13 @@ use Illuminate\Support\Facades\Schema;
  *   Range Break(out/down)  +10
  *   Volume                 +5
  *
- * A BUY/SELL signal only fires when ALL SIX mandatory conditions are true
- * (Volume is a bonus point only, not mandatory — matches the client spec
- * where the AND-list has six items and Volume appears only in the score).
- *
- * Pivots (informational only — NOT part of the 100pt score) are shown as
- * FOUR separate levels: R2, R1, S1, S2 (classic floor-pivot formula from
- * the previous day's H/L/C), each flagged individually if today's price
- * touched it, and tagged with which side (CE/PE) it's relevant to:
- *   BUY  → S1/S2 tagged CE (support test), R1/R2 tagged PE
- *   SELL → S1/S2 tagged PE (support test), R1/R2 tagged CE
+ * Signal grading — a strict "all 6 mandatory" AND rarely fires on real intraday
+ * data, so setups are graded instead of gated as pass/fail:
+ *   STRONG   → core (gap+initial+reversal+OI confirm) AND both range break +
+ *              option reversal hit — textbook-perfect, matches original spec exactly.
+ *   MODERATE → core holds AND at least one of {range break, option reversal} hits.
+ *   WAIT     → core itself never formed.
+ * Volume stays a pure bonus point, not part of grading.
  */
 class GapReversalController extends Controller
 {
@@ -71,7 +73,6 @@ class GapReversalController extends Controller
     private const INITIAL_MIN_PCT = 0.05; // min push in initial window vs open
     private const REVERSAL_BUFFER = 0.02; // buffer for higher-low / lower-high confirmation
     private const BREAK_MIN_PCT   = 0.05; // min push beyond range to count as breakout/breakdown
-    private const PIVOT_TOUCH_TOL = 0.15; // % tolerance to consider a pivot level "touched"
 
     // ── Score weights (client spec, sums to 100) ────────────────────────────
     private const W_GAP        = 20;
@@ -176,7 +177,7 @@ class GapReversalController extends Controller
 
             // Today's full-day series (ATM CE/PE rows carry the underlying future_price)
             $todaySeries = $this->fetchDaySeries($config->id, $symbols, $date);
-            // Previous day's full-day series (prev close / prev H-L / pivots / prev OI trend)
+            // Previous day's full-day series (prev close / prev OI trend)
             $prevSeries  = $this->fetchDaySeries($config->id, $symbols, $prevDate);
 
             if (empty($todaySeries)) {
@@ -230,10 +231,8 @@ class GapReversalController extends Controller
 
         $todayOpen = $candles[$times[0]]['price'] ?? null;
 
-        // Previous day close / high / low (for gap + pivots)
+        // Previous day close (for gap calc)
         $prevClose = $this->lastPrice($prev, self::PREV_DAY_TIME) ?? $this->lastPrice($prev, null);
-        $prevHigh  = $this->extremePrice($prev['candles'] ?? [], 'max');
-        $prevLow   = $this->extremePrice($prev['candles'] ?? [], 'min');
         if (!$prevClose || !$todayOpen) return null;
 
         // ── 1. GAP ───────────────────────────────────────────────────────────
@@ -285,7 +284,14 @@ class GapReversalController extends Controller
             ? ($breakoutHigh !== null && $rangeHigh !== null && $breakoutHigh > ($rangeHigh + $breakMinAmt))
             : ($breakoutLow  !== null && $rangeLow  !== null && $breakoutLow  < ($rangeLow  - $breakMinAmt));
 
-        // ── 5. CE/PE OI CONFIRMATION (today @10:30 decision vs prev day @15:00) ─
+        // ── 5. CE/PE OI CONFIRMATION — client's exact truth table, driven by
+        //      PREVIOUS DAY's buildup/unwinding trend for CE and PE:
+        //        CE Buildup + PE Buildup     → Ignore
+        //        CE Unwinding + PE Unwinding → Ignore
+        //        CE Buildup + PE Unwinding   → Buy CE
+        //        CE Unwinding + PE Buildup   → Buy PE
+        //        CE Buildup + PE Flat        → Buy CE
+        //        CE Flat + PE Buildup        → Buy PE
         $ceToday = $this->latestOi($candles, 'ce_oi', self::ANALYSIS_TIME);
         $peToday = $this->latestOi($candles, 'pe_oi', self::ANALYSIS_TIME);
         $cePrev  = $this->latestOi($prev['candles'] ?? [], 'ce_oi', self::PREV_DAY_TIME);
@@ -294,17 +300,14 @@ class GapReversalController extends Controller
         $cePct = $cePrev > 0 ? round((($ceToday - $cePrev) / $cePrev) * 100, 2) : 0;
         $pePct = $pePrev > 0 ? round((($peToday - $pePrev) / $pePrev) * 100, 2) : 0;
 
-        // BUY expects a bullish OI signature (CE unwinding / PE building), same
-        // family of logic as the OI Flow Sentiment analyzer's BULLISH/BEARISH check.
-        $oiSentiment = $this->oiSentiment($cePct, $pePct);
-        $oiConfirmOk = $bias === 'BUY' ? $oiSentiment === 'BULLISH' : $oiSentiment === 'BEARISH';
-
-        // Previous-day buildup context ("identify any previous long buildup or
-        // buildup after gap down") — shown for trader context, not scored directly.
         $prevOpenCe  = $this->earliestOi($prev['candles'] ?? [], 'ce_oi');
         $prevOpenPe  = $this->earliestOi($prev['candles'] ?? [], 'pe_oi');
-        $prevTrendCe = $this->buildupTag($prevOpenCe, $cePrev);
+        $prevTrendCe = $this->buildupTag($prevOpenCe, $cePrev); // Buildup | Unwinding | Flat | -
         $prevTrendPe = $this->buildupTag($prevOpenPe, $pePrev);
+
+        $oiConfirmSignal = $this->oiConfirmFromTrend($prevTrendCe, $prevTrendPe); // BUY_CE | BUY_PE | IGNORE
+        $oiConfirmOk = ($bias === 'BUY' && $oiConfirmSignal === 'BUY_CE')
+                    || ($bias === 'SELL' && $oiConfirmSignal === 'BUY_PE');
 
         // ── 6. OPTION REVERSAL — "Short Covering" (BUY) / "Long Unwinding" (SELL) ─
         //      Phase 1 (09:15→09:45): OI builds in the gap direction.
@@ -347,33 +350,23 @@ class GapReversalController extends Controller
         $score += $rangeBreakOk ? self::W_RANGE : 0;
         $score += $volumeOk ? self::W_VOLUME : 0;
 
-        $mandatoryOk = ($gapDown || $gapUp) && $initialOk && $reversalOk && $oiConfirmOk && $optionReversalOk && $rangeBreakOk;
-        $setup = $mandatoryOk ? $bias : 'WAIT';
+        // Core = the setup genuinely exists (gap + initial move + reversal + OI
+        // confirmation all align). The last two checks (range break, option
+        // reversal) are the FINAL confirmation — the client's original spec
+        // requires both (STRONG, textbook-perfect). In real intraday data both
+        // rarely land at once, so a MODERATE grade fires when core holds AND at
+        // least one of the two final confirmations does too — still a real,
+        // principled setup, just not textbook-perfect. If core itself never
+        // forms, it stays WAIT regardless of the other two.
+        $coreOk = ($gapDown || $gapUp) && $initialOk && $reversalOk && $oiConfirmOk;
+        $finalConfirmCount = ($rangeBreakOk ? 1 : 0) + ($optionReversalOk ? 1 : 0);
 
-        // ── Pivots (previous day H/L/C, classic floor pivots) — kept as 4 SEPARATE
-        //    levels (R2, R1, S1, S2), each individually flagged if today's price
-        //    touched it, and tagged with which side (CE/PE) it's relevant to.
-        $pivots = ($prevHigh && $prevLow && $prevClose) ? $this->calcPivots($prevHigh, $prevLow, $prevClose) : null;
-        $dayLow  = $this->extremePrice($candles, 'min');
-        $dayHigh = $this->extremePrice($candles, 'max');
-        $pivotNote = null;
-        if ($pivots) {
-            $tol = self::PIVOT_TOUCH_TOL / 100;
-            $touchedS1 = $dayLow  !== null && $dayLow  <= $pivots['s1'] * (1 + $tol);
-            $touchedS2 = $dayLow  !== null && $dayLow  <= $pivots['s2'] * (1 + $tol);
-            $touchedR1 = $dayHigh !== null && $dayHigh >= $pivots['r1'] * (1 - $tol);
-            $touchedR2 = $dayHigh !== null && $dayHigh >= $pivots['r2'] * (1 - $tol);
-
-            // BUY  → S1/S2 relevant to CE (support test), R1/R2 relevant to PE
-            // SELL → S1/S2 relevant to PE (support test), R1/R2 relevant to CE
-            $supportSide    = $bias === 'BUY' ? 'CE' : 'PE';
-            $resistanceSide = $bias === 'BUY' ? 'PE' : 'CE';
-            $pivotNote = [
-                'r2' => ['touched' => $touchedR2, 'side' => $resistanceSide],
-                'r1' => ['touched' => $touchedR1, 'side' => $resistanceSide],
-                's1' => ['touched' => $touchedS1, 'side' => $supportSide],
-                's2' => ['touched' => $touchedS2, 'side' => $supportSide],
-            ];
+        if ($coreOk && $finalConfirmCount === 2) {
+            $setup = $bias; $grade = 'STRONG';
+        } elseif ($coreOk && $finalConfirmCount === 1) {
+            $setup = $bias; $grade = 'MODERATE';
+        } else {
+            $setup = 'WAIT'; $grade = 'WAIT';
         }
 
         $atmRow = $today['atm'] ?? null;
@@ -382,6 +375,7 @@ class GapReversalController extends Controller
             'date'               => $date,
             'symbol'             => $symbol,
             'setup'              => $setup,   // BUY | SELL | WAIT
+            'grade'              => $grade,   // STRONG | MODERATE | WAIT
             'bias'               => $bias,    // which side the gap suggests
             'score'              => $score,
             'gap_pct'            => $gapPct,
@@ -389,47 +383,43 @@ class GapReversalController extends Controller
             'initial_move_pct'   => $initialMovePct,
             'initial_ok'         => $initialOk,
             'reversal_ok'        => $reversalOk,
-            'reversal_type'      => $bias === 'BUY' ? 'HIGHER LOW' : 'LOWER HIGH',
-            'range_high'         => $rangeHigh ? round($rangeHigh, 2) : null,
-            'range_low'          => $rangeLow ? round($rangeLow, 2) : null,
+            'reversal_type'      => $bias === 'BUY' ? 'HL' : 'LH', // Higher Low / Lower High
             'range_break_ok'     => $rangeBreakOk,
-            'range_break_type'   => $bias === 'BUY' ? 'RANGE BREAKOUT' : 'RANGE BREAKDOWN',
+            'range_break_type'   => $bias === 'BUY' ? 'BREAKOUT' : 'BREAKDOWN',
             'ce_oi'              => $ceToday,
             'pe_oi'              => $peToday,
             'ce_oi_pct'          => $cePct,
             'pe_oi_pct'          => $pePct,
-            'oi_sentiment'       => $oiSentiment,
+            'oi_confirm_signal'  => $oiConfirmSignal, // BUY_CE | BUY_PE | IGNORE
             'oi_confirm_ok'      => $oiConfirmOk,
             'prev_ce_trend'      => $prevTrendCe,
             'prev_pe_trend'      => $prevTrendPe,
             'option_reversal_ok' => $optionReversalOk,
             'volume_ok'          => $volumeOk,
             'volume_available'   => $volumeAvailable,
-            'pivots'             => $pivots ? array_map(fn($v) => round($v, 2), $pivots) : null,
-            'pivot_note'         => $pivotNote,
             'atm_strike'         => $atmRow->atm_strike ?? null,
             'fut_price'          => round($candles[end($times)]['price'], 2),
             'expiry'             => $atmRow ? substr($atmRow->expiry_date, 0, 10) : null,
-            'reason'             => $this->buildReason($bias, $setup, $gapPct, $initialOk, $reversalOk, $oiConfirmOk, $optionReversalOk, $rangeBreakOk),
+            'reason'             => $this->buildReason($bias, $setup, $grade, $gapPct, $initialOk, $reversalOk, $oiConfirmOk, $optionReversalOk, $rangeBreakOk),
         ];
     }
 
     private function waitResult(string $symbol, string $date, float $gapPct, string $reason): array
     {
         return [
-            'date' => $date, 'symbol' => $symbol, 'setup' => 'WAIT', 'bias' => null, 'score' => 0,
+            'date' => $date, 'symbol' => $symbol, 'setup' => 'WAIT', 'grade' => 'WAIT', 'bias' => null, 'score' => 0,
             'gap_pct' => $gapPct, 'gap_type' => 'FLAT', 'initial_move_pct' => 0, 'initial_ok' => false,
-            'reversal_ok' => false, 'reversal_type' => '-', 'range_high' => null, 'range_low' => null,
+            'reversal_ok' => false, 'reversal_type' => '-',
             'range_break_ok' => false, 'range_break_type' => '-', 'ce_oi' => 0, 'pe_oi' => 0,
-            'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'oi_sentiment' => 'NEUTRAL', 'oi_confirm_ok' => false,
+            'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'oi_confirm_signal' => 'IGNORE', 'oi_confirm_ok' => false,
             'prev_ce_trend' => '-', 'prev_pe_trend' => '-', 'option_reversal_ok' => false,
-            'volume_ok' => false, 'volume_available' => $this->hasVolume(), 'pivots' => null,
-            'pivot_note' => null, 'atm_strike' => null, 'fut_price' => null, 'expiry' => null,
+            'volume_ok' => false, 'volume_available' => $this->hasVolume(),
+            'atm_strike' => null, 'fut_price' => null, 'expiry' => null,
             'reason' => $reason,
         ];
     }
 
-    private function buildReason(string $bias, string $setup, float $gapPct, bool $i, bool $r, bool $o, bool $opt, bool $rb): string
+    private function buildReason(string $bias, string $setup, string $grade, float $gapPct, bool $i, bool $r, bool $o, bool $opt, bool $rb): string
     {
         if ($setup === 'WAIT') {
             $missing = [];
@@ -440,31 +430,40 @@ class GapReversalController extends Controller
             if (!$rb)  $missing[] = $bias === 'BUY' ? 'range breakout' : 'range breakdown';
             return 'Setup incomplete — missing: ' . implode(', ', $missing);
         }
+        $gradeNote = $grade === 'STRONG' ? 'both final confirmations hit (textbook)' : 'core setup confirmed, one of two final checks hit';
         return $setup === 'BUY'
-            ? "Gap down ({$gapPct}%) reversed with higher low, OI + option flow confirming, range broke out → BUY CE"
-            : "Gap up ({$gapPct}%) reversed with lower high, OI + option flow confirming, range broke down → BUY PE";
+            ? "Gap down ({$gapPct}%) reversed with higher low, OI confirming → BUY CE ({$gradeNote})"
+            : "Gap up ({$gapPct}%) reversed with lower high, OI confirming → BUY PE ({$gradeNote})";
     }
 
     // ── OI helpers ────────────────────────────────────────────────────────────
 
-    private function oiSentiment(float $cePct, float $pePct): string
+    /**
+     * Client's exact CE/PE prev-day trend truth table:
+     *   Buildup  + Buildup   → Ignore
+     *   Unwinding+ Unwinding → Ignore
+     *   Buildup  + Unwinding → Buy CE
+     *   Unwinding+ Buildup   → Buy PE
+     *   Buildup  + Flat      → Buy CE
+     *   Flat     + Buildup   → Buy PE
+     *   (any other combo, e.g. Flat+Flat or Flat+Unwinding, is unspecified → Ignore)
+     */
+    private function oiConfirmFromTrend(string $ceTrend, string $peTrend): string
     {
-        // Reversed per client feedback: CE up + PE down was showing as BEARISH
-        // (BUY PE) but actually plays out as bullish in practice. Swapped.
-        $ceUp = $cePct > 0; $ceDown = $cePct < 0;
-        $peUp = $pePct > 0; $peDown = $pePct < 0;
-        if ($ceUp && $peDown) return 'BULLISH';
-        if ($ceDown && $peUp) return 'BEARISH';
-        if ($ceUp && $peUp)   return $cePct > $pePct ? 'BULLISH' : 'BEARISH';
-        if ($ceDown && $peDown) return $cePct < $pePct ? 'BEARISH' : 'BULLISH';
-        return 'NEUTRAL';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Buildup')   return 'IGNORE';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Unwinding') return 'IGNORE';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Unwinding') return 'BUY_CE';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Buildup')   return 'BUY_PE';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Flat')      return 'BUY_CE';
+        if ($ceTrend === 'Flat'      && $peTrend === 'Buildup')   return 'BUY_PE';
+        return 'IGNORE';
     }
 
     private function buildupTag(?float $openOi, ?float $closeOi): string
     {
         if (!$openOi || !$closeOi || $openOi <= 0) return '-';
         $chg = (($closeOi - $openOi) / $openOi) * 100;
-        return $chg > 1 ? 'Long Buildup' : ($chg < -1 ? 'Unwinding' : 'Flat');
+        return $chg > 1 ? 'Buildup' : ($chg < -1 ? 'Unwinding' : 'Flat');
     }
 
     // ── Series helpers ───────────────────────────────────────────────────────
@@ -544,18 +543,6 @@ class GapReversalController extends Controller
             if (isset($c[$field])) return (int) $c[$field];
         }
         return 0;
-    }
-
-    private function calcPivots(float $high, float $low, float $close): array
-    {
-        $pp = ($high + $low + $close) / 3;
-        return [
-            'pp' => $pp,
-            'r1' => 2 * $pp - $low,
-            'r2' => $pp + ($high - $low),
-            's1' => 2 * $pp - $high,
-            's2' => $pp - ($high - $low),
-        ];
     }
 
     private function hasVolume(): bool
