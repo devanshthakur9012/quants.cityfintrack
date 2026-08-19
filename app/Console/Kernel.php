@@ -86,14 +86,14 @@ class Kernel extends ConsoleKernel
     
         // ── 15min collection: FUT + Stock + Option, 9:15 AM to 3:30 PM, Mon-Fri
         // cp:orchestrate now runs all 3 collectors in sequence.
-        // $schedule->command('cp:orchestrate')
-        //     ->everyFifteenMinutes()
-        //     ->weekdays()
-        //     ->between('09:15', '15:30')
-        //     ->timezone('Asia/Kolkata')
-        //     ->withoutOverlapping(5)
-        //     ->runInBackground()
-        //     ->appendOutputTo(storage_path('logs/cp-15min.log'));
+        $schedule->command('cp:orchestrate')
+            ->everyFifteenMinutes()
+            ->weekdays()
+            ->between('09:15', '15:30')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(5)
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/cp-15min.log'));
     }
 
     protected function commands()
