@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('broker_api_id')->constrained('broker_apis')->cascadeOnDelete();
 
             $table->enum('order_type', ['LIMIT', 'MARKET'])->default('MARKET');
-            $table->enum('product',    ['MIS', 'NRML'])->default('MIS');
+            $table->enum('product', ['MIS', 'NRML'])->default('MIS');
             $table->decimal('disc_ltp', 5, 2)->default(0); // % off LTP, LIMIT orders only
 
             $table->enum('signal_mode', ['align', 'opposite'])->default('align');
@@ -34,6 +34,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['cp_analysis_id', 'status']);
+            $table->index(['user_id', 'status']);
         });
     }
 

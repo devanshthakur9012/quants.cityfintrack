@@ -59,4 +59,9 @@ class CpAnalysis extends Model
         };
         return $q->whereIn('plan_tier', $allowed);
     }
+
+    public function orderConfigs()
+    {
+        return $this->hasMany(CpOrderConfig::class, 'cp_analysis_id');
+    }
 }
