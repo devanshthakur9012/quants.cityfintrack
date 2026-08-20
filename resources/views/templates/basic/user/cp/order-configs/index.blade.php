@@ -148,9 +148,14 @@
                         <div class="col-md-4">
                             <label class="form-label">Order Type <span class="text-danger">*</span></label>
                             <select name="order_type" id="cfg_order_type" class="form-control" required onchange="cfgToggleDisc()">
+                                <option value="LIMIT" selected>LIMIT</option>
                                 <option value="MARKET">MARKET</option>
-                                <option value="LIMIT">LIMIT</option>
                             </select>
+                        </div>
+
+                        <div class="col-md-4" id="cfg_disc_wrap">
+                            <label class="form-label">Discount % (LIMIT orders)</label>
+                            <input type="number" step="0.01" min="0" max="100" name="disc_ltp" class="form-control" value="0">
                         </div>
 
                         <div class="col-md-4">
@@ -215,10 +220,10 @@ function cfgSyncBrokerType() {
 }
 function cfgResetForm() {
     $('#cfgModalTitle').text('New Order Config');
-    $('#cfgForm')[0].reset();
+    $('#cfgForm')[0].reset(); // resets select back to LIMIT (first option, marked selected)
     $('#cfgForm').attr('action', '{{ route("cp.order-configs.store") }}');
     $('#cfg_method').val('POST');
-    cfgToggleDisc();
+    cfgToggleDisc(); // shows disc field since order_type is now LIMIT
     cfgSyncBrokerType();
 }
 function cfgEdit(id) {
