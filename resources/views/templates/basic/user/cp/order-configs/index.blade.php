@@ -153,7 +153,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4" id="cfg_disc_wrap" style="display: block !important;">
+                        <div class="col-md-4" id="cfg_disc_wrap">
                             <label class="form-label">Discount % (LIMIT orders)</label>
                             <input type="number" step="0.01" min="0" max="100" name="disc_ltp" class="form-control" value="0">
                         </div>
@@ -208,7 +208,7 @@
 <script>
 function cfgToggleDisc() {
     const orderType = $('#cfg_order_type').val();
-
+    alert(orderType);
     if (orderType === 'LIMIT') {
         $('#cfg_disc_wrap').show();
     } else {
