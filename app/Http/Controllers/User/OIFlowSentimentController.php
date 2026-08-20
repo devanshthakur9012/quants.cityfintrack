@@ -19,6 +19,7 @@ class OIFlowSentimentController extends Controller
     private const TF            = '15min';
     private const ANALYSIS_TIME = '14:45:00';
     private const PREV_DAY_TIME = '15:00:00';
+    private const PREV_OPEN_TIME = '09:15:00'; // ADD — prev day's opening OI, for buildup/unwinding trend
     private const OPT_TABLE     = 'cp_option_ohlc_15min';
 
     public function index()
@@ -188,6 +189,24 @@ class OIFlowSentimentController extends Controller
                     $prevMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int) $r->total_oi;
                 });
 
+            // Prev day's OPENING OI at 09:15 (for buildup/unwinding trend — same as Gap Reversal)
+            $prevOpenMap = [];
+            DB::table($optTable)
+                ->where('analysis_config_id', $config->id)
+                ->whereIn('base_symbol', $symbols)
+                ->whereIn(DB::raw('DATE(trade_date)'), $prevDates)
+                ->whereRaw("TIME(interval_time) = ?", [self::PREV_OPEN_TIME])
+                ->whereIn('instrument_type', ['CE', 'PE'])
+                ->where('is_missing', false)
+                ->select(['base_symbol', 'instrument_type',
+                        DB::raw('DATE(trade_date) as trade_day'),
+                        DB::raw('SUM(oi) as total_oi')])
+                ->groupBy('base_symbol', 'instrument_type', DB::raw('DATE(trade_date)'))
+                ->orderBy('base_symbol')
+                ->each(function ($r) use (&$prevOpenMap) {
+                    $prevOpenMap["{$r->base_symbol}|{$r->trade_day}|{$r->instrument_type}"] = (int) $r->total_oi;
+                });
+
             // Price / ATM info
             $priceMap = [];
             DB::table($optTable)
@@ -217,6 +236,14 @@ class OIFlowSentimentController extends Controller
                     $cePrev = $prevMap["{$symbol}|{$prevDate}|CE"] ?? 0;
                     $pePrev = $prevMap["{$symbol}|{$prevDate}|PE"] ?? 0;
 
+                    $prevOpenCe = $prevOpenMap["{$symbol}|{$prevDate}|CE"] ?? 0;
+                    $prevOpenPe = $prevOpenMap["{$symbol}|{$prevDate}|PE"] ?? 0;
+
+                    $prevTrendCe = $this->buildupTag($prevOpenCe, $cePrev);
+                    $prevTrendPe = $this->buildupTag($prevOpenPe, $pePrev);
+
+                    $oiConfirmSignal = $this->oiConfirmFromTrend($prevTrendCe, $prevTrendPe); // BUY_CE | BUY_PE | IGNORE
+
                     $cePct = $cePrev > 0 ? round((($ceToday - $cePrev) / $cePrev) * 100, 2) : 0;
                     $pePct = $pePrev > 0 ? round((($peToday - $pePrev) / $pePrev) * 100, 2) : 0;
 
@@ -224,6 +251,9 @@ class OIFlowSentimentController extends Controller
                     $tradeAction = match($signal['sentiment']) {
                         'BULLISH' => 'BUY CE', 'BEARISH' => 'BUY PE', default => 'WAIT'
                     };
+
+                    $oiConfirmOk = ($tradeAction === 'BUY CE' && $oiConfirmSignal === 'BUY_CE')
+                    || ($tradeAction === 'BUY PE' && $oiConfirmSignal === 'BUY_PE');
 
                     if ($actionFilter && $tradeAction !== $actionFilter) continue;
 
@@ -254,6 +284,10 @@ class OIFlowSentimentController extends Controller
                         'trade_action'  => $tradeAction,
                         'strength_rank' => $strengthRank,
                         'pc_ratio'      => $ceToday > 0 ? round($peToday / $ceToday, 2) : 0,
+                        'oi_confirm_signal' => $oiConfirmSignal,
+                        'oi_confirm_ok'     => $oiConfirmOk,
+                        'prev_ce_trend'     => $prevTrendCe,
+                        'prev_pe_trend'     => $prevTrendPe,
                     ];
                 }
             }
@@ -279,6 +313,24 @@ class OIFlowSentimentController extends Controller
             Log::error('OIFlowSentiment analyze: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
+    }
+
+    private function oiConfirmFromTrend(string $ceTrend, string $peTrend): string
+    {
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Buildup')   return 'IGNORE';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Unwinding') return 'IGNORE';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Unwinding') return 'BUY_CE';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Buildup')   return 'BUY_PE';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Flat')      return 'BUY_CE';
+        if ($ceTrend === 'Flat'      && $peTrend === 'Buildup')   return 'BUY_PE';
+        return 'IGNORE';
+    }
+
+    private function buildupTag(?float $openOi, ?float $closeOi): string
+    {
+        if (!$openOi || !$closeOi || $openOi <= 0) return '-';
+        $chg = (($closeOi - $openOi) / $openOi) * 100;
+        return $chg > 1 ? 'Buildup' : ($chg < -1 ? 'Unwinding' : 'Flat');
     }
 
     // ── Signal logic ──────────────────────────────────────────────────────────
