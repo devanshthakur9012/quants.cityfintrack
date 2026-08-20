@@ -207,7 +207,13 @@
 @push('script')
 <script>
 function cfgToggleDisc() {
-    $('#cfg_disc_wrap').toggle($('#cfg_order_type').val() === 'LIMIT');
+    const orderType = $('#cfg_order_type').val();
+
+    if (orderType === 'LIMIT') {
+        $('#cfg_disc_wrap').show();
+    } else {
+        $('#cfg_disc_wrap').hide();
+    }
 }
 function cfgSyncBrokerType() {
     var opt = $('#cfg_broker_api_id option:selected');
