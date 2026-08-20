@@ -147,7 +147,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Order Type <span class="text-danger">*</span></label>
-                            <select name="order_type" id="cfg_order_type" class="form-control" required onchange="cfgToggleDisc()">
+                            <select name="order_type" id="cfg_order_type" class="form-control" required onchange="cfgToggleDisc(this)">
                                 <option value="LIMIT" selected>LIMIT</option>
                                 <option value="MARKET">MARKET</option>
                             </select>
@@ -206,9 +206,9 @@
 
 @push('script')
 <script>
-function cfgToggleDisc() {
-    const orderType = $('#cfg_order_type').val();
-    alert(orderType);
+function cfgToggleDisc(select) {
+    const orderType = select.value;
+
     if (orderType === 'LIMIT') {
         $('#cfg_disc_wrap').show();
     } else {
@@ -251,6 +251,5 @@ function cfgEdit(id) {
         $('#cfgModal').modal('show');
     });
 }
-$(function () { cfgToggleDisc(); });
 </script>
 @endpush
