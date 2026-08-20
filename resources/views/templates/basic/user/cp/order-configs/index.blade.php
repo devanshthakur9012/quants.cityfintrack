@@ -166,11 +166,6 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4" id="cfg_disc_wrap" style="display:none;">
-                            <label class="form-label">Discount off LTP (%)</label>
-                            <input type="number" step="0.01" min="0" max="100" name="disc_ltp" class="form-control" value="0">
-                        </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Signal Mode <span class="text-danger">*</span></label>
                             <select name="signal_mode" class="form-control" required>
