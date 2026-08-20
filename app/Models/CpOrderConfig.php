@@ -17,8 +17,7 @@ class CpOrderConfig extends Model
         'product',
         'disc_ltp',
         'signal_mode',
-        'ce_quantity',
-        'pe_quantity',
+        'quantity',
         'status',
     ];
 

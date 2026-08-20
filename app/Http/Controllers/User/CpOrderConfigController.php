@@ -22,13 +22,12 @@ class CpOrderConfigController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20);
 
-        $analyses = CpAnalysis::where('is_active', 1)
-            ->orderBy('name')
-            ->get(['id', 'name', 'route_name']);
+        $analyses = CpAnalysis::where('is_active', 1)->orderBy('name')->get(['id', 'name', 'route_name']);
 
-        $brokers = BrokerApi::where('user_id', Auth::id())
-            ->whereIn('client_type', ['Zerodha', 'AngelOne'])
-            ->get(['id', 'client_name', 'client_type']);
+        // Global broker pool — NOT filtered by user_id
+        $brokers = BrokerApi::whereIn('client_type', ['Zerodha', 'AngelOne'])
+            ->orderBy('client_name')
+            ->get(['id', 'client_name', 'client_type', 'is_token_valid']);
 
         return view(activeTemplate() . 'user.cp.order-configs.index', compact('pageTitle', 'configs', 'analyses', 'brokers'));
     }
@@ -117,8 +116,7 @@ class CpOrderConfigController extends Controller
             'product'        => 'required|in:MIS,NRML',
             'disc_ltp'       => 'nullable|numeric|min:0|max:100',
             'signal_mode'    => 'required|in:align,opposite',
-            'ce_quantity'    => 'required|integer|min:0',
-            'pe_quantity'    => 'required|integer|min:0',
+            'quantity'       => 'required|integer|min:1|max:5',
         ]);
     }
 }

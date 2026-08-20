@@ -43,8 +43,7 @@
                     <th>Product</th>
                     <th>Disc %</th>
                     <th>Signal Mode</th>
-                    <th>CE Qty</th>
-                    <th>PE Qty</th>
+                    <th>Qty</th>
                     <th>Orders</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -66,8 +65,7 @@
                         <td><span class="badge-type">{{ $config->product }}</span></td>
                         <td>{{ $config->order_type === 'LIMIT' ? number_format($config->disc_ltp, 2) . '%' : '—' }}</td>
                         <td><span class="badge-{{ $config->signal_mode }}">{{ ucfirst($config->signal_mode) }}</span></td>
-                        <td class="qty-ce">{{ $config->ce_quantity }}</td>
-                        <td class="qty-pe">{{ $config->pe_quantity }}</td>
+                        <td class="qty-ce">{{ $config->quantity }} lot(s)</td>
                         <td>
                             <a href="#" class="text-decoration-none">{{ $config->orders_count }}</a>
                         </td>
@@ -174,14 +172,13 @@
                             </select>
                         </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">CE Quantity (lots)</label>
-                            <input type="number" min="0" name="ce_quantity" class="form-control" value="0" required>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">PE Quantity (lots)</label>
-                            <input type="number" min="0" name="pe_quantity" class="form-control" value="0" required>
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity (lots) <span class="text-danger">*</span></label>
+                            <select name="quantity" class="form-control">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}" @selected($i === 1)>{{ $i }}</option>
+                                @endfor
+                            </select>
                         </div>
 
                         <div class="col-md-6">
@@ -242,8 +239,7 @@ function cfgEdit(id) {
         $('#cfgForm select[name="product"]').val(c.product);
         $('#cfgForm input[name="disc_ltp"]').val(c.disc_ltp);
         $('#cfgForm select[name="signal_mode"]').val(c.signal_mode);
-        $('#cfgForm input[name="ce_quantity"]').val(c.ce_quantity);
-        $('#cfgForm input[name="pe_quantity"]').val(c.pe_quantity);
+        $('#cfgForm select[name="quantity"]').val(c.quantity);
         $('#cfg_status').prop('checked', !!c.status);
 
         cfgToggleDisc();

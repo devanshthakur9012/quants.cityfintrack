@@ -8,6 +8,8 @@ use App\Models\CpOrder;
 use App\Services\Broker\AngelBrokerConnector;
 use App\Services\Broker\ZerodhaBrokerConnector;
 use Illuminate\Support\Facades\Log;
+use App\Services\Broker\AngelBrokerService;
+use App\Services\Broker\ZerodhaBrokerService;
 
 class CpOrderPlacementService
 {
@@ -26,7 +28,7 @@ class CpOrderPlacementService
 
             foreach ($signals as $signal) {
                 $optionType = $this->decideSide($config->signal_mode, $signal['action']);
-                $lots = $optionType === 'CE' ? $config->ce_quantity : $config->pe_quantity;
+                $lots = $config->quantity;
                 if ($lots <= 0) { $skipped++; continue; }
 
                 $exists = CpOrder::where('cp_order_config_id', $config->id)
@@ -107,11 +109,11 @@ class CpOrderPlacementService
         return $mode === 'align' ? $side : ($side === 'CE' ? 'PE' : 'CE');
     }
 
-    private function getConnector(CpOrderConfig $config): CpBrokerConnectorInterface
+    private function getConnector(CpOrderConfig $config): AngelBrokerService|ZerodhaBrokerService
     {
         return match ($config->broker_type) {
-            'AngelOne' => new AngelBrokerConnector($config->broker),
-            'Zerodha'  => new ZerodhaBrokerConnector($config->broker),
+            'AngelOne' => new AngelBrokerService($config->broker),
+            'Zerodha'  => new ZerodhaBrokerService($config->broker),
         };
     }
 
