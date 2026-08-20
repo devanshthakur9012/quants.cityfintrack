@@ -1453,3 +1453,14 @@ Route::controller('SiteController')->group(function () {
         Route::get('/index',  [StraddleStrategyController::class, 'index'])  ->name('index');
         Route::get('/data',   [StraddleStrategyController::class, 'getData'])->name('data');
     });   
+
+    Route::prefix('cp/order-configs')->name('cp.order-configs.')
+    ->controller(\App\Http\Controllers\User\CpOrderConfigController::class)
+    ->group(function () {
+        Route::get('/',                'index')->name('index');
+        Route::post('/',               'store')->name('store');
+        Route::post('/{config}',       'update')->name('update');
+        Route::get('/{config}/data',   'getData')->name('data');   // AJAX for edit modal
+        Route::get('/{config}/toggle', 'toggleStatus')->name('toggle');
+        Route::delete('/{config}',     'destroy')->name('destroy');
+    });
