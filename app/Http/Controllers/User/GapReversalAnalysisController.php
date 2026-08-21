@@ -13,32 +13,45 @@ use Illuminate\Support\Facades\Log;
 /**
  * Advanced Gap-Reversal Analyzer — 15min only (internal — not shown to users)
  *
- * Implements the client's flow:
- *   GAP → Initial Move → Higher Low / Lower High → Prev-Day OI → Current OI
- *   → CE/PE Position (ATM-1/ATM/ATM+1) → OI Migration → OI Wall Movement
- *   → Volume Confirmation → Opening Range Breakout/Breakdown → BUY/SELL
+ * ONE signal per symbol per day (like OI Flow Sentiment) — analyzed at a
+ * fixed daily snapshot time, not an intraday replay.
  *
- * KEY FIX for "some stocks behave opposite" (client point #4):
- * Instead of a hardcoded list of "trend following" vs "misleading" stocks,
- * each symbol's OI-vs-price POLARITY is learned from its own historical
- * data (computeStockPolarity()) and cached daily. NORMAL stocks use OI
- * signals as-is, INVERTED stocks have their OI-derived score components
- * flipped, UNRELIABLE stocks fall back to price-action only (reversal
- * pattern + volume + opening range) with capped confidence. This adapts
- * automatically as a stock's behaviour changes over time — no manual list
- * to maintain.
+ * Client's flow, implemented in this exact order:
+ *   GAP (UP/DOWN)
+ *     → Initial Selloff / Initial Rally
+ *     → Higher Low / Lower High
+ *     → Previous-Day OI Analysis
+ *     → Current OI Change
+ *     → CE/PE Position Classification (ATM-1 / ATM / ATM+1)
+ *     → OI Migration
+ *     → OI Wall Movement
+ *     → Volume Confirmation
+ *     → Opening Range Breakout / Breakdown
+ *     → BUY / SELL
+ *
+ * KEY FIX for "some stocks behave opposite" (client point #4 / the
+ * Misleading vs Trend-Following stock lists):
+ * Instead of a hardcoded list, each symbol's OI-vs-price POLARITY is
+ * learned from its own historical data (computeStockPolarity()) and
+ * cached daily. NORMAL stocks use OI signals as-is, INVERTED stocks have
+ * their OI-derived score components flipped, UNRELIABLE stocks fall back
+ * to price-action only (Initial Move + Reversal + Volume + Opening Range)
+ * with a capped max score. This self-corrects as a stock's behaviour
+ * drifts — no list to maintain by hand.
  */
 class GapReversalAnalysisController extends Controller
 {
-    private const TF               = '15min';
-    private const FUT_TABLE        = 'cp_fut_ohlc_15min';
-    private const OPT_TABLE        = 'cp_option_ohlc_15min';
+    private const TF              = '15min';
+    private const FUT_TABLE       = 'cp_fut_ohlc_15min';
+    private const OPT_TABLE       = 'cp_option_ohlc_15min';
 
-    private const DAY_OPEN_TIME    = '09:15:00';
-    private const OR_END_TIME      = '09:30:00'; // opening range = first 2 candles (09:15 + 09:30)
-    private const PREV_CLOSE_TIME  = '15:00:00';
+    private const DAY_OPEN_TIME   = '09:15:00';
+    private const OR_END_TIME     = '09:30:00';   // opening range = first 2 candles
+    private const INITIAL_WINDOW  = 3;             // first 3 candles = 09:15/09:30/09:45 -> "initial move" window
+    private const ANALYSIS_TIME   = '14:45:00';   // fixed daily snapshot (same convention as OI Flow Sentiment)
+    private const PREV_CLOSE_TIME = '15:00:00';
 
-    private const GAP_THRESHOLD_PCT      = 0.3;  // min % move at open to call it a gap
+    private const GAP_THRESHOLD_PCT      = 0.3;
     private const POLARITY_LOOKBACK_DAYS = 20;
     private const POLARITY_MIN_SAMPLES   = 15;
     private const VOLUME_LOOKBACK_DAYS   = 10;
@@ -51,7 +64,7 @@ class GapReversalAnalysisController extends Controller
         return view(activeTemplate() . 'user.gap-reversal-analysis.index', compact('pageTitle'));
     }
 
-    // ── Last Available Date ────────────────────────────────────────────────
+    // -- Last Available Date --------------------------------------------
 
     public function lastDate(Request $request): JsonResponse
     {
@@ -64,7 +77,13 @@ class GapReversalAnalysisController extends Controller
             $lastDate = DB::table(self::FUT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->where('is_missing', false)
+                ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
                 ->max('trade_date');
+
+            if (!$lastDate) {
+                $lastDate = DB::table(self::FUT_TABLE)
+                    ->where('analysis_config_id', $config->id)->where('is_missing', false)->max('trade_date');
+            }
 
             $today    = Carbon::today()->toDateString();
             $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
@@ -76,7 +95,7 @@ class GapReversalAnalysisController extends Controller
         }
     }
 
-    // ── Symbols ───────────────────────────────────────────────────────────
+    // -- Symbols -----------------------------------------------------------
 
     public function getSymbols(Request $request): JsonResponse
     {
@@ -87,34 +106,12 @@ class GapReversalAnalysisController extends Controller
         return response()->json(['success' => true, 'symbols' => $this->getConfigSymbols($config->id)]);
     }
 
-    // ── Available intervals for a date (lets user replay the day) ──────────
-
-    public function getIntervals(Request $request): JsonResponse
-    {
-        $date   = $request->get('date');
-        $config = $this->getActiveConfig();
-        if (!$config || !$date) return response()->json(['success' => true, 'intervals' => []]);
-
-        $intervals = DB::table(self::FUT_TABLE)
-            ->where('analysis_config_id', $config->id)
-            ->whereDate('trade_date', $date)
-            ->where('is_missing', false)
-            ->selectRaw('DISTINCT TIME(interval_time) as t')
-            ->orderBy('t')
-            ->pluck('t')
-            ->map(fn($t) => substr($t, 0, 5))
-            ->toArray();
-
-        return response()->json(['success' => true, 'intervals' => $intervals]);
-    }
-
-    // ── Analyze ───────────────────────────────────────────────────────────
+    // -- Analyze - one signal per symbol for the given date ---------------
 
     public function analyze(Request $request): JsonResponse
     {
         try {
             $date         = $request->get('date');
-            $time         = $request->get('time'); // e.g. "13:00" — optional, defaults to latest
             $symbolReq    = array_filter((array) $request->get('symbols', []));
             $actionFilter = $request->get('filter_action', '');
 
@@ -124,7 +121,7 @@ class GapReversalAnalysisController extends Controller
 
             $config = $this->getActiveConfig();
             if (!$config) {
-                return response()->json(['success' => false, 'no_config' => true, 'message' => 'No active Analysis Config found. Go to Admin → Analysis Config.', 'data' => []]);
+                return response()->json(['success' => false, 'no_config' => true, 'message' => 'No active Analysis Config found. Go to Admin -> Analysis Config.', 'data' => []]);
             }
 
             $configSymbols = $this->getConfigSymbols($config->id);
@@ -137,7 +134,7 @@ class GapReversalAnalysisController extends Controller
 
             $results = [];
             foreach ($symbols as $symbol) {
-                $row = $this->analyzeSymbol($symbol, $config->id, $date, $prevDate, $time);
+                $row = $this->analyzeSymbol($symbol, $config->id, $date, $prevDate);
                 if (!$row) continue;
                 if ($actionFilter && $row['final_action'] !== $actionFilter) continue;
                 $results[] = $row;
@@ -153,7 +150,7 @@ class GapReversalAnalysisController extends Controller
                 'sell_count'        => count(array_filter($results, fn($r) => $r['final_action'] === 'SELL')),
                 'wait_count'        => count(array_filter($results, fn($r) => $r['final_action'] === 'WAIT')),
                 'no_setup_count'    => count(array_filter($results, fn($r) => $r['final_action'] === 'NO SETUP')),
-                'message'           => count($results) . ' symbol(s) analyzed for ' . $date,
+                'message'           => count($results) . ' symbol(s) analyzed for ' . $date . ' (snapshot ' . substr(self::ANALYSIS_TIME, 0, 5) . ')',
                 'available_symbols' => $configSymbols,
                 'date'              => $date,
                 'is_today'          => $date === Carbon::today()->toDateString(),
@@ -165,104 +162,100 @@ class GapReversalAnalysisController extends Controller
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Core per-symbol analysis
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // Core per-symbol analysis - follows the client's flow in order
+    // -----------------------------------------------------------------------
 
-    private function analyzeSymbol(string $symbol, int $configId, string $date, string $prevDate, ?string $time): ?array
+    private function analyzeSymbol(string $symbol, int $configId, string $date, string $prevDate): ?array
     {
-        $candles = $this->getDayCandles($symbol, $configId, $date);
+        $candles = $this->getDayCandles($symbol, $configId, $date); // already trimmed to <= ANALYSIS_TIME
         if (empty($candles)) return null;
-
-        $uptoTime = $time
-            ? Carbon::parse($date . ' ' . $time)
-            : Carbon::parse(end($candles)->interval_time);
-
-        // trim candle series to "now" (lets user replay the day)
-        $candles = array_values(array_filter($candles, fn($c) => Carbon::parse($c->interval_time)->lte($uptoTime)));
-        if (empty($candles)) return null;
-
         $last = end($candles);
 
-        // ── STEP 1: GAP ──────────────────────────────────────────────────
+        // -- GAP --
         $gap = $this->getGapInfo($symbol, $configId, $date, $prevDate);
         if ($gap['gap_type'] === 'NONE') {
             return $this->noSetupRow($symbol, $date, $gap, $last);
         }
+        $wantBullish = $gap['gap_type'] === 'GAP_DOWN';
 
-        // ── STEP 2/3: Opening Range + Initial Move + Higher Low / Lower High ──
-        $or        = $this->getOpeningRange($candles);
-        $reversal  = $this->detectReversalPattern($candles, $gap['gap_type']);
+        // -- Initial Selloff / Initial Rally --
+        $initialMove = $this->detectInitialMove($candles, $gap['gap_type'], $gap['today_open']);
 
-        // ── STEP 4: Previous-day OI (ATM) ───────────────────────────────
+        // -- Higher Low / Lower High --
+        $or       = $this->getOpeningRange($candles);
+        $reversal = $this->detectReversalPattern($candles, $gap['gap_type']);
+
+        // -- Previous-Day OI Analysis (ATM) --
         $prevOi = $this->getOiTrend($symbol, $configId, $prevDate, self::DAY_OPEN_TIME, self::PREV_CLOSE_TIME);
 
-        // ── STEP 5: Current OI change (ATM) ─────────────────────────────
-        $currOi = $this->getOiTrend($symbol, $configId, $date, self::DAY_OPEN_TIME, $uptoTime->format('H:i:s'));
+        // -- Current OI Change (ATM) --
+        $currOi = $this->getOiTrend($symbol, $configId, $date, self::DAY_OPEN_TIME, self::ANALYSIS_TIME);
 
-        // ── STEP 6: CE/PE position classification (ATM-1 / ATM / ATM+1) ──
-        $positions = $this->getPositionBreakdown($symbol, $configId, $date, $uptoTime->format('H:i:s'));
+        // -- CE/PE Position Classification (ATM-1 / ATM / ATM+1) --
+        $positions = $this->getPositionBreakdown($symbol, $configId, $date);
 
-        // ── STEP 7/8: OI migration + wall movement ──────────────────────
-        $wall = $this->getWallMovement($symbol, $configId, $date, $uptoTime->format('H:i:s'));
+        // -- OI Migration + OI Wall Movement --
+        $wall = $this->getWallMovement($symbol, $configId, $date);
 
-        // ── STEP 9: Volume confirmation ─────────────────────────────────
-        $volume = $this->getVolumeConfirmation($symbol, $configId, $date, $uptoTime);
+        // -- Volume Confirmation --
+        $volume = $this->getVolumeConfirmation($symbol, $configId, $date);
 
-        // ── STEP 10: Opening Range breakout / breakdown ─────────────────
+        // -- Opening Range Breakout / Breakdown --
         $orBreak = $this->getOrBreakout($last, $or, $gap['gap_type']);
 
-        // ── Polarity (learned, not hardcoded) ───────────────────────────
+        // -- Learned polarity --
         $polarity = $this->computeStockPolarity($symbol, $configId);
 
-        // ── Score + final action ────────────────────────────────────────
-        $scoring = $this->calculateScore($gap['gap_type'], $reversal, $prevOi, $currOi, $wall, $volume, $orBreak, $polarity);
+        // -- Score -> BUY/SELL/WAIT --
+        $scoring = $this->calculateScore($wantBullish, $initialMove, $reversal, $prevOi, $currOi, $positions, $wall, $volume, $orBreak, $polarity);
 
         return [
-            'date'            => $date,
-            'symbol'          => $symbol,
-            'as_of'           => $uptoTime->format('H:i'),
-            'gap_type'        => $gap['gap_type'],
-            'gap_pct'         => $gap['gap_pct'],
-            'prev_close'      => $gap['prev_close'],
-            'today_open'      => $gap['today_open'],
-            'ltp'             => round((float) $last->close, 2),
-            'atm_strike'      => $last->atm_strike,
-            'or_high'         => $or['high'],
-            'or_low'          => $or['low'],
-            'reversal'        => $reversal,
-            'prev_oi'         => $prevOi,
-            'curr_oi'         => $currOi,
-            'positions'       => $positions,
-            'wall'            => $wall,
-            'volume'          => $volume,
-            'or_breakout'     => $orBreak,
-            'polarity'        => $polarity,
-            'score'           => $scoring['score'],
-            'max_score'       => $scoring['max_score'],
-            'confidence'      => $scoring['confidence'],
-            'final_action'    => $scoring['action'],
-            'breakdown'       => $scoring['breakdown'],
+            'date'         => $date,
+            'symbol'       => $symbol,
+            'snapshot'     => substr(self::ANALYSIS_TIME, 0, 5),
+            'gap_type'     => $gap['gap_type'],
+            'gap_pct'      => $gap['gap_pct'],
+            'prev_close'   => $gap['prev_close'],
+            'today_open'   => $gap['today_open'],
+            'ltp'          => round((float) $last->close, 2),
+            'atm_strike'   => $last->atm_strike,
+            'or_high'      => $or['high'],
+            'or_low'       => $or['low'],
+            'initial_move' => $initialMove,
+            'reversal'     => $reversal,
+            'prev_oi'      => $prevOi,
+            'curr_oi'      => $currOi,
+            'positions'    => $positions,
+            'wall'         => $wall,
+            'volume'       => $volume,
+            'or_breakout'  => $orBreak,
+            'polarity'     => $polarity,
+            'score'        => $scoring['score'],
+            'max_score'    => $scoring['max_score'],
+            'confidence'   => $scoring['confidence'],
+            'final_action' => $scoring['action'],
+            'breakdown'    => $scoring['breakdown'],
         ];
     }
 
     private function noSetupRow(string $symbol, string $date, array $gap, object $last): array
     {
         return [
-            'date' => $date, 'symbol' => $symbol, 'as_of' => substr($last->interval_time, 11, 5),
+            'date' => $date, 'symbol' => $symbol, 'snapshot' => substr(self::ANALYSIS_TIME, 0, 5),
             'gap_type' => 'NONE', 'gap_pct' => $gap['gap_pct'], 'prev_close' => $gap['prev_close'],
             'today_open' => $gap['today_open'], 'ltp' => round((float) $last->close, 2),
             'atm_strike' => $last->atm_strike, 'or_high' => null, 'or_low' => null,
-            'reversal' => null, 'prev_oi' => null, 'curr_oi' => null, 'positions' => null,
-            'wall' => null, 'volume' => null, 'or_breakout' => null, 'polarity' => null,
+            'initial_move' => null, 'reversal' => null, 'prev_oi' => null, 'curr_oi' => null,
+            'positions' => null, 'wall' => null, 'volume' => null, 'or_breakout' => null, 'polarity' => null,
             'score' => 0, 'max_score' => 0, 'confidence' => 0,
-            'final_action' => 'NO SETUP', 'breakdown' => ['No qualifying gap (< ' . self::GAP_THRESHOLD_PCT . '%) — flow does not apply.'],
+            'final_action' => 'NO SETUP', 'breakdown' => ['No qualifying gap (< ' . self::GAP_THRESHOLD_PCT . '%) - flow does not apply.'],
         ];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 1 — Gap
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // GAP
+    // -----------------------------------------------------------------------
 
     private function getGapInfo(string $symbol, int $configId, string $date, string $prevDate): array
     {
@@ -280,23 +273,23 @@ class GapReversalAnalysisController extends Controller
             return ['gap_type' => 'NONE', 'gap_pct' => 0, 'prev_close' => $prevClose, 'today_open' => $todayOpen];
         }
 
-        $gapPct = round((($todayOpen - $prevClose) / $prevClose) * 100, 2);
+        $gapPct  = round((($todayOpen - $prevClose) / $prevClose) * 100, 2);
         $gapType = $gapPct >= self::GAP_THRESHOLD_PCT ? 'GAP_UP'
                  : ($gapPct <= -self::GAP_THRESHOLD_PCT ? 'GAP_DOWN' : 'NONE');
 
         return ['gap_type' => $gapType, 'gap_pct' => $gapPct, 'prev_close' => round((float) $prevClose, 2), 'today_open' => round((float) $todayOpen, 2)];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
     // Candles / Opening Range
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
 
     private function getDayCandles(string $symbol, int $configId, string $date): array
     {
         return DB::table(self::FUT_TABLE)
             ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
-            ->whereDate('trade_date', $date)->where('is_missing', false)
-            ->orderBy('interval_time')
+            ->whereDate('trade_date', $date)->whereRaw('TIME(interval_time) <= ?', [self::ANALYSIS_TIME])
+            ->where('is_missing', false)->orderBy('interval_time')
             ->get(['interval_time', 'open', 'high', 'low', 'close', 'volume', 'oi', 'atm_strike'])
             ->all();
     }
@@ -315,20 +308,44 @@ class GapReversalAnalysisController extends Controller
         ];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 2/3 — Initial move + Higher Low / Lower High
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // STEP - Initial Selloff / Initial Rally
+    // -----------------------------------------------------------------------
+
+    private function detectInitialMove(array $candles, string $gapType, ?float $todayOpen): array
+    {
+        if (!$todayOpen || empty($candles)) {
+            return ['label' => null, 'confirmed' => false, 'extreme' => null, 'pct' => 0];
+        }
+
+        $window = array_slice($candles, 0, self::INITIAL_WINDOW);
+
+        if ($gapType === 'GAP_DOWN') {
+            $minLow    = min(array_map(fn($c) => (float) $c->low, $window));
+            $confirmed = $minLow < $todayOpen;
+            $pct       = $todayOpen > 0 ? round((($todayOpen - $minLow) / $todayOpen) * 100, 2) : 0;
+            return ['label' => 'Initial Selloff', 'confirmed' => $confirmed, 'extreme' => round($minLow, 2), 'pct' => $pct];
+        }
+
+        $maxHigh   = max(array_map(fn($c) => (float) $c->high, $window));
+        $confirmed = $maxHigh > $todayOpen;
+        $pct       = $todayOpen > 0 ? round((($maxHigh - $todayOpen) / $todayOpen) * 100, 2) : 0;
+        return ['label' => 'Initial Rally', 'confirmed' => $confirmed, 'extreme' => round($maxHigh, 2), 'pct' => $pct];
+    }
+
+    // -----------------------------------------------------------------------
+    // STEP - Higher Low / Lower High
+    // -----------------------------------------------------------------------
 
     private function detectReversalPattern(array $candles, string $gapType): array
     {
         if (count($candles) < 2) {
             return ['label' => null, 'confirmed' => false, 'extreme' => null, 'current' => null, 'recovery_pct' => 0];
         }
-
         $last = end($candles);
 
         if ($gapType === 'GAP_DOWN') {
-            $lows = array_map(fn($c) => (float) $c->low, $candles);
+            $lows       = array_map(fn($c) => (float) $c->low, $candles);
             $extremeIdx = array_keys($lows, min($lows))[0];
             $extreme    = $lows[$extremeIdx];
             $current    = (float) $last->low;
@@ -337,8 +354,7 @@ class GapReversalAnalysisController extends Controller
             return ['label' => 'Higher Low', 'confirmed' => $confirmed, 'extreme' => round($extreme, 2), 'current' => round($current, 2), 'recovery_pct' => $recovery];
         }
 
-        // GAP_UP → look for Lower High
-        $highs = array_map(fn($c) => (float) $c->high, $candles);
+        $highs      = array_map(fn($c) => (float) $c->high, $candles);
         $extremeIdx = array_keys($highs, max($highs))[0];
         $extreme    = $highs[$extremeIdx];
         $current    = (float) $last->high;
@@ -347,9 +363,9 @@ class GapReversalAnalysisController extends Controller
         return ['label' => 'Lower High', 'confirmed' => $confirmed, 'extreme' => round($extreme, 2), 'current' => round($current, 2), 'recovery_pct' => $pullback];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 4/5 — OI trend at ATM (prev-day and current, same helper)
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // STEP - Previous-Day OI Analysis / Current OI Change (ATM)
+    // -----------------------------------------------------------------------
 
     private function getOiTrend(string $symbol, int $configId, string $date, string $fromTime, string $toTime): array
     {
@@ -359,8 +375,7 @@ class GapReversalAnalysisController extends Controller
             ->whereIn('instrument_type', ['CE', 'PE'])->where('is_missing', false)
             ->whereRaw('TIME(interval_time) IN (?, ?)', [$fromTime, $toTime])
             ->select(['instrument_type', DB::raw('TIME(interval_time) as t'), DB::raw('SUM(oi) as oi')])
-            ->groupBy('instrument_type', 't')
-            ->get();
+            ->groupBy('instrument_type', 't')->get();
 
         $ceOpen = $peOpen = $ceNow = $peNow = 0;
         foreach ($rows as $r) {
@@ -401,11 +416,23 @@ class GapReversalAnalysisController extends Controller
         return 'NEUTRAL';
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 6 — CE/PE position classification (ATM-1 / ATM / ATM+1)
-    // ─────────────────────────────────────────────────────────────────────
+    /** Same textbook logic, but from Buildup/Unwinding/Flat tags - used for per-strike position classification. */
+    private function positionSignal(string $ceTrend, string $peTrend): string
+    {
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Unwinding') return 'BEARISH';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Buildup')   return 'BULLISH';
+        if ($ceTrend === 'Unwinding' && $peTrend === 'Flat')      return 'BULLISH';
+        if ($ceTrend === 'Flat'      && $peTrend === 'Buildup')   return 'BULLISH';
+        if ($ceTrend === 'Buildup'   && $peTrend === 'Flat')      return 'BEARISH';
+        if ($ceTrend === 'Flat'      && $peTrend === 'Unwinding') return 'BEARISH';
+        return 'NEUTRAL';
+    }
 
-    private function getPositionBreakdown(string $symbol, int $configId, string $date, string $uptoTime): array
+    // -----------------------------------------------------------------------
+    // STEP - CE/PE Position Classification (ATM-1 / ATM / ATM+1)
+    // -----------------------------------------------------------------------
+
+    private function getPositionBreakdown(string $symbol, int $configId, string $date): array
     {
         $positions = ['ATM-1', 'ATM', 'ATM+1'];
         $out = [];
@@ -414,7 +441,7 @@ class GapReversalAnalysisController extends Controller
                 ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
                 ->whereDate('trade_date', $date)->where('strike_position', $pos)
                 ->whereIn('instrument_type', ['CE', 'PE'])->where('is_missing', false)
-                ->whereRaw('TIME(interval_time) IN (?, ?)', [self::DAY_OPEN_TIME, $uptoTime])
+                ->whereRaw('TIME(interval_time) IN (?, ?)', [self::DAY_OPEN_TIME, self::ANALYSIS_TIME])
                 ->select(['instrument_type', DB::raw('TIME(interval_time) as t'), DB::raw('SUM(oi) as oi')])
                 ->groupBy('instrument_type', 't')->get();
 
@@ -422,17 +449,19 @@ class GapReversalAnalysisController extends Controller
             foreach ($rows as $r) {
                 if ($r->t === self::DAY_OPEN_TIME && $r->instrument_type === 'CE') $ceOpen = (int) $r->oi;
                 if ($r->t === self::DAY_OPEN_TIME && $r->instrument_type === 'PE') $peOpen = (int) $r->oi;
-                if ($r->t === $uptoTime && $r->instrument_type === 'CE') $ceNow = (int) $r->oi;
-                if ($r->t === $uptoTime && $r->instrument_type === 'PE') $peNow = (int) $r->oi;
+                if ($r->t === self::ANALYSIS_TIME && $r->instrument_type === 'CE') $ceNow = (int) $r->oi;
+                if ($r->t === self::ANALYSIS_TIME && $r->instrument_type === 'PE') $peNow = (int) $r->oi;
             }
-            $out[$pos] = ['ce_trend' => $this->buildupTag($ceOpen, $ceNow), 'pe_trend' => $this->buildupTag($peOpen, $peNow)];
+            $ceTrend = $this->buildupTag($ceOpen, $ceNow);
+            $peTrend = $this->buildupTag($peOpen, $peNow);
+            $out[$pos] = ['ce_trend' => $ceTrend, 'pe_trend' => $peTrend, 'signal' => $this->positionSignal($ceTrend, $peTrend)];
         }
         return $out;
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 7/8 — OI migration + wall movement (max-OI strike, across full chain)
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // STEP - OI Migration + OI Wall Movement (max-OI strike, full chain)
+    // -----------------------------------------------------------------------
 
     private function getOiWallAt(string $symbol, int $configId, string $date, string $time): array
     {
@@ -449,17 +478,16 @@ class GapReversalAnalysisController extends Controller
         return ['ce_wall_strike' => $ce->strike ?? null, 'pe_wall_strike' => $pe->strike ?? null];
     }
 
-    private function getWallMovement(string $symbol, int $configId, string $date, string $uptoTime): array
+    private function getWallMovement(string $symbol, int $configId, string $date): array
     {
         $open = $this->getOiWallAt($symbol, $configId, $date, self::DAY_OPEN_TIME);
-        $now  = $this->getOiWallAt($symbol, $configId, $date, $uptoTime);
-
-        $ceDir = $this->wallDirection($open['ce_wall_strike'], $now['ce_wall_strike']);
-        $peDir = $this->wallDirection($open['pe_wall_strike'], $now['pe_wall_strike']);
+        $now  = $this->getOiWallAt($symbol, $configId, $date, self::ANALYSIS_TIME);
 
         return [
-            'ce_wall_open' => $open['ce_wall_strike'], 'ce_wall_now' => $now['ce_wall_strike'], 'ce_wall_dir' => $ceDir,
-            'pe_wall_open' => $open['pe_wall_strike'], 'pe_wall_now' => $now['pe_wall_strike'], 'pe_wall_dir' => $peDir,
+            'ce_wall_open' => $open['ce_wall_strike'], 'ce_wall_now' => $now['ce_wall_strike'],
+            'ce_wall_dir'  => $this->wallDirection($open['ce_wall_strike'], $now['ce_wall_strike']),
+            'pe_wall_open' => $open['pe_wall_strike'], 'pe_wall_now' => $now['pe_wall_strike'],
+            'pe_wall_dir'  => $this->wallDirection($open['pe_wall_strike'], $now['pe_wall_strike']),
         ];
     }
 
@@ -471,17 +499,15 @@ class GapReversalAnalysisController extends Controller
         return 'FLAT';
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 9 — Volume confirmation (vs N-day average at the same time-of-day)
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // STEP - Volume Confirmation (vs N-day average up to the same snapshot time)
+    // -----------------------------------------------------------------------
 
-    private function getVolumeConfirmation(string $symbol, int $configId, string $date, Carbon $uptoTime): array
+    private function getVolumeConfirmation(string $symbol, int $configId, string $date): array
     {
-        $timeOfDay = $uptoTime->format('H:i:s');
-
         $todayVol = (int) DB::table(self::FUT_TABLE)
             ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
-            ->whereDate('trade_date', $date)->whereRaw('TIME(interval_time) <= ?', [$timeOfDay])
+            ->whereDate('trade_date', $date)->whereRaw('TIME(interval_time) <= ?', [self::ANALYSIS_TIME])
             ->where('is_missing', false)->sum('volume');
 
         $pastDates = DB::table(self::FUT_TABLE)
@@ -496,7 +522,7 @@ class GapReversalAnalysisController extends Controller
                 DB::table(self::FUT_TABLE)
                     ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
                     ->whereIn(DB::raw('DATE(trade_date)'), $pastDates)
-                    ->whereRaw('TIME(interval_time) <= ?', [$timeOfDay])
+                    ->whereRaw('TIME(interval_time) <= ?', [self::ANALYSIS_TIME])
                     ->where('is_missing', false)->sum('volume') / count($pastDates)
             );
         }
@@ -507,9 +533,9 @@ class GapReversalAnalysisController extends Controller
         return ['today_volume' => $todayVol, 'avg_volume' => $avgVol, 'ratio' => $ratio, 'confirmed' => $confirmed];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 10 — Opening Range breakout / breakdown
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // STEP - Opening Range Breakout / Breakdown
+    // -----------------------------------------------------------------------
 
     private function getOrBreakout(object $last, array $or, string $gapType): array
     {
@@ -522,9 +548,9 @@ class GapReversalAnalysisController extends Controller
         return ['type' => 'Breakdown', 'level' => $or['low'], 'ltp' => round($close, 2), 'confirmed' => $confirmed];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Learned polarity — replaces the client's static "misleading stocks" list
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // Learned polarity - replaces the client's static "misleading stocks" list
+    // -----------------------------------------------------------------------
 
     private function computeStockPolarity(string $symbol, int $configId): array
     {
@@ -589,65 +615,78 @@ class GapReversalAnalysisController extends Controller
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Scoring — combines all steps, applies polarity correction
-    // ─────────────────────────────────────────────────────────────────────
+    // -----------------------------------------------------------------------
+    // Scoring - combines every step in the client's flow, applies polarity
+    // -----------------------------------------------------------------------
 
-    private function calculateScore(string $gapType, array $reversal, array $prevOi, array $currOi, array $wall, array $volume, array $orBreak, array $polarity): array
+    private function calculateScore(bool $wantBullish, array $initialMove, array $reversal, array $prevOi, array $currOi, array $positions, array $wall, array $volume, array $orBreak, array $polarity): array
     {
-        $wantBullish = $gapType === 'GAP_DOWN'; // BUY thesis needs bullish confirmation; SELL thesis needs bearish
         $breakdown = [];
         $score = 0; $maxScore = 0;
 
-        // Price-action components — always count, regardless of polarity
+        // -- Price-action steps - always scored, independent of OI polarity --
+        $maxScore += 10;
+        if ($initialMove['confirmed']) { $score += 10; $breakdown[] = "OK {$initialMove['label']} confirmed - extended to {$initialMove['extreme']} ({$initialMove['pct']}%) (+10)"; }
+        else { $breakdown[] = "NO {$initialMove['label']} not confirmed (0)"; }
+
         $maxScore += 20;
-        if ($reversal['confirmed']) { $score += 20; $breakdown[] = "✓ {$reversal['label']} confirmed (+20)"; }
-        else { $breakdown[] = "✗ {$reversal['label']} not confirmed (0)"; }
+        if ($reversal['confirmed']) { $score += 20; $breakdown[] = "OK {$reversal['label']} confirmed - {$reversal['extreme']} -> {$reversal['current']} (+20)"; }
+        else { $breakdown[] = "NO {$reversal['label']} not confirmed (0)"; }
 
         $maxScore += 10;
-        if ($volume['confirmed']) { $score += 10; $breakdown[] = "✓ Volume {$volume['ratio']}x average (+10)"; }
-        else { $breakdown[] = "✗ Volume not above average (0)"; }
+        if ($volume['confirmed']) { $score += 10; $breakdown[] = "OK Volume Confirmation - {$volume['ratio']}x average (+10)"; }
+        else { $breakdown[] = "NO Volume Confirmation not met - {$volume['ratio']}x average (0)"; }
 
         $maxScore += 10;
-        if ($orBreak['confirmed']) { $score += 10; $breakdown[] = "✓ Opening Range {$orBreak['type']} confirmed (+10)"; }
-        else { $breakdown[] = "✗ Opening Range {$orBreak['type']} not yet confirmed (0)"; }
+        if ($orBreak['confirmed']) { $score += 10; $breakdown[] = "OK Opening Range {$orBreak['type']} confirmed (+10)"; }
+        else { $breakdown[] = "NO Opening Range {$orBreak['type']} not confirmed (0)"; }
 
-        // OI-derived components — skipped (weight 0) if this stock's OI is UNRELIABLE
+        // -- OI-derived steps - weight 0 if this stock's OI is UNRELIABLE --
         $oiUsable = $polarity['polarity'] !== 'UNRELIABLE';
         $invert   = $polarity['polarity'] === 'INVERTED';
+        $wantSignal = $wantBullish ? 'BULLISH' : 'BEARISH';
+        $oppSignal  = $wantBullish ? 'BEARISH' : 'BULLISH';
 
         if ($oiUsable) {
             $maxScore += 15;
-            $prevAligned = $wantBullish ? in_array('BULLISH', [$prevOi['signal']]) : $prevOi['signal'] === 'BEARISH';
-            $prevOpposed = $wantBullish ? $prevOi['signal'] === 'BEARISH' : $prevOi['signal'] === 'BULLISH';
-            if ($invert) { [$prevAligned, $prevOpposed] = [$prevOpposed, $prevAligned]; }
-            if ($prevAligned) { $score += 15; $breakdown[] = "✓ Prev-day OI trend supports thesis (+15)"; }
-            elseif ($prevOpposed) { $score -= 15; $breakdown[] = "✗ Prev-day OI trend contradicts thesis (-15)"; }
-            else { $breakdown[] = "· Prev-day OI trend neutral (0)"; }
+            [$aligned, $opposed] = $this->alignedOpposed($prevOi['signal'], $wantSignal, $oppSignal, $invert);
+            if ($aligned) { $score += 15; $breakdown[] = "OK Previous-Day OI Analysis supports thesis ({$prevOi['ce_trend']} CE / {$prevOi['pe_trend']} PE) (+15)"; }
+            elseif ($opposed) { $score -= 15; $breakdown[] = "NO Previous-Day OI Analysis contradicts thesis ({$prevOi['ce_trend']} CE / {$prevOi['pe_trend']} PE) (-15)"; }
+            else { $breakdown[] = "-- Previous-Day OI Analysis neutral (0)"; }
 
             $maxScore += 15;
-            $currAligned = $wantBullish ? $currOi['signal'] === 'BULLISH' : $currOi['signal'] === 'BEARISH';
-            $currOpposed = $wantBullish ? $currOi['signal'] === 'BEARISH' : $currOi['signal'] === 'BULLISH';
-            if ($invert) { [$currAligned, $currOpposed] = [$currOpposed, $currAligned]; }
-            if ($currAligned) { $score += 15; $breakdown[] = "✓ Current OI change supports thesis (+15)"; }
-            elseif ($currOpposed) { $score -= 15; $breakdown[] = "✗ Current OI change contradicts thesis (-15)"; }
-            else { $breakdown[] = "· Current OI change neutral (0)"; }
+            [$aligned, $opposed] = $this->alignedOpposed($currOi['signal'], $wantSignal, $oppSignal, $invert);
+            if ($aligned) { $score += 15; $breakdown[] = "OK Current OI Change supports thesis (CE {$currOi['ce_pct']}% / PE {$currOi['pe_pct']}%) (+15)"; }
+            elseif ($opposed) { $score -= 15; $breakdown[] = "NO Current OI Change contradicts thesis (CE {$currOi['ce_pct']}% / PE {$currOi['pe_pct']}%) (-15)"; }
+            else { $breakdown[] = "-- Current OI Change neutral (0)"; }
 
             $maxScore += 10;
-            $peUp = ($wall['pe_wall_dir'] === 'UP');
-            $ceUp = ($wall['ce_wall_dir'] === 'UP');
-            $wallFavor = $wantBullish ? ($peUp || $ceUp) : (!$peUp && !$ceUp && ($wall['ce_wall_dir'] === 'DOWN' || $wall['pe_wall_dir'] === 'DOWN'));
-            if ($invert) $wallFavor = !$wallFavor;
-            if ($wallFavor) { $score += 10; $breakdown[] = "✓ OI wall migrating in favorable direction (+10)"; }
-            else { $breakdown[] = "· OI wall migration not confirming (0)"; }
+            $bull = 0; $bear = 0;
+            foreach ($positions as $p) { if ($p['signal'] === 'BULLISH') $bull++; if ($p['signal'] === 'BEARISH') $bear++; }
+            $majority = $bull > $bear ? 'BULLISH' : ($bear > $bull ? 'BEARISH' : 'NEUTRAL');
+            [$aligned, $opposed] = $this->alignedOpposed($majority, $wantSignal, $oppSignal, $invert);
+            if ($aligned) { $score += 10; $breakdown[] = "OK CE/PE Position Classification aligned across ATM-1/ATM/ATM+1 (+10)"; }
+            elseif ($opposed) { $score -= 10; $breakdown[] = "NO CE/PE Position Classification opposed across ATM-1/ATM/ATM+1 (-10)"; }
+            else { $breakdown[] = "-- CE/PE Position Classification mixed (0)"; }
+
+            $maxScore += 10;
+            $peUp = $wall['pe_wall_dir'] === 'UP'; $ceUp = $wall['ce_wall_dir'] === 'UP';
+            $ceDown = $wall['ce_wall_dir'] === 'DOWN'; $peDown = $wall['pe_wall_dir'] === 'DOWN';
+            $wallFavorsBull = $peUp || $ceUp;
+            $wallFavorsBear = $ceDown || $peDown;
+            $wallSignal = $wallFavorsBull && !$wallFavorsBear ? 'BULLISH' : ($wallFavorsBear && !$wallFavorsBull ? 'BEARISH' : 'NEUTRAL');
+            [$aligned, $opposed] = $this->alignedOpposed($wallSignal, $wantSignal, $oppSignal, $invert);
+            if ($aligned) { $score += 10; $breakdown[] = "OK OI Migration / Wall Movement favorable (CE wall {$wall['ce_wall_dir']}, PE wall {$wall['pe_wall_dir']}) (+10)"; }
+            elseif ($opposed) { $score -= 10; $breakdown[] = "NO OI Migration / Wall Movement unfavorable (CE wall {$wall['ce_wall_dir']}, PE wall {$wall['pe_wall_dir']}) (-10)"; }
+            else { $breakdown[] = "-- OI Migration / Wall Movement flat (0)"; }
         } else {
-            $breakdown[] = "⚠ OI signals unreliable for this stock (match rate ≈50% over {$polarity['sample_size']} samples) — scored on price action only";
+            $breakdown[] = "WARN OI signals unreliable for this stock (match rate ~50% over {$polarity['sample_size']} samples) - scored on price action only";
         }
 
         if ($invert) {
-            array_unshift($breakdown, "↺ Stock polarity: INVERTED (OI match rate {$polarity['match_rate']}%) — OI-derived signals flipped");
+            array_unshift($breakdown, "INV Stock polarity: INVERTED (OI match rate {$polarity['match_rate']}%) - OI-derived steps flipped");
         } elseif ($polarity['polarity'] === 'NORMAL') {
-            array_unshift($breakdown, "✓ Stock polarity: NORMAL (OI match rate {$polarity['match_rate']}%)");
+            array_unshift($breakdown, "OK Stock polarity: NORMAL (OI match rate {$polarity['match_rate']}%)");
         }
 
         $confidence = $maxScore > 0 ? round((abs($score) / $maxScore) * 100, 1) : 0;
@@ -657,9 +696,15 @@ class GapReversalAnalysisController extends Controller
         return ['score' => $score, 'max_score' => $maxScore, 'confidence' => $confidence, 'action' => $action, 'breakdown' => $breakdown];
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Config helpers (same pattern as OIFlowSentimentController)
-    // ─────────────────────────────────────────────────────────────────────
+    private function alignedOpposed(string $signal, string $wantSignal, string $oppSignal, bool $invert): array
+    {
+        if ($invert) { [$wantSignal, $oppSignal] = [$oppSignal, $wantSignal]; }
+        return [$signal === $wantSignal, $signal === $oppSignal];
+    }
+
+    // -----------------------------------------------------------------------
+    // Config helpers
+    // -----------------------------------------------------------------------
 
     private function getActiveConfig(): ?object
     {

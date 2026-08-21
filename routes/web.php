@@ -1477,6 +1477,5 @@ Route::controller('SiteController')->group(function () {
         Route::get('/index',      [GapReversalAnalysisController::class, 'index'])->name('index');
         Route::get('/last-date',  [GapReversalAnalysisController::class, 'lastDate'])->name('last.date');
         Route::get('/symbols',    [GapReversalAnalysisController::class, 'getSymbols'])->name('symbols');
-        Route::get('/intervals',  [GapReversalAnalysisController::class, 'getIntervals'])->name('intervals');
         Route::get('/analyze',    [GapReversalAnalysisController::class, 'analyze'])->name('analyze');
     });
