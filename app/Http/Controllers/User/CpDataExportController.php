@@ -33,7 +33,11 @@ class CpDataExportController extends Controller
             ->first();
 
         $symbols = $config
-            ? $config->symbols->pluck('symbol')->unique()->values()->all()
+            ? $config->symbols->pluck('symbol')
+                ->unique()
+                ->reject(fn($s) => in_array(strtoupper($s), ['NIFTY', 'BANKNIFTY']))
+                ->values()
+                ->all()
             : [];
 
         return view(activeTemplate() . 'user.cp.data-export.index', compact('pageTitle', 'symbols'));

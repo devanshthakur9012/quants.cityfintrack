@@ -22,16 +22,9 @@
         <form action="{{ route('cp.data-export.download') }}" method="POST">
             @csrf
             <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Timeframe <span class="text-danger">*</span></label>
-                    <select name="timeframe" id="exp_timeframe" class="form-control" required onchange="expLoadSymbols()">
-                        <option value="15min">15 Min</option>
-                        <option value="30min">30 Min</option>
-                        <option value="1hr">1 Hour</option>
-                    </select>
-                </div>
+                <input type="hidden" name="timeframe" value="15min">
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Symbol <span class="text-danger">*</span></label>
                     <select name="symbol" id="exp_symbol" class="form-control" required>
                         <option value="">— Select Symbol —</option>
@@ -41,12 +34,12 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">From Date <span class="text-danger">*</span></label>
                     <input type="date" name="date_from" id="exp_date_from" class="form-control" required>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">To Date <span class="text-danger">*</span></label>
                     <input type="date" name="date_to" id="exp_date_to" class="form-control" required>
                 </div>
