@@ -176,7 +176,7 @@ class GapReversalAnalysisController extends Controller
 
         $uptoTime = $time
             ? Carbon::parse($date . ' ' . $time)
-            : Carbon::parse($date . ' ' . end($candles)->interval_time);
+            : Carbon::parse(end($candles)->interval_time);
 
         // trim candle series to "now" (lets user replay the day)
         $candles = array_values(array_filter($candles, fn($c) => Carbon::parse($c->interval_time)->lte($uptoTime)));
