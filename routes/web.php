@@ -123,6 +123,7 @@ use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\CpAnalysisController;
 use App\Http\Controllers\SecureVideoController;
 use App\Http\Controllers\User\GapReversalController;
+use App\Http\Controllers\User\GapReversalAnalysisController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
@@ -1470,4 +1471,12 @@ Route::controller('SiteController')->group(function () {
     ->group(function () {
         Route::get('/',          'index')->name('index');
         Route::post('/download', 'download')->name('download');
+    });
+
+    Route::middleware(['auth'])->prefix('gap-reversal-analysis')->name('gap-reversal-analysis.')->group(function () {
+        Route::get('/index',      [GapReversalAnalysisController::class, 'index'])->name('index');
+        Route::get('/last-date',  [GapReversalAnalysisController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',    [GapReversalAnalysisController::class, 'getSymbols'])->name('symbols');
+        Route::get('/intervals',  [GapReversalAnalysisController::class, 'getIntervals'])->name('intervals');
+        Route::get('/analyze',    [GapReversalAnalysisController::class, 'analyze'])->name('analyze');
     });
