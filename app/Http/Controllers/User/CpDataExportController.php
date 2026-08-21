@@ -28,17 +28,15 @@ class CpDataExportController extends Controller
     {
         $pageTitle = 'Data Export';
 
-        $configs = AnalysisConfig::whereIn('time_frame', self::TIMEFRAMES)
-            ->where('is_active', true)
+        $config = AnalysisConfig::where('is_active', true)
             ->with('symbols:id,symbol')
-            ->get(['id', 'time_frame']);
+            ->first();
 
-        $symbolsByTimeframe = [];
-        foreach ($configs as $c) {
-            $symbolsByTimeframe[$c->time_frame] = $c->symbols->pluck('symbol')->unique()->values()->all();
-        }
+        $symbols = $config
+            ? $config->symbols->pluck('symbol')->unique()->values()->all()
+            : [];
 
-        return view(activeTemplate() . 'user.cp.data-export.index', compact('pageTitle', 'symbolsByTimeframe'));
+        return view(activeTemplate() . 'user.cp.data-export.index', compact('pageTitle', 'symbols'));
     }
 
     public function download(Request $request)

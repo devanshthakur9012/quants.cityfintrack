@@ -35,6 +35,9 @@
                     <label class="form-label">Symbol <span class="text-danger">*</span></label>
                     <select name="symbol" id="exp_symbol" class="form-control" required>
                         <option value="">— Select Symbol —</option>
+                        @foreach($symbols as $s)
+                            <option value="{{ $s }}">{{ $s }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -67,21 +70,10 @@
 
 @push('script')
 <script>
-const expSymbolsByTimeframe = @json($symbolsByTimeframe);
-
-function expLoadSymbols() {
-    const tf = document.getElementById('exp_timeframe').value;
-    const symbols = expSymbolsByTimeframe[tf] || [];
-    const $sel = $('#exp_symbol');
-    $sel.empty().append('<option value="">— Select Symbol —</option>');
-    symbols.forEach(s => $sel.append(`<option value="${s}">${s}</option>`));
-}
-
 $(function () {
     const today = new Date().toISOString().split('T')[0];
     $('#exp_date_from').val(today);
     $('#exp_date_to').val(today);
-    expLoadSymbols();
 
     $('form').on('submit', function () {
         $('#exp_submit_btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating…');
