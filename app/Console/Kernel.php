@@ -74,6 +74,8 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('cp:angel-login')->dailyAt('08:45')->withoutOverlapping();
+        
         // ── Instrument sync: weekdays 8:30 AM IST ─────────────────────────────
         $schedule->command('zerodha_instrument:insert')
             ->weekdays()

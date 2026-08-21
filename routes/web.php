@@ -1464,3 +1464,10 @@ Route::controller('SiteController')->group(function () {
         Route::get('/{config}/toggle', 'toggleStatus')->name('toggle');
         Route::delete('/{config}',     'destroy')->name('destroy');
     });
+
+    Route::prefix('cp/data-export')->name('cp.data-export.')
+    ->controller(\App\Http\Controllers\User\CpDataExportController::class)
+    ->group(function () {
+        Route::get('/',          'index')->name('index');
+        Route::post('/download', 'download')->name('download');
+    });
