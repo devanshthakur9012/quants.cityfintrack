@@ -58,18 +58,8 @@ class StockOIStrategyController extends Controller
         return view(activeTemplate() . 'user.stock-oi-strategy.index', compact('pageTitle'));
     }
 
-    // ── Last available date (per symbol — Fix 3) ────────────────────────
+    // ── Last available date (across all 3 symbols) ─────────────────────
 
-    /**
-     * Fix 3: a date having a CE row doesn't guarantee PE/FUT/Stock/ATM-1/
-     * ATM+1 all exist too, so "max(trade_date) from CE" (the old version)
-     * could hand the UI a date that then comes back NO_TRADE / "no
-     * synchronized data" for reasons that have nothing to do with the
-     * strategy. This now walks backward from the most recent CE date and
-     * returns the newest date that's actually fully synchronized for the
-     * requested symbol's engine (LICHSGFIN needs FUT+CE+PE; PAYTM/SHRIRAMFIN
-     * need STOCK+CE+PE).
-     */
     public function lastDate(Request $request): JsonResponse
     {
         try {
@@ -80,12 +70,14 @@ class StockOIStrategyController extends Controller
                 return response()->json(['success' => false, 'last_date' => $today, 'is_today' => true]);
             }
 
-            $symbol = strtoupper((string) $request->get('symbol', ''));
-            if (!in_array($symbol, self::SYMBOLS, true)) {
-                $symbol = self::SYMBOLS[0];
-            }
+            $lastDate = DB::table(self::OPT_TABLE)
+                ->where('analysis_config_id', $config->id)
+                ->whereIn('base_symbol', self::SYMBOLS)
+                ->where('instrument_type', 'CE')
+                ->where('is_missing', false)
+                ->max('trade_date');
 
-            $lastDate = $this->latestSyncedDate($config->id, $symbol) ?? $today;
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
 
             return response()->json([
                 'success' => true,
@@ -96,71 +88,6 @@ class StockOIStrategyController extends Controller
             Log::error('StockOIStrategy lastDate: ' . $e->getMessage());
             return response()->json(['success' => false, 'last_date' => Carbon::today()->toDateString(), 'is_today' => true]);
         }
-    }
-
-    /**
-     * Walks backward, most recent candidate date first, checking each one
-     * for real synchronization before accepting it. Checks the last 20
-     * candidate dates so it doesn't scan the whole table when data is stale.
-     */
-    private function latestSyncedDate(int $configId, string $symbol): ?string
-    {
-        $candidateDates = DB::table(self::OPT_TABLE)
-            ->where('analysis_config_id', $configId)
-            ->where('base_symbol', $symbol)
-            ->where('instrument_type', 'CE')
-            ->where('is_missing', false)
-            ->orderBy('trade_date', 'desc')
-            ->distinct()
-            ->limit(20)
-            ->pluck('trade_date')
-            ->map(fn ($d) => Carbon::parse($d)->toDateString())
-            ->unique()
-            ->values();
-
-        foreach ($candidateDates as $date) {
-            if ($symbol === 'LICHSGFIN') {
-                $futOk = DB::table(self::FUT_TABLE)
-                    ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
-                    ->whereDate('trade_date', $date)->where('is_missing', false)
-                    ->whereIn(DB::raw("TIME(interval_time)"), ['09:15:00', '10:30:00'])
-                    ->distinct()->count(DB::raw('TIME(interval_time)')) === 2;
-
-                $optOk = DB::table(self::OPT_TABLE)
-                    ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
-                    ->whereIn('instrument_type', ['CE', 'PE'])
-                    ->whereDate('trade_date', $date)->where('is_missing', false)
-                    ->whereRaw("TIME(interval_time) = '10:30:00'")
-                    ->count() >= 2; // at least CE+PE ATM present at 10:30
-
-                if ($futOk && $optOk) {
-                    return $date;
-                }
-                continue;
-            }
-
-            $stockOk = DB::table(self::STOCK_TABLE)
-                ->where('analysis_config_id', $configId)->where('symbol', $symbol)
-                ->whereDate('trade_date', $date)->where('is_missing', false)
-                ->whereIn(DB::raw("TIME(interval_time)"), ['09:15:00', '10:00:00'])
-                ->distinct()->count(DB::raw('TIME(interval_time)')) === 2;
-
-            $optOk = DB::table(self::OPT_TABLE)
-                ->where('analysis_config_id', $configId)->where('base_symbol', $symbol)
-                ->whereIn('instrument_type', ['CE', 'PE'])
-                ->whereDate('trade_date', $date)->where('is_missing', false)
-                ->whereRaw("TIME(interval_time) = '10:00:00'")
-                ->count() >= 2;
-
-            if ($stockOk && $optOk) {
-                return $date;
-            }
-        }
-
-        // Nothing fully synced in the recent window — fall back to whatever
-        // the most recent CE date is, so the UI still shows something (the
-        // analyze() response's data_status will make the gap visible).
-        return $candidateDates->first();
     }
 
     // ── Symbols ─────────────────────────────────────────────────────────
@@ -223,35 +150,8 @@ class StockOIStrategyController extends Controller
         $prevDate = $this->getPreviousTradingDate($date);
         $rows = $this->loadCombinedRows($configId, $symbol, $prevDate, $date);
 
-        // Fix 2: fetch the previous day's real final FUT close directly,
-        // instead of trusting that $rows[$start-1] happens to be it.
-        $explicitPrevClose = $this->getPreviousFutClose($configId, $symbol, $prevDate);
-
-        // Fix 7: how much of the required 09:15→10:30 window for the
-        // SELECTED day actually made it through as complete rows.
-        $expectedSlots = ['09:15', '09:30', '09:45', '10:00', '10:15', '10:30'];
-        $presentSlots = 0;
-        foreach ($rows as $r) {
-            if (substr($r['datetime'], 0, 10) === $date && in_array(substr($r['datetime'], 11, 5), $expectedSlots, true)) {
-                $presentSlots++;
-            }
-        }
-        $dataStatus = $presentSlots === 0 ? 'INVALID' : ($presentSlots < count($expectedSlots) ? 'PARTIAL' : 'COMPLETE');
-
-        if (empty($rows) || $presentSlots === 0) {
-            return [
-                'signal' => 'NO_TRADE',
-                'reason' => 'No complete 15-min rows for ' . $symbol . ' on ' . $date . ' (missing FUT/CE/PE legs — see server log)',
-                'data_status' => 'INVALID',
-            ];
-        }
-
-        if ($explicitPrevClose === null) {
-            return [
-                'signal' => 'NO_TRADE',
-                'reason' => 'Previous trading day (' . $prevDate . ') FUT close not found — cannot compute gap',
-                'data_status' => 'INVALID',
-            ];
+        if (empty($rows)) {
+            return ['signal' => 'NO_TRADE', 'reason' => 'No 15-min data found for ' . $symbol . ' around ' . $date];
         }
 
         $engine = new Lichsgfin1030OIEngine($rows);
@@ -266,50 +166,11 @@ class StockOIStrategyController extends Controller
         }
 
         if ($currentIndex === null) {
-            return ['signal' => 'NO_TRADE', 'reason' => 'No rows found for ' . $date, 'data_status' => 'INVALID'];
+            return ['signal' => 'NO_TRADE', 'reason' => 'No rows found for ' . $date];
         }
 
-        $result = $engine->analyse1030($currentIndex, $explicitPrevClose);
-        $result['data_status'] = $result['data_status'] ?? $dataStatus;
-        $result['complete_slots'] = $presentSlots . '/' . count($expectedSlots);
-
-        return $result;
+        return $engine->analyse1030($currentIndex);
     }
-
-    /**
-     * Fix 2: previous trading day's final available FUT close, queried
-     * directly — the row closest to end-of-session that isn't flagged
-     * is_missing. Independent of whichever rows made it into loadCombinedRows().
-     */
-    private function getPreviousFutClose(int $configId, string $symbol, string $prevDate): ?float
-    {
-        $close = DB::table(self::FUT_TABLE)
-            ->where('analysis_config_id', $configId)
-            ->where('base_symbol', $symbol)
-            ->whereDate('trade_date', $prevDate)
-            ->where('is_missing', false)
-            ->orderBy('interval_time', 'desc')
-            ->value('close');
-
-        return $close !== null ? (float) $close : null;
-    }
-
-    /**
-     * Fix 1: single source of truth for strike_position mapping, used by
-     * both loadCombinedRows() and loadAdaptiveSeries(). Returns null for
-     * anything not explicitly recognized so callers can reject the row
-     * instead of silently treating it as ATM.
-     */
-    private function mapStrikePosition(?string $raw): ?string
-    {
-        return match ($raw) {
-            'ATM-1', 'ATM_MINUS_1', 'ATM_MINUS1' => 'ATM-1',
-            'ATM' => 'ATM',
-            'ATM+1', 'ATM_PLUS_1', 'ATM_PLUS1' => 'ATM+1',
-            default => null,
-        };
-    }
-
 
     /**
      * Build the wide-row shape Lichsgfin1030OIEngine expects:
@@ -351,26 +212,17 @@ class StockOIStrategyController extends Controller
 
         foreach ($optRows as $r) {
             $dt = Carbon::parse($r->trade_date)->toDateString() . ' ' . substr($r->interval_time, 11, 5) . ':00';
-
-            // Fix 1: strict strike_position mapping — an unrecognized value
-            // must NOT silently fall through to 'ATM' (that would blend a
-            // wrong strike's OI into the ATM leg and distort the score).
-            $strikeKey = $this->mapStrikePosition($r->strike_position);
-            if ($strikeKey === null) {
-                Log::warning("StockOIStrategy: unmapped strike_position '{$r->strike_position}' for {$symbol} {$dt} — row skipped");
-                continue;
-            }
-
             $byDatetime[$dt] ??= ['datetime' => $dt];
+
             $side = strtolower($r->instrument_type); // ce | pe
-            $suffix = match ($strikeKey) {
-                'ATM-1' => 'atm_minus_1',
-                'ATM+1' => 'atm_plus_1',
+            $strikeKey = match ($r->strike_position) {
+                'ATM-1', 'ATM_MINUS_1' => 'atm_minus_1',
+                'ATM+1', 'ATM_PLUS_1' => 'atm_plus_1',
                 default => 'atm',
             };
 
-            $byDatetime[$dt]["{$side}_{$suffix}_close"] = (float) $r->close;
-            $byDatetime[$dt]["{$side}_{$suffix}_oi"] = (float) $r->oi;
+            $byDatetime[$dt]["{$side}_{$strikeKey}_close"] = (float) $r->close;
+            $byDatetime[$dt]["{$side}_{$strikeKey}_oi"] = (float) $r->oi;
         }
 
         // Drop incomplete rows (a 15-min slot missing FUT or any leg) — the
@@ -413,21 +265,17 @@ class StockOIStrategyController extends Controller
         [$stockByDate, $ce, $pe, $dates] = $this->loadAdaptiveSeries($configId, $symbol, $fromDate, $date);
 
         if (empty($dates)) {
-            return ['latest' => ['signal' => 'NO_TRADE', 'reason' => 'No synchronized stock+CE+PE data found for ' . $symbol . ' in the lookback window', 'data_status' => 'INVALID']];
+            return ['signal' => 'NO_TRADE', 'reason' => 'No synchronized data found for ' . $symbol];
         }
 
-        // Historical profile for the LATEST-day signal only uses days
-        // strictly before the selected date — no leakage there.
+        // Historical profile is built from every day BEFORE the selected one —
+        // the selected date is always treated as "today" being analysed.
         $historyDates = array_values(array_filter($dates, fn ($d) => $d < $date));
         $profile = $engine->buildHistoricalProfile($stockByDate, $ce, $pe, $historyDates);
 
         $latest = $engine->latestAnalysis($stockByDate, $ce, $pe, $dates, $profile);
         $gapStudy = $engine->gapReversalStudy($stockByDate, $historyDates);
-
-        // Fix 4: backtest() now re-learns the profile fresh for every day in
-        // the walk-forward loop internally — it no longer takes a single
-        // precomputed $profile, so it can't leak future days into past signals.
-        $backtest = $engine->backtest($stockByDate, $ce, $pe, $historyDates);
+        $backtest = $engine->backtest($stockByDate, $ce, $pe, $historyDates, $profile);
 
         return [
             'latest' => $latest,
@@ -509,13 +357,11 @@ class StockOIStrategyController extends Controller
             $d = Carbon::parse($r->trade_date)->toDateString();
             $t = substr($r->interval_time, 11, 5);
 
-            // Fix 1: strict mapping, reject unrecognized strike_position instead
-            // of defaulting to 'ATM' (which would silently corrupt the ATM leg).
-            $strikeKey = $this->mapStrikePosition($r->strike_position);
-            if ($strikeKey === null) {
-                Log::warning("StockOIStrategy: unmapped strike_position '{$r->strike_position}' for {$symbol} {$d} {$t} — row skipped");
-                continue;
-            }
+            $strikeKey = match ($r->strike_position) {
+                'ATM-1', 'ATM_MINUS_1' => 'ATM-1',
+                'ATM+1', 'ATM_PLUS_1' => 'ATM+1',
+                default => 'ATM',
+            };
 
             $leg = [
                 'strike' => 0,

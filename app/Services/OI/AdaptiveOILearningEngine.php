@@ -242,15 +242,11 @@ class AdaptiveOILearningEngine
         $score = 0.0;
         $weightUsed = 0.0;
         $details = [];
-        $unknownCount = 0;
-        $totalLegs = 0;
 
         foreach (['CE', 'PE'] as $type) {
             foreach ($weights as $strike => $weight) {
-                $totalLegs++;
                 $behaviour = $classification[$type][$strike]['type'] ?? 'UNKNOWN';
                 if ($behaviour === 'UNKNOWN') {
-                    $unknownCount++;
                     continue;
                 }
 
@@ -278,13 +274,7 @@ class AdaptiveOILearningEngine
 
         $final = $weightUsed ? $score / $weightUsed : 0.0;
 
-        return [
-            'score' => $this->clamp($final, -1, 1),
-            'label' => $this->directionLabel($final),
-            'details' => $details,
-            'unknown_legs' => $unknownCount,
-            'total_legs' => $totalLegs,
-        ];
+        return ['score' => $this->clamp($final, -1, 1), 'label' => $this->directionLabel($final), 'details' => $details];
     }
 
     // ── Gap / reversal / range ───────────────────────────────────────
@@ -424,98 +414,9 @@ class AdaptiveOILearningEngine
         return ['score' => round($score, 1), 'signal' => $signal, 'confidence' => round(abs($score - 50) * 2, 1)];
     }
 
-    // ── Data quality ──────────────────────────────────────────────────
-
-    /**
-     * Fix 7: distinguish "strategy decided NO_TRADE" from "we don't have
-     * enough clean data to decide". Looks at how many CE/PE legs came back
-     * UNKNOWN (missing rows) and whether reversal/range could be computed.
-     */
-    private function dataStatus(array $classification10, array $reversal, array $range, ?float $prevClose, ?float $todayOpen): string
-    {
-        if ($prevClose === null || $todayOpen === null || $prevClose <= 0) {
-            return 'INVALID';
-        }
-
-        $unknownLegs = 0;
-        $totalLegs = 0;
-        foreach (['CE', 'PE'] as $type) {
-            foreach (['ATM-1', 'ATM', 'ATM+1'] as $strike) {
-                $totalLegs++;
-                if (($classification10[$type][$strike]['type'] ?? 'UNKNOWN') === 'UNKNOWN') {
-                    $unknownLegs++;
-                }
-            }
-        }
-
-        if ($unknownLegs === $totalLegs || $reversal['state'] === 'UNKNOWN' || $range['state'] === 'UNKNOWN') {
-            return 'INVALID';
-        }
-        if ($unknownLegs > 0) {
-            return 'PARTIAL';
-        }
-        return 'COMPLETE';
-    }
-
-    /**
-     * Shared per-date evaluation used by both backtest() and latestAnalysis(),
-     * so the two can never drift apart. `$profile` must already be built from
-     * dates strictly BEFORE `$date` — the caller is responsible for that
-     * (see backtest()'s walk-forward loop and StockOIStrategyController).
-     */
-    private function evaluateDate(array $stockByDate, array $ce, array $pe, string $date, string $prevDate, array $profile): ?array
-    {
-        if (!isset($ce[$date], $pe[$date], $stockByDate[$date], $stockByDate[$prevDate])) {
-            return null;
-        }
-
-        $todayRows = $stockByDate[$date];
-        $prevRows = $stockByDate[$prevDate];
-        $todayOpen = $this->timeRow($todayRows, '09:15');
-        $prevCloseRow = end($prevRows);
-
-        if (!$todayOpen || !$prevCloseRow) {
-            return null;
-        }
-
-        $gap = $this->gapAnalysis($prevCloseRow['close'], $todayOpen['open']);
-        $reversal = $this->reversalAnalysis($todayRows);
-        $range = $this->openingRangeAnalysis($todayRows);
-        $classification = $this->buildOptionClassifications($ce, $pe, $date, '10:00', '09:45');
-        $oi = $this->adaptiveOIScore($classification, $profile);
-        $signal = $this->finalIntradaySignal($gap, $reversal, $range, $oi);
-        $futureReturn = $this->intradayOutcome($todayRows);
-        $status = $this->dataStatus($classification, $reversal, $range, $prevCloseRow['close'], $todayOpen['open']);
-
-        return [
-            'date' => $date,
-            'signal' => $status === 'INVALID' ? 'NO_TRADE' : $signal['signal'],
-            'score' => $signal['score'],
-            'gap_type' => $gap['type'],
-            'gap_pct' => round($gap['gap_pct'], 3),
-            'reversal_state' => $reversal['state'],
-            'range_state' => $range['state'],
-            'oi_score' => round($oi['score'], 3),
-            'oi_label' => $oi['label'],
-            'oi_unknown_legs' => $oi['unknown_legs'],
-            'oi_total_legs' => $oi['total_legs'],
-            'future_return_pct' => $futureReturn !== null ? round($futureReturn, 3) : null,
-            'data_status' => $status,
-        ];
-    }
-
     // ── Backtest (STEP 4 in the client script) ──────────────────────
 
-    /**
-     * Fix 4 (walk-forward): for the date at index i, the profile is built
-     * ONLY from dates[0..i-1] — never from dates that happen after it.
-     * The client's original script (and the first version of this port)
-     * built one profile from all history and reused it for every backtest
-     * row, which let a later day's outcome leak into an earlier day's
-     * signal. This version re-learns the profile fresh for every step,
-     * exactly matching how the strategy would actually have run live.
-     */
-    public function backtest(array $stockByDate, array $ce, array $pe, array $dates): array
+    public function backtest(array $stockByDate, array $ce, array $pe, array $dates, array $profile): array
     {
         $rows = [];
         $summary = ['BUY' => ['n' => 0, 'wins' => 0, 'returns' => []], 'SELL' => ['n' => 0, 'wins' => 0, 'returns' => []], 'NO_TRADE' => ['n' => 0]];
@@ -524,17 +425,28 @@ class AdaptiveOILearningEngine
             $date = $dates[$i];
             $prevDate = $dates[$i - 1];
 
-            // Walk-forward: only dates strictly before today ever inform today's profile.
-            $profile = $this->buildHistoricalProfile($stockByDate, $ce, $pe, array_slice($dates, 0, $i));
-
-            $result = $this->evaluateDate($stockByDate, $ce, $pe, $date, $prevDate, $profile);
-            if ($result === null) {
+            if (!isset($ce[$date], $pe[$date], $stockByDate[$date], $stockByDate[$prevDate])) {
                 continue;
             }
 
-            $futureReturn = $result['future_return_pct'];
+            $todayRows = $stockByDate[$date];
+            $prevRows = $stockByDate[$prevDate];
+            $todayOpen = $this->timeRow($todayRows, '09:15');
+            $prevCloseRow = end($prevRows);
 
-            if ($result['signal'] === 'BUY') {
+            if (!$todayOpen || !$prevCloseRow) {
+                continue;
+            }
+
+            $gap = $this->gapAnalysis($prevCloseRow['close'], $todayOpen['open']);
+            $reversal = $this->reversalAnalysis($todayRows);
+            $range = $this->openingRangeAnalysis($todayRows);
+            $classification = $this->buildOptionClassifications($ce, $pe, $date, '10:00', '09:45');
+            $oi = $this->adaptiveOIScore($classification, $profile);
+            $signal = $this->finalIntradaySignal($gap, $reversal, $range, $oi);
+            $futureReturn = $this->intradayOutcome($todayRows);
+
+            if ($signal['signal'] === 'BUY') {
                 $summary['BUY']['n']++;
                 if ($futureReturn !== null) {
                     $summary['BUY']['returns'][] = $futureReturn;
@@ -542,7 +454,7 @@ class AdaptiveOILearningEngine
                         $summary['BUY']['wins']++;
                     }
                 }
-            } elseif ($result['signal'] === 'SELL') {
+            } elseif ($signal['signal'] === 'SELL') {
                 $summary['SELL']['n']++;
                 if ($futureReturn !== null) {
                     $summary['SELL']['returns'][] = -$futureReturn;
@@ -554,7 +466,18 @@ class AdaptiveOILearningEngine
                 $summary['NO_TRADE']['n']++;
             }
 
-            $rows[] = $result;
+            $rows[] = [
+                'date' => $date,
+                'signal' => $signal['signal'],
+                'score' => $signal['score'],
+                'gap_type' => $gap['type'],
+                'gap_pct' => round($gap['gap_pct'], 3),
+                'reversal_state' => $reversal['state'],
+                'range_state' => $range['state'],
+                'oi_score' => round($oi['score'], 3),
+                'oi_label' => $oi['label'],
+                'future_return_pct' => $futureReturn !== null ? round($futureReturn, 3) : null,
+            ];
         }
 
         $summaryOut = [];
@@ -639,14 +562,14 @@ class AdaptiveOILearningEngine
         $latestDate = end($dates);
 
         if (!isset($ce[$latestDate], $pe[$latestDate], $stockByDate[$latestDate])) {
-            return ['signal' => 'NO_TRADE', 'reason' => 'Latest day has no synchronized CE/PE/stock data', 'data_status' => 'INVALID'];
+            return ['signal' => 'NO_TRADE', 'reason' => 'Latest day has no synchronized CE/PE/stock data'];
         }
 
         $latestIndex = array_search($latestDate, $dates, true);
         $prevDate = ($latestIndex !== false && $latestIndex > 0) ? $dates[$latestIndex - 1] : null;
 
         if ($prevDate === null || !isset($stockByDate[$prevDate])) {
-            return ['signal' => 'NO_TRADE', 'reason' => 'No previous trading day available for gap analysis', 'data_status' => 'INVALID'];
+            return ['signal' => 'NO_TRADE', 'reason' => 'No previous trading day available for gap analysis'];
         }
 
         $latestRows = $stockByDate[$latestDate];
@@ -654,7 +577,7 @@ class AdaptiveOILearningEngine
         $prevLast = end($stockByDate[$prevDate]);
 
         if (!$open || !$prevLast) {
-            return ['signal' => 'NO_TRADE', 'reason' => '09:15 row or previous close unavailable', 'data_status' => 'INVALID'];
+            return ['signal' => 'NO_TRADE', 'reason' => '09:15 row or previous close unavailable'];
         }
 
         $gap = $this->gapAnalysis($prevLast['close'], $open['open']);
@@ -663,7 +586,6 @@ class AdaptiveOILearningEngine
         $classification = $this->buildOptionClassifications($ce, $pe, $latestDate, '10:00', '09:45');
         $oi = $this->adaptiveOIScore($classification, $profile);
         $signal = $this->finalIntradaySignal($gap, $reversal, $range, $oi);
-        $status = $this->dataStatus($classification, $reversal, $range, $prevLast['close'], $open['open']);
 
         // Overnight variant — uses latest available option snapshot of the day.
         $optionTimes = array_keys($ce[$latestDate] ?? []);
@@ -692,12 +614,9 @@ class AdaptiveOILearningEngine
             'oi_score' => round($oi['score'], 3),
             'oi_label' => $oi['label'],
             'oi_details' => $oi['details'],
-            'oi_unknown_legs' => $oi['unknown_legs'],
-            'oi_total_legs' => $oi['total_legs'],
-            'signal' => $status === 'INVALID' ? 'NO_TRADE' : $signal['signal'],
+            'signal' => $signal['signal'],
             'signal_score' => $signal['score'],
             'signal_confidence' => $signal['confidence'],
-            'data_status' => $status,
             'today_return_pct' => round($todayReturn, 3),
             'overnight_signal' => $overnight['signal'],
             'overnight_score' => $overnight['score'],

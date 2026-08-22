@@ -113,10 +113,6 @@
 .sos-empty{text-align:center;padding:52px 20px;color:var(--c-muted);}
 .sos-spinner-row{display:flex;align-items:center;justify-content:center;gap:12px;padding:52px;color:var(--c-muted);font-size:12px;font-family:var(--f-mono);}
 .sos-spinner{width:28px;height:28px;border:2px solid var(--c-border2);border-top:2px solid var(--c-lime);border-radius:50%;animation:sosSpin .9s linear infinite;}
-.data-status-chip{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:100px;font-size:9px;font-weight:700;font-family:var(--f-mono);letter-spacing:.06em;vertical-align:middle;}
-.ds-complete{background:rgba(38,166,154,.12);color:#4DB6AC;border:1px solid rgba(38,166,154,.25);}
-.ds-partial{background:rgba(255,167,38,.1);color:var(--c-amber);border:1px solid rgba(255,167,38,.25);}
-.ds-invalid{background:rgba(239,83,80,.1);color:#EF9A9A;border:1px solid rgba(239,83,80,.25);}
 </style>
 
 <div class="sos-wrap">
@@ -175,12 +171,12 @@ function f(v,d){d=d===undefined?2:d;return (v===null||v===undefined)?'—':parse
 document.addEventListener('DOMContentLoaded',function(){sosSetActiveTab();sosResolveLastDateAndLoad();});
 
 function sosResolveLastDateAndLoad(){
-    fetch(SOS_LASTDATE+'?symbol='+sosSymbol,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(res){
+    fetch(SOS_LASTDATE,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(res){
         if(res.last_date) el('sos-date').value=res.last_date;
         sosAnalyze();
     }).catch(function(){sosAnalyze();});
 }
-function sosSelectSymbol(sym){sosSymbol=sym;sosSetActiveTab();sosResolveLastDateAndLoad();}
+function sosSelectSymbol(sym){sosSymbol=sym;sosSetActiveTab();sosAnalyze();}
 function sosSetActiveTab(){document.querySelectorAll('.sos-tab').forEach(function(t){t.classList.toggle('active',t.dataset.symbol===sosSymbol);});}
 function sosGetDate(){return el('sos-date').value;}
 function sosShiftDate(d){var p=el('sos-date'),dt=new Date(p.value);dt.setDate(dt.getDate()+d);var s=dt.toISOString().split('T')[0];if(s>SOS_TODAY)return;p.value=s;sosAnalyze();}
@@ -209,18 +205,11 @@ function sosAnalyze(){
 }
 function sosEmptyHtml(msg){return '<div class="sos-card"><div class="sos-empty">'+esc(msg||'No data found.')+'</div></div>';}
 
-function dataStatusChip(status){
-    if(!status) return '';
-    var cls=status==='COMPLETE'?'ds-complete':(status==='PARTIAL'?'ds-partial':'ds-invalid');
-    var label=status==='COMPLETE'?'Data: Complete':(status==='PARTIAL'?'Data: Partial (legs missing)':'Data: Invalid');
-    return '<span class="data-status-chip '+cls+'">'+label+'</span>';
-}
-
 /* ── LICHSGFIN (gap-fail engine) render ── */
 function sosRenderLichsgfin(d){
     if(!d||d.signal===undefined){html('sos-body',sosEmptyHtml('No data.'));return;}
     if(d.signal==='NO_TRADE' && d.reason && typeof d.reason==='string' && !d.gap_pct){
-        html('sos-body',sosEmptyHtml(d.reason+(d.data_status?' — '+d.data_status:'')));return;
+        html('sos-body',sosEmptyHtml(d.reason));return;
     }
     var isCe=d.signal==='BUY_CE',isPe=d.signal==='BUY_PE';
     var bannerCls=isCe?'sig-ce':(isPe?'sig-pe':'sig-none');
@@ -230,9 +219,9 @@ function sosRenderLichsgfin(d){
 
     var h='';
     h+='<div class="sos-signal-banner '+bannerCls+'">';
-    h+='  <div class="sos-signal-left"><div class="sig-label">LICHSGFIN · 10:30 Signal'+dataStatusChip(d.data_status)+'</div><div class="sig-val '+sigCls+'">'+sigVal+'</div></div>';
+    h+='  <div class="sos-signal-left"><div class="sig-label">LICHSGFIN · 10:30 Signal</div><div class="sig-val '+sigCls+'">'+sigVal+'</div></div>';
     h+='  <div class="sos-signal-reasons">'+reasons+'</div>';
-    h+='  <div class="sos-score-box"><div class="score-val">'+f(d.ce_buy_score,1)+' / '+f(d.pe_buy_score,1)+'</div><div class="score-label">CE / PE Buy Score'+(d.complete_slots?' · '+esc(d.complete_slots)+' slots':'')+'</div></div>';
+    h+='  <div class="sos-score-box"><div class="score-val">'+f(d.ce_buy_score,1)+' / '+f(d.pe_buy_score,1)+'</div><div class="score-label">CE / PE Buy Score</div></div>';
     h+='</div>';
 
     h+='<div class="sos-grid">';
@@ -276,7 +265,7 @@ function sosRenderAdaptive(d,symbol){
 
     var h='';
     h+='<div class="sos-signal-banner '+bannerCls+'">';
-    h+='  <div class="sos-signal-left"><div class="sig-label">'+esc(symbol)+' · Intraday Signal ('+esc(L.date)+')'+dataStatusChip(L.data_status)+'</div><div class="sig-val '+sigCls+'">'+esc(L.signal)+'</div></div>';
+    h+='  <div class="sos-signal-left"><div class="sig-label">'+esc(symbol)+' · Intraday Signal ('+esc(L.date)+')</div><div class="sig-val '+sigCls+'">'+esc(L.signal)+'</div></div>';
     h+='  <div class="sos-signal-reasons"><span class="sos-reason-chip">Gap: '+esc(L.gap_type)+' ('+f(L.gap_pct,3)+'%)</span><span class="sos-reason-chip">Reversal: '+esc(L.reversal_state)+'</span><span class="sos-reason-chip">Range: '+esc(L.range_state)+'</span><span class="sos-reason-chip">OI: '+esc(L.oi_label)+'</span></div>';
     h+='  <div class="sos-score-box"><div class="score-val">'+f(L.signal_score,1)+'/100</div><div class="score-label">Confidence '+f(L.signal_confidence,0)+'%</div></div>';
     h+='</div>';
@@ -316,10 +305,10 @@ function sosRenderAdaptive(d,symbol){
         d.backtest_rows.forEach(function(r){
             var cls=r.signal==='BUY'?'tr-buy':(r.signal==='SELL'?'tr-sell':'');
             var badge=r.signal==='BUY'?'sig-buy-b':(r.signal==='SELL'?'sig-sell-b':'sig-wait-b');
-            brows+='<tr class="'+cls+'"><td style="color:#fff;">'+esc(r.date)+'</td><td><span class="sig-badge '+badge+'">'+esc(r.signal)+'</span></td><td>'+f(r.score,1)+'</td><td>'+esc(r.gap_type)+' ('+f(r.gap_pct,2)+'%)</td><td>'+esc(r.reversal_state)+'</td><td>'+esc(r.range_state)+'</td><td>'+f(r.oi_score,2)+' ('+(r.oi_unknown_legs||0)+'/'+(r.oi_total_legs||6)+' unk)</td><td>'+(r.future_return_pct!=null?f(r.future_return_pct,2)+'%':'—')+'</td><td>'+dataStatusChip(r.data_status)+'</td></tr>';
+            brows+='<tr class="'+cls+'"><td style="color:#fff;">'+esc(r.date)+'</td><td><span class="sig-badge '+badge+'">'+esc(r.signal)+'</span></td><td>'+f(r.score,1)+'</td><td>'+esc(r.gap_type)+' ('+f(r.gap_pct,2)+'%)</td><td>'+esc(r.reversal_state)+'</td><td>'+esc(r.range_state)+'</td><td>'+f(r.oi_score,2)+'</td><td>'+(r.future_return_pct!=null?f(r.future_return_pct,2)+'%':'—')+'</td></tr>';
         });
-        h+='<div class="sos-card"><div class="sos-card-header"><div class="sos-card-title">Walk-Forward Backtest (last '+d.backtest_rows.length+' sessions, no look-ahead)</div></div>'+
-           '<div class="sos-tscroll"><table class="sos-table"><thead><tr><th>Date</th><th>Signal</th><th>Score</th><th>Gap</th><th>Reversal</th><th>Range</th><th>OI Score</th><th>Future Return</th><th>Data</th></tr></thead><tbody>'+brows+'</tbody></table></div></div>';
+        h+='<div class="sos-card"><div class="sos-card-header"><div class="sos-card-title">Recent Backtest (last '+d.backtest_rows.length+' sessions)</div></div>'+
+           '<div class="sos-tscroll"><table class="sos-table"><thead><tr><th>Date</th><th>Signal</th><th>Score</th><th>Gap</th><th>Reversal</th><th>Range</th><th>OI Score</th><th>Future Return</th></tr></thead><tbody>'+brows+'</tbody></table></div></div>';
     }
 
     html('sos-body',h);
