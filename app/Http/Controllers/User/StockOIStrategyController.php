@@ -24,23 +24,24 @@ use Illuminate\Support\Facades\Log;
  * scripts are functionally identical, only the tuning constants
  * differ — so both are served by one engine class, configured below.
  *
- * ── DATA SOURCE ASSUMPTIONS (please confirm against the real schema) ──
- * This reuses `cp_option_ohlc_15min` (same table as OIFlowSentimentController)
- * with the existing columns: analysis_config_id, base_symbol, trade_date,
- * interval_time, instrument_type, strike_position, oi, close, is_missing.
+ * ── DATA SOURCE ──────────────────────────────────────────────────────
+ * Wired to the real collector tables (per Cp\CpCollectStock / CpCollectFut
+ * / CpCollectOption):
  *
- * Two things this feature needs that OIFlowSentimentController's queries
- * didn't touch — please verify these exist / adjust the column names in
- * loadFutureRows()/loadOptionSeries() below if they don't match:
- *   1. Row-level `open`, `high`, `low` columns on cp_option_ohlc_15min
- *      (table is named *_ohlc_15min so this is assumed to already exist).
- *   2. A FUTURES row per (symbol, date, interval_time) — assumed stored
- *      with instrument_type = 'FUT' (strike_position null/'FUT') in the
- *      same table. If futures actually live in a separate table, only
- *      loadFutureRows() needs to change.
+ *   cp_stock_ohlc_15min  — underlying EQ OHLC. Column: `symbol`.
+ *   cp_fut_ohlc_15min    — futures OHLC+OI. Column: `base_symbol`.
+ *   cp_option_ohlc_15min — CE/PE OHLC+OI per strike_position. Column: `base_symbol`.
+ *
+ * `strike_position` values are assumed to be 'ATM-1' / 'ATM' / 'ATM+1'
+ * (matches the literal field names the LICHSGFIN engine expects and the
+ * `->where('strike_position','ATM')` filter already used elsewhere) — if
+ * `getStrikePosition()` in CpOhlcBase actually emits something else
+ * (e.g. 'ITM1'/'OTM1'), adjust the two `match()` blocks below.
  */
 class StockOIStrategyController extends Controller
 {
+    private const STOCK_TABLE = 'cp_stock_ohlc_15min';
+    private const FUT_TABLE = 'cp_fut_ohlc_15min';
     private const OPT_TABLE = 'cp_option_ohlc_15min';
 
     /** Symbols this page serves and which engine drives each one. */
@@ -72,6 +73,7 @@ class StockOIStrategyController extends Controller
             $lastDate = DB::table(self::OPT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->whereIn('base_symbol', self::SYMBOLS)
+                ->where('instrument_type', 'CE')
                 ->where('is_missing', false)
                 ->max('trade_date');
 
@@ -173,33 +175,44 @@ class StockOIStrategyController extends Controller
     /**
      * Build the wide-row shape Lichsgfin1030OIEngine expects:
      * one row per 15-min interval with future OHLC/OI + CE/PE ATM-1/ATM/ATM+1 close+OI.
+     * Futures come from cp_fut_ohlc_15min; CE/PE from cp_option_ohlc_15min.
      */
     private function loadCombinedRows(int $configId, string $symbol, string $fromDate, string $toDate): array
     {
+        $byDatetime = [];
+
+        $futRows = DB::table(self::FUT_TABLE)
+            ->where('analysis_config_id', $configId)
+            ->where('base_symbol', $symbol)
+            ->whereBetween(DB::raw('DATE(trade_date)'), [$fromDate, $toDate])
+            ->where('is_missing', false)
+            ->select(['trade_date', 'interval_time', 'open', 'high', 'low', 'close', 'oi'])
+            ->orderBy('trade_date')->orderBy('interval_time')
+            ->get();
+
+        foreach ($futRows as $r) {
+            $dt = Carbon::parse($r->trade_date)->toDateString() . ' ' . substr($r->interval_time, 11, 5) . ':00';
+            $byDatetime[$dt] ??= ['datetime' => $dt];
+            $byDatetime[$dt]['future_open'] = (float) $r->open;
+            $byDatetime[$dt]['future_high'] = (float) $r->high;
+            $byDatetime[$dt]['future_low'] = (float) $r->low;
+            $byDatetime[$dt]['future_close'] = (float) $r->close;
+            $byDatetime[$dt]['future_oi'] = (float) $r->oi;
+        }
+
         $optRows = DB::table(self::OPT_TABLE)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
             ->whereBetween(DB::raw('DATE(trade_date)'), [$fromDate, $toDate])
             ->where('is_missing', false)
-            ->whereIn('instrument_type', ['CE', 'PE', 'FUT'])
-            ->select(['trade_date', 'interval_time', 'instrument_type', 'strike_position', 'open', 'high', 'low', 'close', 'oi'])
+            ->whereIn('instrument_type', ['CE', 'PE'])
+            ->select(['trade_date', 'interval_time', 'instrument_type', 'strike_position', 'close', 'oi'])
             ->orderBy('trade_date')->orderBy('interval_time')
             ->get();
 
-        // Pivot into datetime => fields
-        $byDatetime = [];
         foreach ($optRows as $r) {
-            $dt = Carbon::parse($r->trade_date)->toDateString() . ' ' . substr($r->interval_time, 0, 5) . ':00';
+            $dt = Carbon::parse($r->trade_date)->toDateString() . ' ' . substr($r->interval_time, 11, 5) . ':00';
             $byDatetime[$dt] ??= ['datetime' => $dt];
-
-            if ($r->instrument_type === 'FUT') {
-                $byDatetime[$dt]['future_open'] = (float) $r->open;
-                $byDatetime[$dt]['future_high'] = (float) $r->high;
-                $byDatetime[$dt]['future_low'] = (float) $r->low;
-                $byDatetime[$dt]['future_close'] = (float) $r->close;
-                $byDatetime[$dt]['future_oi'] = (float) $r->oi;
-                continue;
-            }
 
             $side = strtolower($r->instrument_type); // ce | pe
             $strikeKey = match ($r->strike_position) {
@@ -291,44 +304,58 @@ class StockOIStrategyController extends Controller
 
     /**
      * Build $stockByDate / $ce / $pe in the shape AdaptiveOILearningEngine
-     * expects. The client's original scripts used a dedicated "Stock" sheet
-     * (underlying cash price) for OHLC; since the DB table here only carries
-     * option + futures rows, the FUT row is used as the underlying-price
-     * proxy — confirm with the client whether a separate stock/futures OHLC
-     * source should be used instead.
+     * expects. $stockByDate now comes from the real underlying-EQ table
+     * (cp_stock_ohlc_15min — column `symbol`, no `base_symbol`), matching
+     * the client's original "Stock" sheet 1:1. CE/PE come from cp_option_ohlc_15min.
      */
     private function loadAdaptiveSeries(int $configId, string $symbol, string $fromDate, string $toDate): array
     {
-        $rows = DB::table(self::OPT_TABLE)
+        $stockByDate = [];
+
+        $stockRows = DB::table(self::STOCK_TABLE)
+            ->where('analysis_config_id', $configId)
+            ->where('symbol', $symbol)
+            ->whereBetween(DB::raw('DATE(trade_date)'), [$fromDate, $toDate])
+            ->where('is_missing', false)
+            ->select(['trade_date', 'interval_time', 'open', 'high', 'low', 'close', 'volume'])
+            ->orderBy('trade_date')->orderBy('interval_time')
+            ->get();
+
+        foreach ($stockRows as $r) {
+            $d = Carbon::parse($r->trade_date)->toDateString();
+            $t = substr($r->interval_time, 11, 5);
+
+            $stockByDate[$d][] = [
+                'date' => $d,
+                'time' => $t,
+                'open' => (float) $r->open,
+                'high' => (float) $r->high,
+                'low' => (float) $r->low,
+                'close' => (float) $r->close,
+                'volume' => (float) $r->volume,
+            ];
+        }
+
+        foreach ($stockByDate as $d => $dayRows) {
+            usort($stockByDate[$d], fn ($a, $b) => strcmp($a['time'], $b['time']));
+        }
+
+        $ce = [];
+        $pe = [];
+
+        $optRows = DB::table(self::OPT_TABLE)
             ->where('analysis_config_id', $configId)
             ->where('base_symbol', $symbol)
             ->whereBetween(DB::raw('DATE(trade_date)'), [$fromDate, $toDate])
             ->where('is_missing', false)
-            ->whereIn('instrument_type', ['CE', 'PE', 'FUT'])
+            ->whereIn('instrument_type', ['CE', 'PE'])
             ->select(['trade_date', 'interval_time', 'instrument_type', 'strike_position', 'open', 'high', 'low', 'close', 'oi'])
             ->orderBy('trade_date')->orderBy('interval_time')
             ->get();
 
-        $stockByDate = [];
-        $ce = [];
-        $pe = [];
-
-        foreach ($rows as $r) {
+        foreach ($optRows as $r) {
             $d = Carbon::parse($r->trade_date)->toDateString();
-            $t = substr($r->interval_time, 0, 5);
-
-            if ($r->instrument_type === 'FUT') {
-                $stockByDate[$d][] = [
-                    'date' => $d,
-                    'time' => $t,
-                    'open' => (float) $r->open,
-                    'high' => (float) $r->high,
-                    'low' => (float) $r->low,
-                    'close' => (float) $r->close,
-                    'volume' => 0,
-                ];
-                continue;
-            }
+            $t = substr($r->interval_time, 11, 5);
 
             $strikeKey = match ($r->strike_position) {
                 'ATM-1', 'ATM_MINUS_1' => 'ATM-1',
@@ -352,10 +379,6 @@ class StockOIStrategyController extends Controller
             } else {
                 $pe[$d][$t][$strikeKey] = $leg;
             }
-        }
-
-        foreach ($stockByDate as $d => $dayRows) {
-            usort($stockByDate[$d], fn ($a, $b) => strcmp($a['time'], $b['time']));
         }
 
         $dates = array_values(array_intersect(array_keys($stockByDate), array_keys($ce), array_keys($pe)));
