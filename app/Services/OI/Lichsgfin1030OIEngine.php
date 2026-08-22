@@ -142,8 +142,26 @@ final class Lichsgfin1030OIEngine
         return compact('bull','bear','neutral');
     }
 
-    private function previousDayClose(int $start): ?float
+    /**
+     * Fix 2: the original client script assumes $this->rows[$start-1] IS
+     * the previous trading day's final candle — true only when every
+     * 15-min slot of the previous day made it into $rows unbroken. Since
+     * loadCombinedRows() in the controller drops any interval missing a
+     * FUT/CE/PE leg, that assumption can silently point at the wrong
+     * candle (an earlier same-day slot, not yesterday's close) whenever
+     * the previous day has a gap late in the session.
+     *
+     * $explicitPrevClose lets the caller pass the previous day's real
+     * final FUT close, fetched directly from the DB with its own query
+     * (see StockOIStrategyController::getPreviousFutClose()), bypassing
+     * this fragile index-based lookup entirely. When not supplied, falls
+     * back to the original behaviour unchanged.
+     */
+    private function previousDayClose(int $start, ?float $explicitPrevClose = null): ?float
     {
+        if ($explicitPrevClose !== null) {
+            return $explicitPrevClose;
+        }
         if ($start <= 0) return null;
         return (float)$this->rows[$start-1]['future_close'];
     }
@@ -179,8 +197,13 @@ final class Lichsgfin1030OIEngine
 
     /**
      * Main LICHSGFIN analysis at 10:30.
+     *
+     * @param float|null $explicitPrevClose Fix 2 — pass the previous trading
+     *   day's real final FUT close (fetched directly from DB) instead of
+     *   relying on $rows[$start-1], which can point at the wrong candle if
+     *   the previous day has any dropped/incomplete 15-min slot.
      */
-    public function analyse1030(int $currentIndex): array
+    public function analyse1030(int $currentIndex, ?float $explicitPrevClose = null): array
     {
         $window=$this->find1030Window($currentIndex);
         if (!$window) return ['signal'=>'NO_TRADE','reason'=>'10:30 window not available'];
@@ -188,7 +211,7 @@ final class Lichsgfin1030OIEngine
         [$start,$end]=[$window['start'],$window['target']];
         $open=$this->row($start);
         $now=$this->row($end);
-        $prevClose=$this->previousDayClose($start);
+        $prevClose=$this->previousDayClose($start, $explicitPrevClose);
 
         if ($prevClose===null) return ['signal'=>'NO_TRADE','reason'=>'Previous day close unavailable'];
 
