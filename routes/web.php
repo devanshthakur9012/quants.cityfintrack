@@ -124,6 +124,7 @@ use App\Http\Controllers\CpAnalysisController;
 use App\Http\Controllers\SecureVideoController;
 use App\Http\Controllers\User\GapReversalController;
 use App\Http\Controllers\User\GapReversalAnalysisController;
+use App\Http\Controllers\User\StockOIStrategyController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
@@ -1479,3 +1480,11 @@ Route::controller('SiteController')->group(function () {
         Route::get('/symbols',    [GapReversalAnalysisController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',    [GapReversalAnalysisController::class, 'analyze'])->name('analyze');
     });
+ 
+    Route::middleware(['auth'])->prefix('stock-oi-strategy')->name('stock-oi-strategy.')->group(function () {
+        Route::get('/index',      [StockOIStrategyController::class, 'index'])->name('index');
+        Route::get('/last-date',  [StockOIStrategyController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',    [StockOIStrategyController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [StockOIStrategyController::class, 'analyze'])->name('analyze');
+    });
+    
