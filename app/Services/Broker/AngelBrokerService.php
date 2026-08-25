@@ -6,21 +6,27 @@ use App\Models\AngelApiInstrument;
 use App\Models\BrokerApi;
 use App\Models\ZerodhaInstrument;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 require_once app_path('Libraries/vendor/autoload.php');
 use OTPHP\TOTP;
 
 /**
- * AngelBrokerService — FINAL once verified. All Angel One auth + order logic
- * lives here, driven entirely by the broker_apis row passed to the
- * constructor (no .env credentials — every Angel account is a DB row).
+ * AngelBrokerService — all Angel One auth + order logic lives here, driven
+ * entirely by the broker_apis row passed to the constructor.
  *
- * Token lifecycle is self-managing:
- *   - getValidAccessToken() reuses broker_apis.access_token if it's still
- *     marked valid and not expired — no repeat logins per call.
- *   - login() is only triggered when the stored token is missing/expired/
- *     invalid, and persists the fresh token straight back to broker_apis.
+ * Token lifecycle:
+ *   - getValidAccessToken() reuses the cached session (token + the exact
+ *     IP/MAC used when that token was issued) while it's still valid.
+ *   - login() is only triggered when nothing valid is cached, and caches
+ *     the fresh token TOGETHER with the IP/MAC used to obtain it — this
+ *     is critical: Angel's order-placement API appears to validate the
+ *     session against the IP/MAC it was issued under, so if .env's
+ *     ANGEL_CLIENT_PUBLIC_IP ever changes between login and a later
+ *     order call, sending the NEW ip with an OLD token gets rejected
+ *     (AG8001) even though both values are individually "valid".
+ *     Caching them as one unit makes that class of bug impossible.
  *
  * Nothing outside this file should ever build an Angel payload directly —
  * call login() or placeOrder() only.
@@ -36,17 +42,26 @@ class AngelBrokerService
 
     // ── Public: token lifecycle ─────────────────────────────────────────
 
-    /** Reuse the stored token if valid; otherwise perform a fresh login. */
-    public function getValidAccessToken(): string
+    /** Reuse the cached session if valid; otherwise perform a fresh login. */
+    public function getValidAccessToken(): array
     {
-        if ($this->hasValidStoredToken()) {
-            return $this->broker->access_token;
+        $cacheKey = $this->sessionCacheKey();
+        $session  = Cache::get($cacheKey);
+
+        if ($session && $this->hasValidStoredToken()) {
+            return $session;
         }
+
         return $this->login();
     }
 
-    /** Force a fresh TOTP login, persist the result to broker_apis, return the JWT. */
-    public function login(): string
+    /**
+     * Force a fresh TOTP login, cache the token TOGETHER with the exact
+     * IP/MAC used to obtain it, and persist just the token/expiry to
+     * broker_apis (for hasValidStoredToken()'s DB-side expiry check).
+     * Returns the full session array: ['token'=>, 'localIp'=>, 'publicIp'=>, 'mac'=>]
+     */
+    public function login(): array
     {
         $clientCode = $this->broker->account_user_name;
         $pin        = $this->broker->security_pin ?: $this->broker->account_password;
@@ -65,6 +80,12 @@ class AngelBrokerService
             'totp'       => $totp->now(),
         ];
 
+        // These are the values THIS login attempt uses — frozen into the
+        // cached session below so every future call replays the same ones.
+        $localIp  = env('ANGEL_CLIENT_LOCAL_IP', '192.168.1.1');
+        $publicIp = env('ANGEL_CLIENT_PUBLIC_IP', '1.1.1.1');
+        $mac      = env('ANGEL_MAC_ADDRESS', '00-00-00-00-00-00');
+
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL            => self::BASE_URL . '/rest/auth/angelbroking/user/v1/loginByPassword',
@@ -72,7 +93,7 @@ class AngelBrokerService
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_CUSTOMREQUEST  => 'POST',
             CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => $this->headers(),
+            CURLOPT_HTTPHEADER     => $this->loginHeaders($apiKey, $localIp, $publicIp, $mac),
         ]);
         $response = curl_exec($curl);
         $err = curl_error($curl);
@@ -93,6 +114,19 @@ class AngelBrokerService
 
         $jwtToken = $data['data']['jwtToken'];
 
+        $session = [
+            'token'    => $jwtToken,
+            'localIp'  => $localIp,
+            'publicIp' => $publicIp,
+            'mac'      => $mac,
+        ];
+
+        // Cache the whole session as one unit — this is what makes
+        // login() and every later placeOrder() call agree on IP/MAC.
+        Cache::put($this->sessionCacheKey(), $session, now()->addHours(self::TOKEN_TTL_HOURS));
+
+        // DB row still tracks token/expiry so hasValidStoredToken() and
+        // any admin UI showing "last login" keep working as before.
         $this->broker->update([
             'access_token'     => $jwtToken,
             'request_token'    => $data['data']['refreshToken'] ?? null,
@@ -102,16 +136,16 @@ class AngelBrokerService
         ]);
         $this->broker->refresh();
 
-        Log::info("AngelBrokerService: login OK for broker #{$this->broker->id} ({$clientCode})");
+        Log::info("AngelBrokerService: login OK for broker #{$this->broker->id} ({$clientCode}) — session cached with publicIp={$publicIp}");
 
-        return $jwtToken;
+        return $session;
     }
 
     // ── Public: order placement (the ONLY method callers should use) ────
 
     public function placeOrder(array $params): array
     {
-        $jwtToken = $this->getValidAccessToken();
+        $session = $this->getValidAccessToken();
 
         [$angelSymbol, $angelToken, $lotSize, $tickSize] = $this->getInstrumentInfo($params);
 
@@ -121,7 +155,7 @@ class AngelBrokerService
 
         $qty = $params['lots'] * $lotSize;
         $orderId = $this->sendOrder(
-            $jwtToken, $angelSymbol, $angelToken,
+            $session, $angelSymbol, $angelToken,
             $params['transaction_type'], $params['order_type'], $params['product'],
             $qty, $params['price'] ?? 0, $tickSize
         );
@@ -138,13 +172,11 @@ class AngelBrokerService
 
         $angelRow = null;
 
-        // Attempt 1: fast path — bridge via Zerodha's exchange_token, if it happens to line up
         $zerodhaRow = ZerodhaInstrument::where('instrument_token', $params['instrument_token'])->first();
         if ($zerodhaRow) {
             $angelRow = AngelApiInstrument::where('token', (string) $zerodhaRow->exchange_token)->first();
         }
 
-        // Attempt 2: robust match — underlying + expiry + strike + CE/PE, not string equality
         if (!$angelRow) {
             $angelRow = $this->matchAngelOption(
                 $params['base_symbol'],
@@ -164,21 +196,21 @@ class AngelBrokerService
     private function matchAngelOption(string $baseSymbol, string $expiryDate, float $strike, string $optionType): ?object
     {
         $expiry = \Carbon\Carbon::parse($expiryDate)->format('Y-m-d');
-        $instrumentType = in_array($baseSymbol, ['NIFTY', 'BANKNIFTY', 'SENSEX']) ? 'OPTIDX' : 'OPTSTK'; // ← added
+        $instrumentType = in_array($baseSymbol, ['NIFTY', 'BANKNIFTY', 'SENSEX']) ? 'OPTIDX' : 'OPTSTK';
 
         return AngelApiInstrument::where('name', strtoupper($baseSymbol))
             ->where('expiry', $expiry)
-            ->where('exch_seg', 'NFO')                         // ← added — excludes non-F&O duplicates
-            ->where('instrumenttype', $instrumentType)          // ← added — excludes wrong-segment duplicates
+            ->where('exch_seg', 'NFO')
+            ->where('instrumenttype', $instrumentType)
             ->where('symbol_name', 'LIKE', '%' . strtoupper($optionType))
             ->where(function ($q) use ($strike) {
                 $q->whereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike])
-                ->orWhereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike * 100]);
+                  ->orWhereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike * 100]);
             })
             ->first();
     }
 
-    private function sendOrder(string $jwtToken, string $symbol, string $token, string $txType, string $orderType, string $product, int $qty, float $price, float $tickSize): string
+    private function sendOrder(array $session, string $symbol, string $token, string $txType, string $orderType, string $product, int $qty, float $price, float $tickSize): string
     {
         $rounded = number_format(round($price / $tickSize) * $tickSize, 2, '.', '');
 
@@ -200,11 +232,10 @@ class AngelBrokerService
         Log::info("ANGEL_DEBUG payload", [
             'symbol'      => $symbol,
             'symboltoken' => $token,
-            'jwt_len'     => strlen($jwtToken),
-            'jwt_prefix'  => substr($jwtToken, 0, 15),
+            'session_publicIp' => $session['publicIp'],
         ]);
 
-        $resp = $this->callApi('/rest/secure/angelbroking/order/v1/placeOrder', $payload, $jwtToken);
+        $resp = $this->callApi('/rest/secure/angelbroking/order/v1/placeOrder', $payload, $session);
 
         Log::info("ANGEL_DEBUG raw response", ['resp' => $resp]);
 
@@ -214,10 +245,9 @@ class AngelBrokerService
         return $resp['data']['orderid'];
     }
 
-    private function callApi(string $endpoint, array $payload, string $jwtToken): array
+    private function callApi(string $endpoint, array $payload, array $session): array
     {
-        $headers = $this->headers();
-        $headers[] = 'Authorization: Bearer ' . $jwtToken;
+        $headers = $this->orderHeaders($session);
 
         Log::info("ANGEL_DEBUG headers", ['headers' => $headers, 'endpoint' => $endpoint]);
 
@@ -240,16 +270,36 @@ class AngelBrokerService
         return $data;
     }
 
-    private function headers(): array
+    /** Headers for the LOGIN call — no Authorization header exists yet. */
+    private function loginHeaders(string $apiKey, string $localIp, string $publicIp, string $mac): array
+    {
+        return [
+            'X-UserType: USER', 'X-SourceID: WEB',
+            'X-PrivateKey: '     . $apiKey,
+            'X-ClientLocalIP: '  . $localIp,
+            'X-ClientPublicIP: ' . $publicIp,
+            'X-MACAddress: '     . $mac,
+            'Content-Type: application/json', 'Accept: application/json',
+        ];
+    }
+
+    /** Headers for authenticated calls — MUST reuse the IP/MAC frozen into $session at login. */
+    private function orderHeaders(array $session): array
     {
         return [
             'X-UserType: USER', 'X-SourceID: WEB',
             'X-PrivateKey: '     . $this->broker->api_key,
-            'X-ClientLocalIP: '  . env('ANGEL_CLIENT_LOCAL_IP', '192.168.1.1'),
-            'X-ClientPublicIP: ' . env('ANGEL_CLIENT_PUBLIC_IP', '1.1.1.1'),
-            'X-MACAddress: '     . env('ANGEL_MAC_ADDRESS', '00-00-00-00-00-00'),
+            'X-ClientLocalIP: '  . $session['localIp'],
+            'X-ClientPublicIP: ' . $session['publicIp'],
+            'X-MACAddress: '     . $session['mac'],
             'Content-Type: application/json', 'Accept: application/json',
+            'Authorization: Bearer ' . $session['token'],
         ];
+    }
+
+    private function sessionCacheKey(): string
+    {
+        return 'ANGEL_SESSION_' . $this->broker->id;
     }
 
     private function hasValidStoredToken(): bool
@@ -262,6 +312,7 @@ class AngelBrokerService
 
     private function markInvalid(string $reason): void
     {
+        Cache::forget($this->sessionCacheKey());
         $this->broker->update(['is_token_valid' => false]);
         Log::error("AngelBrokerService: broker #{$this->broker->id} token invalidated — {$reason}");
     }
