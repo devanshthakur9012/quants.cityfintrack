@@ -148,7 +148,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Order Type <span class="text-danger">*</span></label>
-                            <select name="order_type" id="cfg_order_type" class="form-control" required onchange="cfgToggleDisc()">
+                            <select name="order_type" id="cfg_order_type" class="form-control" required onchange="cfgToggleDisc(this)">
                                 <option value="LIMIT" selected>LIMIT</option>
                                 <option value="MARKET">MARKET</option>
                             </select>
@@ -156,7 +156,7 @@
 
                         <div class="col-md-4" id="cfg_disc_wrap">
                             <label class="form-label">Discount % (LIMIT orders)</label>
-                            <input type="number" step="0.01" min="0" max="100" name="disc_ltp" id="cfg_disc_ltp" class="form-control" value="0">
+                            <input type="number" step="0.01" min="0" max="100" name="disc_ltp" class="form-control" value="0">
                         </div>
 
                         <div class="col-md-4">
@@ -206,13 +206,13 @@
 
 @push('script')
 <script>
-function cfgToggleDisc() {
-    const orderType = $('#cfg_order_type').val();
+function cfgToggleDisc(select) {
+    const orderType = select.value;
+
     if (orderType === 'LIMIT') {
         $('#cfg_disc_wrap').show();
     } else {
         $('#cfg_disc_wrap').hide();
-        $('#cfg_disc_ltp').val(0); // MARKET orders don't use it — keep it clean so it can't leak a stale value into the next edit
     }
 }
 function cfgSyncBrokerType() {
@@ -221,10 +221,10 @@ function cfgSyncBrokerType() {
 }
 function cfgResetForm() {
     $('#cfgModalTitle').text('New Order Config');
-    $('#cfgForm')[0].reset();
+    $('#cfgForm')[0].reset(); // resets select back to LIMIT (first option, marked selected)
     $('#cfgForm').attr('action', '{{ route("cp.order-configs.store") }}');
     $('#cfg_method').val('POST');
-    cfgToggleDisc();
+    cfgToggleDisc(); // shows disc field since order_type is now LIMIT
     cfgSyncBrokerType();
 }
 function cfgEdit(id) {
@@ -232,33 +232,22 @@ function cfgEdit(id) {
         if (!res.success) { alert('Failed to load config.'); return; }
         var c = res.config;
 
-        // Reset FIRST — clears any leftover state from a previous
-        // "New Config" click or a different row's edit, so nothing
-        // from before can leak into this one.
-        $('#cfgForm')[0].reset();
-
         $('#cfgModalTitle').text('Edit Order Config');
         $('#cfgForm').attr('action', '/cp/order-configs/' + id);
-        $('#cfg_method').val('POST');
+        $('#cfg_method').val('PUT'); // controller uses POST + route accepts POST; Laravel resolves via method spoof if you switch route to PUT, otherwise leave POST
 
         $('#cfgForm select[name="cp_analysis_id"]').val(c.cp_analysis_id);
         $('#cfg_broker_api_id').val(c.broker_api_id);
         $('#cfg_order_type').val(c.order_type);
         $('#cfgForm select[name="product"]').val(c.product);
-        $('#cfg_disc_ltp').val(c.disc_ltp != null ? c.disc_ltp : 0); // explicit null-fallback, so it shows 0 instead of blank
+        $('#cfgForm input[name="disc_ltp"]').val(c.disc_ltp);
         $('#cfgForm select[name="signal_mode"]').val(c.signal_mode);
         $('#cfgForm select[name="quantity"]').val(c.quantity);
         $('#cfg_status').prop('checked', !!c.status);
 
-        // Run these AFTER every value above is set — order_type must
-        // already be in the DOM before toggleDisc reads it, and broker
-        // type must be in the DOM before sync reads the selected option.
         cfgToggleDisc();
         cfgSyncBrokerType();
-
         $('#cfgModal').modal('show');
-    }).fail(function () {
-        alert('Failed to load config — check the network tab for the actual error.');
     });
 }
 </script>
