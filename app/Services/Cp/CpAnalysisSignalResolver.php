@@ -16,14 +16,18 @@ class CpAnalysisSignalResolver
      */
     public function resolve(CpAnalysis $analysis, string $date): array
     {
-        return match ($analysis->route_name) {
+        \Log::info("CpAnalysisSignalResolver: resolving for route_name='{$analysis->route_name}' date={$date}"); // ← ADD
+
+        $result = match ($analysis->route_name) {
             'gap-reversal'      => $this->fromGapReversal($date),
             'oi-flow-sentiment' => $this->fromOiFlowSentiment($date),
             'oiiv-pece'         => $this->fromOiivPece($date),
-            // 'pivot-signal'   => $this->fromPivotSignal($date),
-            // 'mm-trap'        => $this->fromMmTrap($date),
             default             => [],
         };
+
+        \Log::info("CpAnalysisSignalResolver: resolved " . count($result) . " signal(s) for route_name='{$analysis->route_name}'"); // ← ADD
+
+        return $result;
     }
 
     private function fromGapReversal(string $date): array
@@ -43,6 +47,8 @@ class CpAnalysisSignalResolver
     private function fromOiFlowSentiment(string $date): array
     {
         $rows = app(\App\Services\Cp\OIFlowSentimentService::class)->getSignalsForDate($date);
+
+        \Log::info("fromOiFlowSentiment: getSignalsForDate({$date}) returned " . count($rows) . " row(s)", ['rows' => $rows]); // ← ADD
 
         $out = [];
         foreach ($rows as $r) {

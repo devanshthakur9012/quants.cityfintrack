@@ -291,10 +291,18 @@ class OIFlowSentimentService
     {
         try {
             $config = $this->getActiveConfig();
-            if (!$config) return [];
+            if (!$config) {
+                \Log::info("getSignalsForDate({$date}): NO active config found — guard 1"); // ← ADD
+                return [];
+            }
+            \Log::info("getSignalsForDate({$date}): active config id={$config->id}"); // ← ADD
 
             $symbols = $this->getConfigSymbols($config->id);
-            if (empty($symbols)) return [];
+            if (empty($symbols)) {
+                \Log::info("getSignalsForDate({$date}): NO symbols for config id={$config->id} — guard 2"); // ← ADD
+                return [];
+            }
+            \Log::info("getSignalsForDate({$date}): " . count($symbols) . " symbols: " . implode(',', $symbols)); // ← ADD
 
             $prevDate = $this->getPreviousTradingDate($date);
             $optTable = self::OPT_TABLE;
@@ -315,7 +323,12 @@ class OIFlowSentimentService
                     else $peToday[$r->base_symbol] = (int) $r->total_oi;
                 });
 
-            if (empty($ceToday) && empty($peToday)) return []; // 14:45 candle hasn't printed yet today
+            \Log::info("getSignalsForDate({$date}): ceToday=" . count($ceToday) . " peToday=" . count($peToday)); // ← ADD
+
+            if (empty($ceToday) && empty($peToday)) {
+                \Log::info("getSignalsForDate({$date}): both ceToday/peToday EMPTY — guard 3 (config_id={$config->id}, symbols=" . implode(',', $symbols) . ")"); // ← ADD
+                return [];
+            }
 
             $cePrevArr = []; $pePrevArr = [];
             DB::table($optTable)
@@ -364,10 +377,12 @@ class OIFlowSentimentService
                 ];
             }
 
+            \Log::info("getSignalsForDate({$date}): built " . count($results) . " final signal(s) after WAIT-filtering", ['results' => $results]); // ← ADD before final return
+
             return $results;
 
         } catch (\Exception $e) {
-            Log::error('OIFlowSentimentService getSignalsForDate: ' . $e->getMessage());
+            \Log::error('OIFlowSentimentService getSignalsForDate: ' . $e->getMessage());
             return [];
         }
     }
