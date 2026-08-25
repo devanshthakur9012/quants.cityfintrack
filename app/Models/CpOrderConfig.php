@@ -11,13 +11,13 @@ class CpOrderConfig extends Model
     protected $fillable = [
     'user_id', 'cp_analysis_id', 'broker_type', 'broker_api_id',
         'order_type', 'product', 'disc_ltp', 'signal_mode', 'quantity',
-        'status', 'last_run_date',
+        'status', 'last_run_at',
     ];
 
     protected $casts = [
-        'status'        => 'boolean',
-        'disc_ltp'      => 'float',
-        'last_run_date' => 'date',
+        'status'      => 'boolean',
+        'disc_ltp'    => 'float',
+        'last_run_at' => 'datetime',
     ];
 
     // ── Relationships ────────────────────────────────────────────────────
