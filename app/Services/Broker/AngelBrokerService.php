@@ -197,7 +197,17 @@ class AngelBrokerService
             'stoploss'        => '0',
         ];
 
+        Log::info("ANGEL_DEBUG payload", [
+            'symbol'      => $symbol,
+            'symboltoken' => $token,
+            'jwt_len'     => strlen($jwtToken),
+            'jwt_prefix'  => substr($jwtToken, 0, 15),
+        ]);
+
         $resp = $this->callApi('/rest/secure/angelbroking/order/v1/placeOrder', $payload, $jwtToken);
+
+        Log::info("ANGEL_DEBUG raw response", ['resp' => $resp]);
+
         if (empty($resp['data']['orderid'])) {
             throw new \Exception("Angel placeOrder failed for {$symbol}: " . ($resp['message'] ?? json_encode($resp)));
         }
