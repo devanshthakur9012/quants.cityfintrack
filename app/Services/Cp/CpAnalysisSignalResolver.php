@@ -42,9 +42,7 @@ class CpAnalysisSignalResolver
 
     private function fromOiFlowSentiment(string $date): array
     {
-        /** @var OIFlowSentimentController $ctrl */
-        $ctrl = app(OIFlowSentimentController::class);
-        $rows = $ctrl->getSignalsForDate($date); // ← extract from analyze()
+        $rows = app(\App\Services\Cp\OIFlowSentimentService::class)->getSignalsForDate($date);
 
         $out = [];
         foreach ($rows as $r) {
