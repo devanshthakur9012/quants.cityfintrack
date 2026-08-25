@@ -164,9 +164,12 @@ class AngelBrokerService
     private function matchAngelOption(string $baseSymbol, string $expiryDate, float $strike, string $optionType): ?object
     {
         $expiry = \Carbon\Carbon::parse($expiryDate)->format('Y-m-d');
+        $instrumentType = in_array($baseSymbol, ['NIFTY', 'BANKNIFTY', 'SENSEX']) ? 'OPTIDX' : 'OPTSTK'; // ← added
 
         return AngelApiInstrument::where('name', strtoupper($baseSymbol))
             ->where('expiry', $expiry)
+            ->where('exch_seg', 'NFO')                         // ← added — excludes non-F&O duplicates
+            ->where('instrumenttype', $instrumentType)          // ← added — excludes wrong-segment duplicates
             ->where('symbol_name', 'LIKE', '%' . strtoupper($optionType))
             ->where(function ($q) use ($strike) {
                 $q->whereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike])
