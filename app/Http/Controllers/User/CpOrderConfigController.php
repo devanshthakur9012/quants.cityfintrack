@@ -108,9 +108,8 @@ class CpOrderConfigController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'cp_analysis_id' => 'required|exists:cp_analyses,id',
-            'broker_type'    => 'required|in:Zerodha,AngelOne',
             'broker_api_id'  => 'required|exists:broker_apis,id',
             'order_type'     => 'required|in:LIMIT,MARKET',
             'product'        => 'required|in:MIS,NRML',
@@ -118,5 +117,13 @@ class CpOrderConfigController extends Controller
             'signal_mode'    => 'required|in:align,opposite',
             'quantity'       => 'required|integer|min:1|max:5',
         ]);
+
+        $broker = \App\Models\BrokerApi::findOrFail($data['broker_api_id']);
+        if (!in_array($broker->client_type, ['Zerodha', 'AngelOne'])) {
+            abort(422, 'Selected broker is not a supported type.');
+        }
+        $data['broker_type'] = $broker->client_type;
+
+        return $data;
     }
 }
