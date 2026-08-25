@@ -125,6 +125,7 @@ use App\Http\Controllers\SecureVideoController;
 use App\Http\Controllers\User\GapReversalController;
 use App\Http\Controllers\User\GapReversalAnalysisController;
 use App\Http\Controllers\User\StockOIStrategyController;
+use App\Http\Controllers\User\OIFlowMultiTimeController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
@@ -1487,4 +1488,10 @@ Route::controller('SiteController')->group(function () {
         Route::get('/symbols',    [StockOIStrategyController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',    [StockOIStrategyController::class, 'analyze'])->name('analyze');
     });
-    
+
+    Route::middleware(['auth'])->prefix('oi-flow-multi')->name('oi-flow-multi.')->group(function () {
+        Route::get('/index',     [OIFlowMultiTimeController::class, 'index'])->name('index');
+        Route::get('/last-date', [OIFlowMultiTimeController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',   [OIFlowMultiTimeController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',   [OIFlowMultiTimeController::class, 'analyze'])->name('analyze');
+    });
