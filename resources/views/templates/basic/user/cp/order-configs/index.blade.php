@@ -16,6 +16,9 @@
     .status-on{background:#28a745;} .status-off{background:#6c757d;}
     .status-pill{color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:none;}
     .empty-state{text-align:center;padding:50px 20px;color:#8a8a8a;}
+    th{
+        color:#000;
+    }
 </style>
 @endpush
 
