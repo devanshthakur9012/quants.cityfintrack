@@ -19,7 +19,9 @@ use Illuminate\Support\Facades\Log;
 
 class CpProcessOrderConfigs extends Command
 {
-    protected $signature = 'cp:process-order-configs {--config= : Only process a specific cp_order_configs.id}';
+    protected $signature = 'cp:process-order-configs
+                        {--config= : Only process a specific cp_order_configs.id}
+                        {--date= : Test against a specific date (Y-m-d) instead of today}';
     protected $description = 'Per-minute: checks every active config for signals and places orders when ready';
 
     public function __construct(private CpOrderPlacementService $placementService)
@@ -29,7 +31,7 @@ class CpProcessOrderConfigs extends Command
 
     public function handle(): int
     {
-        $today = now()->toDateString();
+        $date = $this->option('date') ?: now()->toDateString();
 
         $query = CpOrderConfig::with(['analysis', 'broker'])->where('status', true);
         if ($this->option('config')) {
@@ -49,14 +51,12 @@ class CpProcessOrderConfigs extends Command
             }
 
             try {
-                $result = $this->placementService->runForConfig($config, $today);
+                $result = $this->placementService->runForConfig($config, $date); // ← was hardcoded today
                 $config->update(['last_run_at' => now()]);
 
-                if ($result['placed'] > 0 || $result['errors'] > 0) {
-                    $line = "Config #{$config->id} ({$config->analysis->name}): placed={$result['placed']} skipped={$result['skipped']} errors={$result['errors']}";
-                    $this->info($line);
-                    Log::info("CpProcessOrderConfigs: {$line}");
-                }
+                $line = "Config #{$config->id} ({$config->analysis->name}) [{$date}]: placed={$result['placed']} skipped={$result['skipped']} errors={$result['errors']}";
+                $this->info($line);
+                Log::info("CpProcessOrderConfigs: {$line}");
             } catch (\Exception $e) {
                 $this->error("Config #{$config->id}: {$e->getMessage()}");
                 Log::error("CpProcessOrderConfigs: config #{$config->id} — {$e->getMessage()}");
