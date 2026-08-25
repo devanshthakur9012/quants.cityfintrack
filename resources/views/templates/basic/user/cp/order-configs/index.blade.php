@@ -55,18 +55,18 @@
             <tbody>
                 @forelse($configs as $config)
                     <tr>
-                        <td>{{ $configs->firstItem() + $loop->index }}</td>
+                        <td class="text-dark">{{ $configs->firstItem() + $loop->index }}</td>
                         <td>
-                            <strong>{{ $config->analysis->name ?? '—' }}</strong><br>
+                            <strong class="text-dark">{{ $config->analysis->name ?? '—' }}</strong><br>
                             <small class="text-muted">{{ $config->analysis->route_name ?? '' }}</small>
                         </td>
                         <td>
-                            <span class="badge-broker-{{ strtolower($config->broker_type) }}">{{ $config->broker_type }}</span><br>
+                            <span class="text-dark badge-broker-{{ strtolower($config->broker_type) }}">{{ $config->broker_type }}</span><br>
                             <small class="text-muted">{{ $config->broker->client_name ?? '—' }}</small>
                         </td>
                         <td><span class="badge-type">{{ $config->order_type }}</span></td>
                         <td><span class="badge-type">{{ $config->product }}</span></td>
-                        <td>{{ $config->order_type === 'LIMIT' ? number_format($config->disc_ltp, 2) . '%' : '—' }}</td>
+                        <td class="text-dark">{{ $config->order_type === 'LIMIT' ? number_format($config->disc_ltp, 2) . '%' : '—' }}</td>
                         <td><span class="badge-{{ $config->signal_mode }}">{{ ucfirst($config->signal_mode) }}</span></td>
                         <td class="qty-ce">{{ $config->quantity }} lot(s)</td>
                         <td>
