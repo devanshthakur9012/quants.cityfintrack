@@ -78,6 +78,10 @@ class CpOrderPlacementService
                 $result = $connector->placeOrder([
                     'trading_symbol'   => $instrument->trading_symbol,
                     'instrument_token' => $instrument->instrument_token,
+                    'base_symbol'       => $instrument->base_symbol,   // ← NEW
+                    'expiry_date'       => $instrument->expiry_date,   // ← NEW
+                    'strike'            => $instrument->strike,        // ← NEW
+                    'instrument_type'   => $optionType,                 // ← NEW ('CE'/'PE')
                     'transaction_type' => 'BUY',
                     'order_type'       => $config->order_type,
                     'product'          => $config->product,

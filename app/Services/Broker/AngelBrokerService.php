@@ -113,8 +113,7 @@ class AngelBrokerService
     {
         $jwtToken = $this->getValidAccessToken();
 
-        [$angelSymbol, $angelToken, $lotSize, $tickSize] =
-            $this->getInstrumentInfo($params['trading_symbol'], $params['instrument_token']);
+        [$angelSymbol, $angelToken, $lotSize, $tickSize] = $this->getInstrumentInfo($params);
 
         if (empty($angelToken)) {
             throw new \Exception("AngelBrokerService: [{$angelSymbol}] not found in angel_api_instruments. Run angel_instrument:daily_update.");
@@ -132,25 +131,48 @@ class AngelBrokerService
 
     // ── Private: instrument lookup (Zerodha exchange_token bridge) ──────
 
-    private function getInstrumentInfo(string $tradingSymbol, int $instrumentToken): array
+    private function getInstrumentInfo(array $params): array
     {
-        $key = (string) $instrumentToken;
+        $key = $params['instrument_token'] . '|' . $params['instrument_type'];
         if (isset($this->instrumentCache[$key])) return $this->instrumentCache[$key];
 
         $angelRow = null;
-        $zerodhaRow = ZerodhaInstrument::where('instrument_token', $instrumentToken)->first();
+
+        // Attempt 1: fast path — bridge via Zerodha's exchange_token, if it happens to line up
+        $zerodhaRow = ZerodhaInstrument::where('instrument_token', $params['instrument_token'])->first();
         if ($zerodhaRow) {
             $angelRow = AngelApiInstrument::where('token', (string) $zerodhaRow->exchange_token)->first();
         }
+
+        // Attempt 2: robust match — underlying + expiry + strike + CE/PE, not string equality
         if (!$angelRow) {
-            $angelRow = AngelApiInstrument::where('symbol_name', strtoupper($tradingSymbol))->first();
+            $angelRow = $this->matchAngelOption(
+                $params['base_symbol'],
+                $params['expiry_date'],
+                (float) $params['strike'],
+                $params['instrument_type']
+            );
         }
 
-        $angelSymbolName = $angelRow->symbol_name ?? strtoupper($tradingSymbol);
+        $angelSymbolName = $angelRow->symbol_name ?? strtoupper($params['trading_symbol']);
         $angelToken      = $angelRow->token ?? '';
         $lotSize         = max(1, (int) ($angelRow->lotsize ?? 1));
 
         return $this->instrumentCache[$key] = [$angelSymbolName, $angelToken, $lotSize, 0.05];
+    }
+
+    private function matchAngelOption(string $baseSymbol, string $expiryDate, float $strike, string $optionType): ?object
+    {
+        $expiry = \Carbon\Carbon::parse($expiryDate)->format('Y-m-d');
+
+        return AngelApiInstrument::where('name', strtoupper($baseSymbol))
+            ->where('expiry', $expiry)
+            ->where('symbol_name', 'LIKE', '%' . strtoupper($optionType))
+            ->where(function ($q) use ($strike) {
+                $q->whereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike])
+                ->orWhereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike * 100]);
+            })
+            ->first();
     }
 
     private function sendOrder(string $jwtToken, string $symbol, string $token, string $txType, string $orderType, string $product, int $qty, float $price, float $tickSize): string
