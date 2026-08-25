@@ -219,6 +219,8 @@ class AngelBrokerService
         $headers = $this->headers();
         $headers[] = 'Authorization: Bearer ' . $jwtToken;
 
+        Log::info("ANGEL_DEBUG headers", ['headers' => $headers, 'endpoint' => $endpoint]);
+
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL            => self::BASE_URL . $endpoint,
