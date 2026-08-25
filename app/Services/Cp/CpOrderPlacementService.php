@@ -147,14 +147,32 @@ class CpOrderPlacementService
         };
     }
 
+    // CpOrderPlacementService.php — replace resolveAtmInstrument() with this
     private function resolveAtmInstrument(string $symbol, string $optionType, string $date)
     {
-        return \App\Models\OptionOhlcData::where('base_symbol', $symbol)
+        $config = \DB::table('analysis_configs')
+            ->where('time_frame', '15min')
+            ->where('is_active', 1)
+            ->first();
+
+        if (!$config) {
+            throw new \Exception("resolveAtmInstrument: no active 15min analysis_config found for {$symbol}");
+        }
+
+        $row = \DB::table('cp_option_ohlc_15min')
+            ->where('analysis_config_id', $config->id)
+            ->where('base_symbol', $symbol)
             ->where('instrument_type', $optionType)
             ->where('strike_position', 'ATM')
             ->whereDate('trade_date', $date)
-            ->where('is_missing', 0)
+            ->where('is_missing', false)
             ->orderByDesc('interval_time')
-            ->firstOrFail();
+            ->first();
+
+        if (!$row) {
+            throw new \Exception("resolveAtmInstrument: no ATM {$optionType} row for {$symbol} on {$date}");
+        }
+
+        return $row;
     }
 }
