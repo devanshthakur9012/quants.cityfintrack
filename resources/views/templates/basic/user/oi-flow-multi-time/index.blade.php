@@ -53,10 +53,13 @@
 .omt-today-btn{width:auto;padding:0 10px;font-size:9px;font-family:var(--f-mono);font-weight:700;letter-spacing:.1em;}
 .omt-live-badge{background:rgba(38,166,154,.12);color:#4DB6AC;border:1px solid rgba(38,166,154,.25);border-radius:100px;font-size:10px;font-weight:700;padding:2px 9px;font-family:var(--f-mono);}
 .omt-hist-badge{background:rgba(255,167,38,.1);color:var(--c-amber);border:1px solid rgba(255,167,38,.25);border-radius:100px;font-size:10px;font-weight:700;padding:2px 9px;font-family:var(--f-mono);}
+.omt-range-badge{background:rgba(171,71,188,.12);color:#CE93D8;border:1px solid rgba(171,71,188,.3);border-radius:100px;font-size:10px;font-weight:700;padding:2px 9px;font-family:var(--f-mono);}
 .omt-analyze-btn{background:var(--c-lime);color:#000;border:none;border-radius:7px;padding:7px 20px;font-family:var(--f-display);font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:all .2s;box-shadow:0 0 14px rgba(125,255,0,.2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 .omt-analyze-btn:hover{background:#8FFF1A;box-shadow:0 0 22px rgba(125,255,0,.35);transform:translateY(-1px);}
-.omt-reset-btn{background:var(--c-panel);border:1px solid var(--c-border2);color:var(--c-muted);border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f-sans);transition:all .2s;}
+.omt-reset-btn{background:var(--c-panel);border:1px solid var(--c-border2);color:var(--c-muted);border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f-sans);transition:all .2s;white-space:nowrap;}
 .omt-reset-btn:hover{color:var(--c-text);}
+.omt-history-btn{background:rgba(171,71,188,.1);border:1px solid rgba(171,71,188,.3);color:#CE93D8;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--f-sans);transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+.omt-history-btn:hover{background:rgba(171,71,188,.18);}
 .omt-filter-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .omt-info-text{font-size:10px;color:var(--c-muted);font-family:var(--f-mono);}
 .omt-upd-text{font-size:10px;color:rgba(120,123,134,.45);font-family:var(--f-mono);}
@@ -132,7 +135,7 @@
     <div class="omt-hero-left">
         <div class="omt-eyebrow">Options Analytics</div>
         <h1>OI Flow Sentiment <span>Multi Snapshot</span></h1>
-        <p>Anchors on the previous trading day's <strong style="color:#fff;">closing OI (15:00)</strong> and independently checks it against today's OI at <strong style="color:#fff;">10:15, 11:15 and 12:15</strong> — so you can see how sentiment is building across the morning session, not just at one point in time.</p>
+        <p>Anchors on the previous trading day's <strong style="color:#fff;">closing OI (15:00)</strong> and independently checks it against today's OI at <strong style="color:#fff;">10:15, 11:15 and 12:15</strong> — so you can see how sentiment is building across the morning session, not just at one point in time. Pick a single symbol to pull up its full <strong style="color:#fff;">History</strong> across a date range.</p>
     </div>
     <div class="omt-hero-icon"><i class="las la-layer-group"></i></div>
 </div>
@@ -140,16 +143,28 @@
 <div class="omt-filter-bar">
     <div class="omt-filter-inner">
         <span class="omt-filter-label">Symbol</span>
-        <select id="omt-sym" class="omt-select" onchange="omtAnalyze()"><option value="ALL">— All —</option></select>
+        <select id="omt-sym" class="omt-select" onchange="omtOnSymbolChange()"><option value="ALL">— All —</option></select>
         <div class="omt-sep"></div>
+
         <span class="omt-filter-label">Date</span>
         <div class="omt-date-wrap">
             <button class="omt-date-nav" onclick="omtShiftDate(-1)">‹</button>
             <input type="date" id="omt-date" class="omt-date-input" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" onchange="omtAnalyze()">
             <button class="omt-date-nav" onclick="omtShiftDate(1)">›</button>
             <button class="omt-date-nav omt-today-btn" onclick="omtGoToday()">TODAY</button>
-            <span id="omt-date-badge"></span>
         </div>
+
+        {{-- History (date-range) controls — shown once a single symbol is picked --}}
+        <div class="omt-sep" id="omt-range-sep" style="display:none"></div>
+        <div class="omt-date-wrap" id="omt-range-wrap" style="display:none">
+            <input type="date" id="omt-from-date" class="omt-date-input" max="{{ now()->toDateString() }}" onchange="omtAnalyze()">
+            <span style="color:var(--c-muted);font-size:11px;">→</span>
+            <input type="date" id="omt-to-date" class="omt-date-input" max="{{ now()->toDateString() }}" onchange="omtAnalyze()">
+            <button class="omt-date-nav omt-today-btn" onclick="omtQuick30()" title="Last 30 days">30D</button>
+        </div>
+
+        <span id="omt-date-badge"></span>
+
         <div class="omt-sep"></div>
         <span class="omt-filter-label">Action</span>
         <select id="omt-action" class="omt-select" onchange="omtAnalyze()">
@@ -158,8 +173,11 @@
             <option value="BUY PE">BUY PE (any snapshot)</option>
             <option value="WAIT">WAIT (any snapshot)</option>
         </select>
+
+        <button class="omt-history-btn" id="omt-history-btn" onclick="omtToggleRangeMode()" style="display:none">📊 History</button>
         <button class="omt-analyze-btn" onclick="omtAnalyze()"><i class="las la-search"></i> Analyze</button>
         <button class="omt-reset-btn" onclick="omtReset()">↺ Reset</button>
+
         <div class="omt-filter-right">
             <span class="omt-info-text" id="omt-info"></span>
             <span class="omt-upd-text"  id="omt-upd"></span>
@@ -170,7 +188,7 @@
 <div class="omt-content">
     <div class="omt-warn" id="omt-warn"><i class="las la-exclamation-triangle"></i><div><strong>No Analysis Config Found</strong><div style="font-size:12px;margin-top:3px;color:var(--c-muted);" id="omt-warn-msg">Go to Admin → Analysis Config and create a config with symbols.</div></div></div>
 
-    <div class="omt-anchor-note"><i class="las la-anchor"></i> Anchor = previous trading day's closing OI (15:00). Each snapshot column below is compared independently against this same anchor.</div>
+    <div class="omt-anchor-note"><i class="las la-anchor"></i> Anchor = previous trading day's closing OI (15:00). Each snapshot column below is compared independently against this same anchor. <span id="omt-anchor-extra"></span></div>
 
     <div class="omt-stats-groups omt-anim" id="omt-stats-groups"></div>
 
@@ -208,6 +226,7 @@
 /* ═══ OI Flow Multi-Snapshot — JS ═══ */
 var OMT_ANALYZE='{{route("oi-flow-multi.analyze")}}',OMT_SYMBOLS='{{route("oi-flow-multi.symbols")}}',OMT_LASTDATE='{{route("oi-flow-multi.last.date")}}',OMT_TODAY='{{now()->toDateString()}}';
 var omtSymCache=null, omtLabels=['10:15','11:15','12:15']; // overwritten by server response
+var omtMode='single'; // 'single' | 'range' — range mode = symbol-wise "History" view
 function el(id){return document.getElementById(id);}
 function html(id,h){var e=el(id);if(e)e.innerHTML=h;}
 function txt(id,t){var e=el(id);if(e)e.textContent=t;}
@@ -220,6 +239,47 @@ function omtUpdateDateBadge(isToday){el('omt-date-badge').innerHTML=isToday?'<sp
 function omtLoadSymbols(callback){if(omtSymCache!==null){omtRebuildSym(omtSymCache);if(callback)callback();return;}fetch(OMT_SYMBOLS,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(res){if(res.no_config){omtShowWarn(res.message||'');omtSymCache=[];omtRebuildSym([]);}else{omtHideWarn();omtSymCache=res.symbols||[];omtRebuildSym(omtSymCache);}if(callback)callback();}).catch(function(){if(callback)callback();});}
 function omtRebuildSym(syms){var sel=el('omt-sym'),prev=sel.value,opts='<option value="ALL">— All Symbols —</option>';syms.forEach(function(s){opts+='<option value="'+s+'"'+(s===prev?' selected':'')+'>'+s+'</option>';});sel.innerHTML=opts;if(prev&&prev!=='ALL'){sel.value=prev;if(sel.value!==prev)sel.value='ALL';}}
 
+/* ── Symbol change: reveal/hide the History (range) toggle ── */
+function omtOnSymbolChange(){
+    var sym=el('omt-sym').value;
+    if(sym==='ALL'){
+        el('omt-history-btn').style.display='none';
+        if(omtMode==='range'){omtToggleRangeMode();return;} // snaps back to single-date mode & re-analyzes
+    }else{
+        el('omt-history-btn').style.display='inline-flex';
+    }
+    omtAnalyze();
+}
+
+/* ── Toggle between single-date and symbol-wise date-range (History) mode ── */
+function omtToggleRangeMode(){
+    omtMode=(omtMode==='single')?'range':'single';
+    if(omtMode==='range'){
+        el('omt-date').style.display='none';
+        el('omt-range-wrap').style.display='flex';
+        el('omt-range-sep').style.display='block';
+        el('omt-history-btn').innerHTML='📅 Single Day';
+        el('omt-date-badge').innerHTML='<span class="omt-range-badge">📊 History</span>';
+        if(!el('omt-from-date').value||!el('omt-to-date').value)omtSetRangeDefaults(30);
+        txt('omt-anchor-extra','Showing '+el('omt-sym').value+' across the selected range, most recent first.');
+    }else{
+        el('omt-date').style.display='inline-block';
+        el('omt-range-wrap').style.display='none';
+        el('omt-range-sep').style.display='none';
+        el('omt-history-btn').innerHTML='📊 History';
+        txt('omt-anchor-extra','');
+    }
+    omtAnalyze();
+}
+function omtSetRangeDefaults(days){
+    var to=el('omt-date').value||OMT_TODAY;
+    var toDt=new Date(to),fromDt=new Date(toDt);
+    fromDt.setDate(fromDt.getDate()-(days-1));
+    el('omt-to-date').value=toDt.toISOString().split('T')[0];
+    el('omt-from-date').value=fromDt.toISOString().split('T')[0];
+}
+function omtQuick30(){omtSetRangeDefaults(30);omtAnalyze();}
+
 var omtSnapClasses=['g-s1','g-s2','g-s3'];
 function omtBuildHead(){
     var groupHtml='',colsHtml='';
@@ -228,7 +288,6 @@ function omtBuildHead(){
         groupHtml+='<th colspan="6" class="'+cls+' sep-s'+(i+1)+'">'+label+' vs Prev Close</th>';
         colsHtml+='<th class="sep-s'+(i+1)+'">CE OI</th><th>CE %</th><th>PE OI</th><th>PE %</th><th>Sentiment</th><th>Action</th>';
     });
-    var baseGroup=el('omt-thead-group').querySelectorAll('th');
     el('omt-thead-group').innerHTML='<th colspan="5" class="g-info">Market Info</th><th colspan="3" class="g-anchor sep-anchor">Prev Day Close OI (Anchor)</th>'+groupHtml;
     el('omt-thead-cols').innerHTML='<th>#</th><th>Date</th><th>Symbol</th><th>ATM / FUT</th><th>Expiry</th><th class="sep-anchor">CE OI</th><th>PE OI</th><th>Prev Trend</th>'+colsHtml;
     omtBuildStatGroups();
@@ -249,7 +308,45 @@ function omtBuildStatGroups(){
 }
 function omtKey(label){return label.replace(':','');}
 
-function omtAnalyze(){var date=omtGetDate(),action=el('omt-action').value,sym=el('omt-sym').value;if(!date)return;omtHideWarn();omtResetStats();var colspan=8+omtLabels.length*6;html('omt-tbody','<tr><td colspan="'+colspan+'"><div class="omt-spinner-row"><div class="omt-spinner"></div>Calculating multi-snapshot OI flow for '+date+'…</div></div></td></tr>');txt('omt-subtitle',date+' · Loading…');var params=new URLSearchParams({date:date,filter_action:action});if(sym&&sym!=='ALL')params.append('symbols[]',sym);fetch(OMT_ANALYZE+'?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){if(!r.ok)throw new Error('Server error '+r.status);return r.json();}).then(function(res){if(res.snapshot_labels&&res.snapshot_labels.length){omtLabels=res.snapshot_labels;omtBuildHead();}if(typeof res.is_today!=='undefined')omtUpdateDateBadge(res.is_today);if(res.available_symbols&&res.available_symbols.length){omtSymCache=res.available_symbols;omtRebuildSym(omtSymCache);if(sym&&sym!=='ALL')el('omt-sym').value=sym;}if(res.no_config){omtShowWarn(res.message);omtEmptyTable('No active config.');return;}if(!res.success||!res.data||!res.data.length){omtEmptyTable(res.message||'No signals found for this date.');omtResetStats();txt('omt-subtitle',date+' · No data found');return;}if(res.stats)omtUpdateStats(res.stats);omtRenderTable(res.data);txt('omt-info','Total: '+res.total_records);txt('omt-subtitle',date+' · '+res.message);txt('omt-upd','Updated '+new Date().toLocaleTimeString());}).catch(function(err){omtEmptyTable('⚠ '+err.message);});}
+function omtAnalyze(){
+    var action=el('omt-action').value, sym=el('omt-sym').value;
+    var params, loadingLabel;
+
+    if(omtMode==='range'){
+        var from=el('omt-from-date').value, to=el('omt-to-date').value;
+        if(!from||!to)return;
+        if(sym==='ALL'){omtEmptyTable('Select a single symbol to view its history.');return;}
+        params=new URLSearchParams({from_date:from,to_date:to,filter_action:action});
+        params.append('symbols[]',sym);
+        loadingLabel=sym+' · '+from+' → '+to;
+    }else{
+        var date=omtGetDate();
+        if(!date)return;
+        params=new URLSearchParams({date:date,filter_action:action});
+        if(sym&&sym!=='ALL')params.append('symbols[]',sym);
+        loadingLabel=date;
+    }
+
+    omtHideWarn();omtResetStats();
+    var colspan=8+omtLabels.length*6;
+    html('omt-tbody','<tr><td colspan="'+colspan+'"><div class="omt-spinner-row"><div class="omt-spinner"></div>Calculating multi-snapshot OI flow for '+loadingLabel+'…</div></div></td></tr>');
+    txt('omt-subtitle',loadingLabel+' · Loading…');
+
+    fetch(OMT_ANALYZE+'?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+        .then(function(r){if(!r.ok)throw new Error('Server error '+r.status);return r.json();})
+        .then(function(res){
+            if(res.snapshot_labels&&res.snapshot_labels.length){omtLabels=res.snapshot_labels;omtBuildHead();}
+            if(omtMode==='single'&&typeof res.is_today!=='undefined')omtUpdateDateBadge(res.is_today);
+            if(res.available_symbols&&res.available_symbols.length){omtSymCache=res.available_symbols;omtRebuildSym(omtSymCache);if(sym&&sym!=='ALL')el('omt-sym').value=sym;}
+            if(res.no_config){omtShowWarn(res.message);omtEmptyTable('No active config.');return;}
+            if(!res.success||!res.data||!res.data.length){omtEmptyTable(res.message||'No signals found for this date.');omtResetStats();txt('omt-subtitle',loadingLabel+' · No data found');return;}
+            if(res.stats)omtUpdateStats(res.stats);
+            omtRenderTable(res.data);
+            txt('omt-info','Total: '+res.total_records+(omtMode==='range'?' across '+(new Set(res.data.map(function(r){return r.date;}))).size+' day(s)':''));
+            txt('omt-subtitle',loadingLabel+' · '+res.message);
+            txt('omt-upd','Updated '+new Date().toLocaleTimeString());
+        }).catch(function(err){omtEmptyTable('⚠ '+err.message);});
+}
 
 function omtRenderTable(data){var h='',num=1;data.forEach(function(r,i){var zebra=i%2===0?'tr-even':'tr-odd';var prevTrend='<span class="'+trendCls(r.prev_ce_trend)+'">CE:'+dashOr(r.prev_ce_trend)+'</span><br><span class="'+trendCls(r.prev_pe_trend)+'">PE:'+dashOr(r.prev_pe_trend)+'</span>';var snapCells='';omtLabels.forEach(function(label,idx){var s=r.snapshots?r.snapshots[label]:null;var sepCls='sep-s'+(idx+1);if(!s){snapCells+='<td class="'+sepCls+' dash-cell">—</td><td class="dash-cell">—</td><td class="dash-cell">—</td><td class="dash-cell">—</td><td class="dash-cell">—</td><td class="dash-cell">—</td>';return;}var isBull=s.sentiment==='BULLISH',isBear=s.sentiment==='BEARISH';var sentBadge=isBull?'<span class="sig-bull">▲ BULL</span>':isBear?'<span class="sig-bear">▼ BEAR</span>':'<span class="sig-neut">— NEUT</span>';var actBadge=s.trade_action==='BUY CE'?'<span class="act-ce">📈 CE</span>':s.trade_action==='BUY PE'?'<span class="act-pe">📉 PE</span>':'<span class="act-wt">⏸ WAIT</span>';snapCells+='<td class="'+sepCls+' c-oi">'+nInt(s.ce_oi)+'</td><td>'+pctCell(s.ce_oi_pct)+'</td><td class="c-oi">'+nInt(s.pe_oi)+'</td><td>'+pctCell(s.pe_oi_pct)+'</td><td>'+sentBadge+'</td><td>'+actBadge+'</td>';});h+='<tr class="'+zebra+'">'+'<td class="c-num">'+num+++'</td>'+'<td class="c-date">'+r.date+'</td>'+'<td class="c-sym">'+esc(r.symbol)+'</td>'+'<td>'+(r.atm_strike?'<span class="c-atm">₹'+nInt(r.atm_strike)+'</span>':'—')+(r.fut_price?'<br><span class="c-fut">F:₹'+f(r.fut_price)+'</span>':'')+'</td>'+'<td class="c-expiry">'+(r.expiry||'—')+'</td>'+'<td class="sep-anchor c-oi">'+nInt(r.prev_close_ce_oi)+'</td>'+'<td class="c-oi">'+nInt(r.prev_close_pe_oi)+'</td>'+'<td>'+prevTrend+'</td>'+snapCells+'</tr>';});html('omt-tbody',h||omtEmptyHtml('No results.'));}
 
@@ -259,7 +356,15 @@ function omtShowWarn(msg){el('omt-warn').classList.add('show');txt('omt-warn-msg
 function omtHideWarn(){el('omt-warn').classList.remove('show');}
 function omtEmptyTable(msg){html('omt-tbody',omtEmptyHtml(msg));}
 function omtEmptyHtml(msg){var colspan=8+omtLabels.length*6;return'<tr><td colspan="'+colspan+'"><div class="omt-empty"><div class="omt-empty-icon"><i class="las la-chart-bar"></i></div><p>'+(msg||'No data found.')+'</p></div></td></tr>';}
-function omtReset(){fetch(OMT_LASTDATE,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(res){el('omt-date').value=res.last_date||OMT_TODAY;el('omt-action').value='';el('omt-sym').value='ALL';omtHideWarn();omtAnalyze();}).catch(function(){el('omt-date').value=OMT_TODAY;el('omt-action').value='';el('omt-sym').value='ALL';omtHideWarn();omtAnalyze();});}
+function omtReset(){
+    omtMode='single';
+    el('omt-date').style.display='inline-block';
+    el('omt-range-wrap').style.display='none';
+    el('omt-range-sep').style.display='none';
+    el('omt-history-btn').innerHTML='📊 History';
+    txt('omt-anchor-extra','');
+    fetch(OMT_LASTDATE,{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json();}).then(function(res){el('omt-date').value=res.last_date||OMT_TODAY;el('omt-action').value='';el('omt-sym').value='ALL';el('omt-history-btn').style.display='none';omtHideWarn();omtAnalyze();}).catch(function(){el('omt-date').value=OMT_TODAY;el('omt-action').value='';el('omt-sym').value='ALL';el('omt-history-btn').style.display='none';omtHideWarn();omtAnalyze();});
+}
 
 function pctCell(v){if(v==null)return'<span class="pct-neu">—</span>';var n=parseFloat(v)||0,cls=n>0?'pct-up':n<0?'pct-down':'pct-neu';return'<span class="'+cls+'">'+(n>0?'+':'')+n.toFixed(2)+'%</span>';}
 function f(v){return parseFloat(v||0).toFixed(2);}

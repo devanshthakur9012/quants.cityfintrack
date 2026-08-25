@@ -22,6 +22,11 @@ use Illuminate\Support\Facades\Log;
  *
  * CE↑+PE↓ → BULLISH   CE↓+PE↑ → BEARISH   (same sentiment engine
  * as OIFlowSentimentController, just re-anchored per snapshot)
+ *
+ * NOTE: analyze() already supported from_date/to_date independently
+ * of the single `date` param — that's what powers "History" mode
+ * (symbol-wise date-range view) added on the frontend. This file
+ * adds a sane span guard and a clearer range-aware message.
  */
 class OIFlowMultiTimeController extends Controller
 {
@@ -29,6 +34,11 @@ class OIFlowMultiTimeController extends Controller
     private const PREV_CLOSE_TIME = '15:00:00'; // anchor
     private const PREV_OPEN_TIME  = '09:15:00'; // for prev-day buildup/unwinding tag
     private const OPT_TABLE       = 'cp_option_ohlc_15min';
+
+    // Max span (in days) allowed for a from_date/to_date range request.
+    // Keeps the "History" mode from hammering shared-hosting MySQL with
+    // an unbounded GROUP BY across months of 15-min rows.
+    private const MAX_RANGE_DAYS = 120;
 
     // Snapshot times to compare against the prev-day close anchor.
     // Add/remove entries here to change the columns shown — nothing
@@ -125,6 +135,18 @@ class OIFlowMultiTimeController extends Controller
                 return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
             }
 
+            // Guard against unbounded range requests (e.g. symbol-wise
+            // "History" mode on the frontend) — keeps the GROUP BY queries
+            // below from scanning months of 15-min rows on shared hosting.
+            $spanDays = Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate));
+            if ($spanDays > self::MAX_RANGE_DAYS) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Date range too large — please pick ' . self::MAX_RANGE_DAYS . ' days or fewer.',
+                    'data'    => [],
+                ]);
+            }
+
             $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
@@ -160,7 +182,7 @@ class OIFlowMultiTimeController extends Controller
                     'is_today'          => $fromDate === Carbon::today()->toDateString(),
                     'available_symbols' => $configSymbols,
                     'snapshot_labels'   => array_values(self::SNAPSHOT_TIMES),
-                    'message'           => 'No data found for the selected date.',
+                    'message'           => 'No data found for the selected date' . ($fromDate === $toDate ? '' : ' range') . '.',
                 ]);
             }
 
@@ -285,8 +307,6 @@ class OIFlowMultiTimeController extends Controller
             usort($results, fn($a, $b) => strcmp($b['date'], $a['date']) ?: strcmp($a['symbol'], $b['symbol']));
 
             // Per-snapshot stats
-            $stats = [];
-            foreach (self::SNAPSHOT_TIMES as $label) { /* placeholder overwritten below */ }
             foreach (array_values(self::SNAPSHOT_TIMES) as $label) {
                 $buyCe = 0; $buyPe = 0; $wait = 0; $bull = 0; $bear = 0;
                 foreach ($results as $r) {
@@ -304,16 +324,23 @@ class OIFlowMultiTimeController extends Controller
                 ];
             }
 
+            // Range-aware message: single date keeps the original wording,
+            // a from/to range says so explicitly (used by "History" mode).
+            $message = count($results) . ' record(s) found'
+                . ($fromDate === $toDate ? " for {$fromDate}" : " from {$fromDate} to {$toDate}");
+
             return response()->json([
                 'success'           => true,
                 'data'              => $results,
                 'total_records'     => count($results),
-                'stats'             => $stats,
+                'stats'             => $stats ?? [],
                 'snapshot_labels'   => array_values(self::SNAPSHOT_TIMES),
-                'message'           => count($results) . ' record(s) found for ' . $fromDate,
+                'message'           => $message,
                 'available_symbols' => $configSymbols,
                 'date'              => $fromDate,
-                'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                'from_date'         => $fromDate,
+                'to_date'           => $toDate,
+                'is_today'          => $fromDate === $toDate && $fromDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
