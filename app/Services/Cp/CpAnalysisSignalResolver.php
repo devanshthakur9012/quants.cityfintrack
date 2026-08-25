@@ -20,7 +20,7 @@ class CpAnalysisSignalResolver
 
         $result = match ($analysis->route_name) {
             'gap-reversal'      => $this->fromGapReversal($date),
-            'oi-flow-sentiment' => $this->fromOiFlowSentiment($date),
+            'oi-flow-sentiment.index' => $this->fromOiFlowSentiment($date),
             'oiiv-pece'         => $this->fromOiivPece($date),
             default             => [],
         };
