@@ -169,12 +169,24 @@ class OIFlowMultiTimeService
                             $diff > 10 => 'Rank 3', $diff > 5  => 'Rank 4', default => 'Normal'
                         };
 
+                        $angelSymbol = null;
+                        if ($tradeAction !== 'WAIT') {
+                            // priceRow for THIS snapshot/day is looked up right here — need the
+                            // ATM strike + expiry to resolve the Angel symbol for this snapshot
+                            $snapPriceRow = $snapshotPriceMaps[$label]["{$symbol}|{$d}"] ?? null;
+                            if ($snapPriceRow && !empty($snapPriceRow->atm_strike) && !empty($snapPriceRow->expiry_date)) {
+                                $optType = $tradeAction === 'BUY CE' ? 'CE' : 'PE';
+                                $angelSymbol = $this->resolveAngelSymbol($symbol, $snapPriceRow->expiry_date, (float) $snapPriceRow->atm_strike, $optType);
+                            }
+                        }
+
                         $snapshots[$label] = [
                             'ce_oi' => $ceNow, 'pe_oi' => $peNow,
                             'ce_oi_pct' => $cePct, 'pe_oi_pct' => $pePct, 'oi_diff' => $diff,
                             'sentiment' => $signal['sentiment'], 'condition' => $signal['condition'],
                             'reason' => $signal['reason'], 'trade_action' => $tradeAction,
                             'strength_rank' => $strengthRank,
+                            'angel_symbol' => $angelSymbol, // ← NEW
                         ];
                     }
 
@@ -421,5 +433,29 @@ class OIFlowMultiTimeService
     private function isHoliday(string $date): bool
     {
         return DB::table('market_holidays')->where('market_name', 'NSE')->where('holiday_date', $date)->exists();
+    }
+
+    /**
+     * Resolves the Angel-formatted tradable symbol for a CE/PE at a given
+     * strike+expiry — same matching logic as AngelBrokerService::matchAngelOption(),
+     * duplicated here (read-only, UI-only) so the dashboard can show what the
+     * bot will actually buy without depending on the broker service directly.
+    */
+    private function resolveAngelSymbol(string $baseSymbol, string $expiryDate, float $strike, string $optionType): ?string
+    {
+        $expiry = \Carbon\Carbon::parse($expiryDate)->format('Y-m-d');
+        $instrumentType = in_array($baseSymbol, ['NIFTY', 'BANKNIFTY', 'SENSEX']) ? 'OPTIDX' : 'OPTSTK';
+
+        return DB::table('angel_api_instruments')
+            ->where('name', strtoupper($baseSymbol))
+            ->where('expiry', $expiry)
+            ->where('exch_seg', 'NFO')
+            ->where('instrumenttype', $instrumentType)
+            ->where('symbol_name', 'LIKE', '%' . strtoupper($optionType))
+            ->where(function ($q) use ($strike) {
+                $q->whereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike])
+                ->orWhereRaw('ABS(CAST(strike AS DECIMAL(15,2)) - ?) < 0.01', [$strike * 100]);
+            })
+            ->value('symbol_name');
     }
 }
