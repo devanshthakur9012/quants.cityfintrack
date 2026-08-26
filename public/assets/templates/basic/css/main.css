@@ -5276,7 +5276,7 @@ body.lightmode [data-label]::before {
 }
 
 .table {
-    color: transparent !important;
+    color: #000 !important;
 }
 
 body:not(.lightmode) .list-group li {
