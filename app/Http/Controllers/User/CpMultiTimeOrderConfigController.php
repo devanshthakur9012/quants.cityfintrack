@@ -13,8 +13,6 @@ class CpMultiTimeOrderConfigController extends Controller
 {
     public function index()
     {
-        $this->requireAuth();
-
         $pageTitle = 'Multi-Snapshot Order Configs';
 
         $configs = CpMultiTimeOrderConfig::where('user_id', Auth::id())
