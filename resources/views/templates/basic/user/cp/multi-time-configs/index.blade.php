@@ -17,19 +17,6 @@
     .empty-state{text-align:center;padding:50px 20px;color:#8a8a8a;}
     .cfg-rule-badge{background:rgba(15,155,142,.1);color:#0f9b8e;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;}
     .cfg-rule-dash{color:#adb5bd;}
-    #mtCfgModal .form-label {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        color: #212529 !important;
-        font-weight: 500;
-        margin-bottom: 6px;
-    }
-    #mtCfgModal #mt_cfg_order_type {
-        display: block !important;
-        visibility: visible !important;
-        width: 100% !important;
-    }
 </style>
 @endpush
 
@@ -165,50 +152,22 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label for="mt_cfg_order_type" class="form-label">
-                                Order Type <span class="text-danger">*</span>
-                            </label>
-
-                            <select
-                                name="order_type"
-                                id="mt_cfg_order_type"
-                                class="form-control"
-                                required
-                            >
-                                <option value="LIMIT">LIMIT</option>
+                            <label class="form-label">Order Type <span class="text-danger">*</span></label>
+                            <select name="order_type" id="mt_cfg_order_type" class="form-control" required onchange="mtCfgToggleDisc()">
+                                <option value="LIMIT" selected>LIMIT</option>
                                 <option value="MARKET">MARKET</option>
                             </select>
                         </div>
 
                         <div class="col-md-4" id="mt_cfg_disc_wrap">
-                            <label for="mt_cfg_disc_ltp" class="form-label">
-                                Discount % <span class="text-muted">(LIMIT)</span>
-                            </label>
-
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                max="100"
-                                name="disc_ltp"
-                                id="mt_cfg_disc_ltp"
-                                class="form-control"
-                                value="0"
-                            >
+                            <label class="form-label">Discount % (LIMIT orders)</label>
+                            <input type="number" step="0.01" min="0" max="100" name="disc_ltp" id="mt_cfg_disc_ltp" class="form-control" value="0">
                         </div>
 
                         <div class="col-md-4">
-                            <label for="mt_cfg_product" class="form-label">
-                                Product <span class="text-danger">*</span>
-                            </label>
-
-                            <select
-                                name="product"
-                                id="mt_cfg_product"
-                                class="form-control"
-                                required
-                            >
-                                <option value="NRML">NRML (Carryforward)</option>
+                            <label class="form-label">Product <span class="text-danger">*</span></label>
+                            <select name="product" id="mt_cfg_product" class="form-control" required>
+                                <option value="NRML" selected>NRML (Carryforward)</option>
                                 <option value="MIS">MIS (Intraday)</option>
                             </select>
                         </div>
@@ -263,28 +222,14 @@
 @push('script')
 <script>
 function mtCfgToggleDisc() {
-    const orderType = $('#mt_cfg_order_type').val();
-
+    var orderType = $('#mt_cfg_order_type').val();
     if (orderType === 'LIMIT') {
-        $('#mt_cfg_disc_wrap').removeClass('d-none').show();
-        $('#mt_cfg_disc_ltp').prop('disabled', false);
+        $('#mt_cfg_disc_wrap').show();
     } else {
         $('#mt_cfg_disc_wrap').hide();
-        $('#mt_cfg_disc_ltp').val(0).prop('disabled', true);
+        $('#mt_cfg_disc_ltp').val(0); // MARKET orders don't use it — clear so no stale value gets submitted
     }
 }
-
-$(document).ready(function () {
-
-    $('#mt_cfg_order_type').on('change', function () {
-        mtCfgToggleDisc();
-    });
-
-    // Default
-    $('#mt_cfg_order_type').val('LIMIT');
-    mtCfgToggleDisc();
-
-});
 
 function mtCfgSyncBrokerType() {
     var opt = $('#mt_cfg_broker_api_id option:selected');
