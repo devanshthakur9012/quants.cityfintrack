@@ -9,16 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Config CRUD for OI Flow Multi-Snapshot ONLY — fully separate from
- * CpOrderConfigController (which handles OI Flow Sentiment and every
- * other analysis). No cp_analysis_id select here: this config table
- * IS the analysis, there's nothing else to pick.
- */
 class CpMultiTimeOrderConfigController extends Controller
 {
     public function index()
     {
+        $this->requireAuth();
+
         $pageTitle = 'Multi-Snapshot Order Configs';
 
         $configs = CpMultiTimeOrderConfig::where('user_id', Auth::id())
@@ -105,7 +101,6 @@ class CpMultiTimeOrderConfigController extends Controller
     }
 
     // ── Private ──────────────────────────────────────────────────────────
-
     private function validated(Request $request): array
     {
         $data = $request->validate([
@@ -117,6 +112,8 @@ class CpMultiTimeOrderConfigController extends Controller
             'quantity'       => 'required|integer|min:1|max:5',
             'max_price_pct_of_underlying' => 'nullable|numeric|min:0|max:100',
             'reentry_min_drop_pct'        => 'nullable|numeric|min:0|max:100',
+            'snapshot_times'   => 'required|array|min:1',
+            'snapshot_times.*' => 'in:10:15,11:15,12:15',
         ]);
 
         $broker = BrokerApi::findOrFail($data['broker_api_id']);

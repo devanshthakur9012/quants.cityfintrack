@@ -10,6 +10,7 @@ class CpMultiTimeOrderConfig extends Model
         'user_id', 'broker_type', 'broker_api_id',
         'order_type', 'product', 'disc_ltp', 'signal_mode', 'quantity',
         'max_price_pct_of_underlying', 'reentry_min_drop_pct',
+        'snapshot_times', // ← NEW
         'status', 'last_run_at',
     ];
 
@@ -18,6 +19,7 @@ class CpMultiTimeOrderConfig extends Model
         'disc_ltp'                    => 'float',
         'max_price_pct_of_underlying' => 'float',
         'reentry_min_drop_pct'        => 'float',
+        'snapshot_times'              => 'array', // ← NEW — stored as JSON, read back as PHP array
         'last_run_at'                 => 'datetime',
     ];
 

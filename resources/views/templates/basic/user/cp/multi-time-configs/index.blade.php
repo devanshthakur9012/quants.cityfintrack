@@ -17,6 +17,7 @@
     .empty-state{text-align:center;padding:50px 20px;color:#8a8a8a;}
     .cfg-rule-badge{background:rgba(15,155,142,.1);color:#0f9b8e;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;}
     .cfg-rule-dash{color:#adb5bd;}
+    .cfg-snap-badge{background:rgba(0,184,212,.1);color:#0097a7;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;margin:1px;display:inline-block;}
 </style>
 @endpush
 
@@ -44,6 +45,7 @@
                     <th>Disc %</th>
                     <th>Signal Mode</th>
                     <th>Qty</th>
+                    <th>Snapshots</th>
                     <th>Max Price %</th>
                     <th>Re-entry Drop %</th>
                     <th>Orders</th>
@@ -64,6 +66,13 @@
                         <td>{{ $config->order_type === 'LIMIT' ? number_format($config->disc_ltp, 2) . '%' : '—' }}</td>
                         <td><span class="badge-{{ $config->signal_mode }}">{{ ucfirst($config->signal_mode) }}</span></td>
                         <td>{{ $config->quantity }} lot(s)</td>
+                        <td>
+                            @forelse(($config->snapshot_times ?? []) as $t)
+                                <span class="cfg-snap-badge">{{ $t }}</span>
+                            @empty
+                                <span class="cfg-rule-dash">—</span>
+                            @endforelse
+                        </td>
                         <td>
                             @if($config->max_price_pct_of_underlying !== null)
                                 <span class="cfg-rule-badge">≤ {{ number_format($config->max_price_pct_of_underlying, 2) }}%</span>
@@ -99,7 +108,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11">
+                        <td colspan="13">
                             <div class="empty-state">
                                 <i class="fas fa-layer-group" style="font-size:2.5rem;opacity:.4;"></i>
                                 <p class="mt-3">No configs yet. Click <strong>"New Config"</strong> to set up automatic Multi-Snapshot orders.</p>
@@ -192,6 +201,28 @@
                         <div class="col-md-12"><hr></div>
 
                         <div class="col-md-12">
+                            <label class="form-label d-block">Active Snapshots <span class="text-danger">*</span></label>
+                            <small class="text-muted d-block mb-2">Pick which snapshot(s) this config should place orders on. At least one required.</small>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input mt-snap-cb" type="checkbox" name="snapshot_times[]" id="mt_snap_1015" value="10:15">
+                                    <label class="form-check-label" for="mt_snap_1015">10:15</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input mt-snap-cb" type="checkbox" name="snapshot_times[]" id="mt_snap_1115" value="11:15">
+                                    <label class="form-check-label" for="mt_snap_1115">11:15</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input mt-snap-cb" type="checkbox" name="snapshot_times[]" id="mt_snap_1215" value="12:15">
+                                    <label class="form-check-label" for="mt_snap_1215">12:15</label>
+                                </div>
+                            </div>
+                            <small class="text-danger d-none" id="mt_snap_error">Select at least one snapshot.</small>
+                        </div>
+
+                        <div class="col-md-12"><hr></div>
+
+                        <div class="col-md-12">
                             <h6 class="mb-2">Multi-Snapshot Rules <small class="text-muted">(both optional — leave blank to disable)</small></h6>
                         </div>
 
@@ -247,6 +278,8 @@ function mtCfgResetForm() {
     $('#mt_cfg_method').val('POST');
     $('#mt_cfg_order_type').val('LIMIT');
     $('#mt_cfg_product').val('NRML');
+    $('.mt-snap-cb').prop('checked', false);
+    $('#mt_snap_error').addClass('d-none');
     mtCfgToggleDisc();
     mtCfgSyncBrokerType();
 }
@@ -274,6 +307,12 @@ function mtCfgEdit(id) {
         $('#mtCfgForm input[name="max_price_pct_of_underlying"]').val(c.max_price_pct_of_underlying ?? '');
         $('#mtCfgForm input[name="reentry_min_drop_pct"]').val(c.reentry_min_drop_pct ?? '');
 
+        $('.mt-snap-cb').prop('checked', false);
+        (c.snapshot_times || []).forEach(function (t) {
+            $('.mt-snap-cb[value="' + t + '"]').prop('checked', true);
+        });
+        $('#mt_snap_error').addClass('d-none');
+
         // Run AFTER the values above are set, so visibility/derived fields
         // reflect what was just loaded, not stale defaults.
         mtCfgToggleDisc();
@@ -281,8 +320,7 @@ function mtCfgEdit(id) {
 
         // Bootstrap 5 API — this project's markup uses data-bs-* / btn-close,
         // so the modal must be driven by bootstrap.Modal, not the old
-        // jQuery $('#mtCfgModal').modal('show') Bootstrap 4 API. Mixing the
-        // two causes the modal to silently fail to open or double-init.
+        // jQuery $('#mtCfgModal').modal('show') Bootstrap 4 API.
         var modalElement = document.getElementById('mtCfgModal');
         var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
         modal.show();
@@ -290,5 +328,15 @@ function mtCfgEdit(id) {
         alert('Failed to load config — check the network tab for the actual error.');
     });
 }
+
+// Client-side guard: block submit if zero snapshots checked (server also
+// enforces this via 'snapshot_times' => 'required|array|min:1')
+$(document).on('submit', '#mtCfgForm', function (e) {
+    var anyChecked = $('.mt-snap-cb:checked').length > 0;
+    if (!anyChecked) {
+        e.preventDefault();
+        $('#mt_snap_error').removeClass('d-none');
+    }
+});
 </script>
 @endpush

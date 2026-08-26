@@ -40,6 +40,13 @@ class CpMultiTimeOrderPlacementService
         $signals = $this->signals->getSignalsForDate($date);
 
         foreach ($signals as $signal) {
+            $signalTime = $signal['signal_time'];
+
+            $allowedTimes = $config->snapshot_times ?? [];
+            if (!empty($allowedTimes) && !in_array($signalTime, $allowedTimes, true)) {
+                continue; // not counted as skipped — this signal isn't for this config at all
+            }
+
             $optionType = $this->decideSide($config->signal_mode, $signal['trade_action']);
             $lots = $config->quantity;
             if ($lots <= 0) { $skipped++; continue; }
