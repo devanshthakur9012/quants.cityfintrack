@@ -223,6 +223,7 @@
 <script>
 function mtCfgToggleDisc() {
     var orderType = $('#mt_cfg_order_type').val();
+    alert(orderType);
     if (orderType === 'LIMIT') {
         $('#mt_cfg_disc_wrap').show();
     } else {
@@ -286,6 +287,5 @@ function mtCfgEdit(id) {
         alert('Failed to load config — check the network tab for the actual error.');
     });
 }
-mtCfgToggleDisc();
 </script>
 @endpush
