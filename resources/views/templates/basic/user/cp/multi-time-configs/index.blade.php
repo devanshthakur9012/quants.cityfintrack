@@ -286,5 +286,6 @@ function mtCfgEdit(id) {
         alert('Failed to load config — check the network tab for the actual error.');
     });
 }
+mtCfgToggleDisc();
 </script>
 @endpush
