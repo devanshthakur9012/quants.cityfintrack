@@ -1501,8 +1501,8 @@ Route::controller('SiteController')->group(function () {
     ->group(function () {
         Route::get('/',                'index')->name('index');
         Route::post('/',               'store')->name('store');
-        Route::post('/{config}',       'update')->name('update');
         Route::get('/{config}/data',   'getData')->name('data');
         Route::get('/{config}/toggle', 'toggleStatus')->name('toggle');
         Route::delete('/{config}',     'destroy')->name('destroy');
+        Route::post('/{config}', 'update')->name('update');
     });

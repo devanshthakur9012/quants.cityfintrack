@@ -166,9 +166,9 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Product <span class="text-danger">*</span></label>
-                            <select name="product" class="form-control" required>
+                            <select name="product" id="mt_cfg_product" class="form-control" required>
+                                <option value="NRML" selected>NRML (Carryforward)</option>
                                 <option value="MIS">MIS (Intraday)</option>
-                                <option value="NRML">NRML (Carryforward)</option>
                             </select>
                         </div>
 
@@ -223,33 +223,46 @@
 <script>
 function mtCfgToggleDisc() {
     var orderType = $('#mt_cfg_order_type').val();
-    if (orderType === 'LIMIT') { $('#mt_cfg_disc_wrap').show(); } else { $('#mt_cfg_disc_wrap').hide(); $('#mt_cfg_disc_ltp').val(0); }
+    if (orderType === 'LIMIT') {
+        $('#mt_cfg_disc_wrap').show();
+    } else {
+        $('#mt_cfg_disc_wrap').hide();
+        $('#mt_cfg_disc_ltp').val(0); // MARKET orders don't use it — clear so no stale value gets submitted
+    }
 }
+
 function mtCfgSyncBrokerType() {
     var opt = $('#mt_cfg_broker_api_id option:selected');
     $('#mt_cfg_broker_type').val(opt.data('type') || '');
 }
+
 function mtCfgResetForm() {
     $('#mtCfgModalTitle').text('New Multi-Snapshot Config');
     $('#mtCfgForm')[0].reset();
     $('#mtCfgForm').attr('action', '{{ route("cp.multi-time-configs.store") }}');
     $('#mt_cfg_method').val('POST');
+    $('#mt_cfg_order_type').val('LIMIT');
+    $('#mt_cfg_product').val('NRML');
     mtCfgToggleDisc();
     mtCfgSyncBrokerType();
 }
+
 function mtCfgEdit(id) {
     $.get('/cp/multi-time-configs/' + id + '/data', function (res) {
         if (!res.success) { alert('Failed to load config.'); return; }
         var c = res.config;
 
+        // Reset FIRST so nothing from a previous "New Config" or a
+        // different row's Edit can leak into this one.
         $('#mtCfgForm')[0].reset();
+
         $('#mtCfgModalTitle').text('Edit Multi-Snapshot Config');
         $('#mtCfgForm').attr('action', '/cp/multi-time-configs/' + id);
-        $('#mt_cfg_method').val('POST');
+        $('#mt_cfg_method').val('POST'); // route is registered as POST — see cp.multi-time-configs.update
 
         $('#mt_cfg_broker_api_id').val(c.broker_api_id);
         $('#mt_cfg_order_type').val(c.order_type);
-        $('#mtCfgForm select[name="product"]').val(c.product);
+        $('#mt_cfg_product').val(c.product);
         $('#mt_cfg_disc_ltp').val(c.disc_ltp != null ? c.disc_ltp : 0);
         $('#mtCfgForm select[name="signal_mode"]').val(c.signal_mode);
         $('#mtCfgForm select[name="quantity"]').val(c.quantity);
@@ -257,11 +270,20 @@ function mtCfgEdit(id) {
         $('#mtCfgForm input[name="max_price_pct_of_underlying"]').val(c.max_price_pct_of_underlying ?? '');
         $('#mtCfgForm input[name="reentry_min_drop_pct"]').val(c.reentry_min_drop_pct ?? '');
 
+        // Run AFTER the values above are set, so visibility/derived fields
+        // reflect what was just loaded, not stale defaults.
         mtCfgToggleDisc();
         mtCfgSyncBrokerType();
-        $('#mtCfgModal').modal('show');
+
+        // Bootstrap 5 API — this project's markup uses data-bs-* / btn-close,
+        // so the modal must be driven by bootstrap.Modal, not the old
+        // jQuery $('#mtCfgModal').modal('show') Bootstrap 4 API. Mixing the
+        // two causes the modal to silently fail to open or double-init.
+        var modalElement = document.getElementById('mtCfgModal');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
     }).fail(function () {
-        alert('Failed to load config — check the network tab.');
+        alert('Failed to load config — check the network tab for the actual error.');
     });
 }
 </script>
