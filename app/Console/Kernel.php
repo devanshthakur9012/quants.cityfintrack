@@ -96,6 +96,15 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(5)
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/cp-15min.log'));
+
+        $schedule->command('cp:process-multi-time-order-configs')
+        ->everyMinute()
+        ->weekdays()
+        ->between('09:15', '15:35')
+        ->timezone('Asia/Kolkata')
+        ->withoutOverlapping()
+        ->runInBackground()
+        ->appendOutputTo(storage_path('logs/cp-multi-time-order-configs.log'));
     }
 
     protected function commands()

@@ -1495,3 +1495,14 @@ Route::controller('SiteController')->group(function () {
         Route::get('/symbols',   [OIFlowMultiTimeController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',   [OIFlowMultiTimeController::class, 'analyze'])->name('analyze');
     });
+
+    Route::prefix('cp/multi-time-configs')->name('cp.multi-time-configs.')
+    ->controller(\App\Http\Controllers\User\CpMultiTimeOrderConfigController::class)
+    ->group(function () {
+        Route::get('/',                'index')->name('index');
+        Route::post('/',               'store')->name('store');
+        Route::post('/{config}',       'update')->name('update');
+        Route::get('/{config}/data',   'getData')->name('data');
+        Route::get('/{config}/toggle', 'toggleStatus')->name('toggle');
+        Route::delete('/{config}',     'destroy')->name('destroy');
+    });
