@@ -1,11 +1,13 @@
 <?php
-// app/Services/Cp/CpMultiTimeOrderPlacementService.php
+// FILE: app/Services/Cp/CpMultiTimeOrderPlacementService.php
+
 namespace App\Services\Cp;
 
 use App\Models\CpMultiTimeOrderConfig;
 use App\Models\CpMultiTimeOrder;
 use App\Services\Broker\AngelBrokerService;
 use App\Services\Broker\ZerodhaBrokerService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -14,9 +16,20 @@ use Illuminate\Support\Facades\Log;
  * (AngelBrokerService / ZerodhaBrokerService) for execution. Nothing
  * here touches cp_order_configs / cp_orders / CpAnalysisSignalResolver —
  * fully isolated from the OI Flow Sentiment (single-snapshot) flow.
+ *
+ * Paced with usleep() between each broker call — with up to 17 symbols x
+ * 3 snapshots, this can fire 50+ orders in a single run; without pacing,
+ * Angel's API intermittently returns a non-JSON/empty response under
+ * rapid-fire load (surfaces as "invalid JSON" errors here), which looks
+ * like a bug but is actually rate limiting. Matches the pacing already
+ * used in CpCollectOption/CpCollectFut for the same reason.
  */
 class CpMultiTimeOrderPlacementService
 {
+    // Delay between each individual broker order call. 300ms mirrors the
+    // pacing already used in CpCollectFut for the same class of problem.
+    private const ORDER_PACE_MICROSECONDS = 300_000;
+
     public function __construct(private OIFlowMultiTimeService $signals) {}
 
     public function run(string $date): array
@@ -39,19 +52,21 @@ class CpMultiTimeOrderPlacementService
 
         $signals = $this->signals->getSignalsForDate($date);
 
+        // Only act on the snapshot(s) this config opted into. An empty/null
+        // snapshot_times is treated as "all snapshots" for backward
+        // compatibility with any row created before this field existed.
+        $allowedTimes = $config->snapshot_times ?? [];
+
         foreach ($signals as $signal) {
             $signalTime = $signal['signal_time'];
 
-            $allowedTimes = $config->snapshot_times ?? [];
             if (!empty($allowedTimes) && !in_array($signalTime, $allowedTimes, true)) {
-                continue; // not counted as skipped — this signal isn't for this config at all
+                continue; // not this config's concern — not counted as skipped
             }
 
             $optionType = $this->decideSide($config->signal_mode, $signal['trade_action']);
             $lots = $config->quantity;
             if ($lots <= 0) { $skipped++; continue; }
-
-            $signalTime = $signal['signal_time'];
 
             // Dedupe: exact same snapshot for this symbol+side already handled today?
             $exactExists = CpMultiTimeOrder::where('cp_multi_time_order_config_id', $config->id)
@@ -109,25 +124,25 @@ class CpMultiTimeOrderPlacementService
                     'cp_multi_time_order_config_id' => $config->id,
                     'broker_api_id'                 => $config->broker_api_id,
                     'broker_type'                   => $config->broker_type,
-                    'symbol'                        => $signal['symbol'],
-                    'option_symbol'                 => $instrument->trading_symbol,
-                    'option_token'                  => $instrument->instrument_token,
-                    'option_type'                   => $optionType,
-                    'strike'                        => $instrument->strike ?? null,
-                    'signal_date'                   => $date,
-                    'signal_time'                   => $signalTime,
-                    'signal_action'                 => $signal['trade_action'],
-                    'transaction_type'               => 'BUY',
-                    'order_type'                     => $config->order_type,
-                    'product'                        => $config->product,
-                    'lots'                           => $lots,
-                    'quantity'                        => $result['quantity'],
-                    'order_price'                     => $price,
-                    'broker_order_id'                 => $result['order_id'],
-                    'broker_status'                   => 'OPEN',
-                    'is_order_placed'                 => true,
-                    'order_placed_at'                 => now(),
-                    'meta'                             => $signal,
+                    'symbol'                         => $signal['symbol'],
+                    'option_symbol'                  => $instrument->trading_symbol,
+                    'option_token'                   => $instrument->instrument_token,
+                    'option_type'                    => $optionType,
+                    'strike'                          => $instrument->strike ?? null,
+                    'signal_date'                     => $date,
+                    'signal_time'                     => $signalTime,
+                    'signal_action'                   => $signal['trade_action'],
+                    'transaction_type'                => 'BUY',
+                    'order_type'                       => $config->order_type,
+                    'product'                          => $config->product,
+                    'lots'                             => $lots,
+                    'quantity'                         => $result['quantity'],
+                    'order_price'                      => $price,
+                    'broker_order_id'                  => $result['order_id'],
+                    'broker_status'                    => 'OPEN',
+                    'is_order_placed'                  => true,
+                    'order_placed_at'                  => now(),
+                    'meta'                              => $signal,
                 ]);
                 $placed++;
 
@@ -146,6 +161,10 @@ class CpMultiTimeOrderPlacementService
                 ]);
                 $errors++;
             }
+
+            // Pace every broker call — success or failure — so Angel's API
+            // isn't hit with 50+ requests back-to-back. See class docblock.
+            usleep(self::ORDER_PACE_MICROSECONDS);
         }
 
         return compact('placed', 'skipped', 'errors');
@@ -165,9 +184,14 @@ class CpMultiTimeOrderPlacementService
         };
     }
 
+    /**
+     * Queries cp_option_ohlc_15min directly, scoped by analysis_config_id —
+     * NOT App\Models\OptionOhlcData (a stale/unrelated model). Same fix
+     * applied earlier to CpOrderPlacementService's version of this method.
+     */
     private function resolveAtmInstrument(string $symbol, string $optionType, string $date)
     {
-        $config = \DB::table('analysis_configs')
+        $config = DB::table('analysis_configs')
             ->where('time_frame', '15min')
             ->where('is_active', 1)
             ->first();
@@ -176,7 +200,7 @@ class CpMultiTimeOrderPlacementService
             throw new \Exception("resolveAtmInstrument: no active 15min analysis_config found for {$symbol}");
         }
 
-        $row = \DB::table('cp_option_ohlc_15min')
+        $row = DB::table('cp_option_ohlc_15min')
             ->where('analysis_config_id', $config->id)
             ->where('base_symbol', $symbol)
             ->where('instrument_type', $optionType)
