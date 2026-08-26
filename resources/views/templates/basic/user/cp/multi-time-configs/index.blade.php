@@ -223,7 +223,10 @@
 <script>
 function mtCfgToggleDisc() {
     var orderType = $('#mt_cfg_order_type').val();
-    alert(orderType);
+    if (!orderType) {
+        orderType = 'LIMIT';
+        $('#mt_cfg_order_type').val('LIMIT');
+    }
     if (orderType === 'LIMIT') {
         $('#mt_cfg_disc_wrap').show();
     } else {
