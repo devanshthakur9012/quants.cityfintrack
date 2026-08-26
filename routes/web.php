@@ -1496,7 +1496,7 @@ Route::controller('SiteController')->group(function () {
         Route::get('/analyze',   [OIFlowMultiTimeController::class, 'analyze'])->name('analyze');
     });
 
-    Route::prefix('cp/multi-time-configs')->name('cp.multi-time-configs.')
+    Route::middleware(['auth'])->prefix('cp/multi-time-configs')->name('cp.multi-time-configs.')
     ->controller(\App\Http\Controllers\User\CpMultiTimeOrderConfigController::class)
     ->group(function () {
         Route::get('/',                'index')->name('index');
