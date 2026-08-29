@@ -34,6 +34,12 @@ use Illuminate\Support\Facades\Log;
  *   (alongside symbols[]) to return one row per trading day for a
  *   given symbol, using the exact same per-day calculation.
  *
+ * ── FIX (this revision) ──
+ * PHP method names are case-insensitive, so a private helper named
+ * calcOiSignal() collided with the ported calcOISignal() and PHP threw
+ * "Cannot redeclare". The wrapper is now named buildOiSignalFromTotals()
+ * — no behavior change, purely a rename to avoid the collision.
+ *
  * ── STRIKE KEY FIX (carried over, unchanged) ──
  * All strike-based lookups route through strikeKey() — a DB strike like
  * "2640.0000" and a ladder-derived float 2640.0 must resolve to the same
@@ -297,7 +303,7 @@ class AdvancedOIMetricsController extends Controller
             $rollover   = $this->calcRolloverVelocity();
             $momentum   = $this->calcIntradayMomentum();
 
-            $oiSignal = $this->calcOiSignal($liveOi, $anchorOi);
+            $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
 
             $advanced = [
                 'meta' => [
@@ -323,7 +329,7 @@ class AdvancedOIMetricsController extends Controller
                 'ntm_signal'        => $this->metricSignal($ntmBias['bullish_status'], $ntmBias['bearish_status']),
                 'deep_otm_signal'   => $this->metricSignal($deepOtm['ce_status'], $deepOtm['pe_status']),
 
-                // ── OI Signal — same logic as OIFlowSentimentController::calcOISignal() ──
+                // ── OI Signal — same logic as OIFlowSentimentController ──
                 'oi_signal' => $oiSignal,
             ];
 
@@ -523,7 +529,13 @@ class AdvancedOIMetricsController extends Controller
     // Duplicated intentionally (not shared/imported) so OIFlowSentimentController
     // is never touched. Formula and thresholds are identical.
 
-    private function calcOiSignal(array $liveOi, array $anchorOi): array
+    /**
+     * Wraps totals from the live/anchor maps into the same CE%/PE% inputs
+     * that OIFlowSentimentController uses, then hands off to the ported
+     * calcOISignal() below. Renamed (was calcOiSignal) to avoid colliding
+     * with calcOISignal() — PHP method names are case-insensitive.
+     */
+    private function buildOiSignalFromTotals(array $liveOi, array $anchorOi): array
     {
         $ceToday = array_sum($liveOi['CE']);
         $peToday = array_sum($liveOi['PE']);
@@ -551,27 +563,27 @@ class AdvancedOIMetricsController extends Controller
      * Ported verbatim from OIFlowSentimentController::calcOISignal().
      * Do not diverge — this must stay identical to the live sentiment page.
      */
-    // private function calcOISignal(float $cePct, float $pePct): array
-    // {
-    //     $ceUp = $cePct > 0; $ceDown = $cePct < 0;
-    //     $peUp = $pePct > 0; $peDown = $pePct < 0;
+    private function calcOISignal(float $cePct, float $pePct): array
+    {
+        $ceUp = $cePct > 0; $ceDown = $cePct < 0;
+        $peUp = $pePct > 0; $peDown = $pePct < 0;
 
-    //     if ($ceUp && $peDown)
-    //         return ['sentiment' => 'BULLISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Support forming'];
-    //     if ($ceDown && $peUp)
-    //         return ['sentiment' => 'BEARISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Resistance forming'];
-    //     if ($ceUp && $peUp) {
-    //         if ($cePct > $pePct)
-    //             return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bullish"];
-    //         return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bearish"];
-    //     }
-    //     if ($ceDown && $peDown) {
-    //         if ($cePct < $pePct)
-    //             return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Long covering"];
-    //         return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Short covering"];
-    //     }
-    //     return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
-    // }
+        if ($ceUp && $peDown)
+            return ['sentiment' => 'BULLISH', 'condition' => 'CE ↑ + PE ↓', 'reason' => 'Call buildup + Put unwinding → Support forming'];
+        if ($ceDown && $peUp)
+            return ['sentiment' => 'BEARISH', 'condition' => 'CE ↓ + PE ↑', 'reason' => 'Call unwinding + Put buildup → Resistance forming'];
+        if ($ceUp && $peUp) {
+            if ($cePct > $pePct)
+                return ['sentiment' => 'BULLISH', 'condition' => 'Both ↑ (CE > PE)', 'reason' => "Call buildup stronger (+{$cePct}% vs +{$pePct}%) → Bullish"];
+            return ['sentiment' => 'BEARISH', 'condition' => 'Both ↑ (PE > CE)', 'reason' => "Put buildup stronger (+{$pePct}% vs +{$cePct}%) → Bearish"];
+        }
+        if ($ceDown && $peDown) {
+            if ($cePct < $pePct)
+                return ['sentiment' => 'BEARISH', 'condition' => 'Both ↓ (CE < PE)', 'reason' => "Call unwinding larger ({$cePct}% vs {$pePct}%) → Long covering"];
+            return ['sentiment' => 'BULLISH', 'condition' => 'Both ↓ (PE < CE)', 'reason' => "Put unwinding larger ({$pePct}% vs {$cePct}%) → Short covering"];
+        }
+        return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
+    }
 
     // ═════════════════════════ PER-METRIC SIGNAL ═════════════════════════
 
