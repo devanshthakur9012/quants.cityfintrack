@@ -1506,3 +1506,9 @@ Route::controller('SiteController')->group(function () {
         Route::delete('/{config}',     'destroy')->name('destroy');
         Route::post('/{config}', 'update')->name('update');
     });
+
+    Route::middleware(['auth'])->prefix('advanced-oi-metrics')->name('advanced-oi-metrics.')->group(function () {
+        Route::get('/index',   [AdvancedOIMetricsController::class, 'index'])->name('index');
+        Route::get('/symbols', [AdvancedOIMetricsController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze', [AdvancedOIMetricsController::class, 'analyze'])->name('analyze');
+    });
