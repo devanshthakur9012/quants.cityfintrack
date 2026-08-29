@@ -126,6 +126,7 @@ use App\Http\Controllers\User\GapReversalController;
 use App\Http\Controllers\User\GapReversalAnalysisController;
 use App\Http\Controllers\User\StockOIStrategyController;
 use App\Http\Controllers\User\OIFlowMultiTimeController;
+use App\Http\Controllers\User\AdvancedOIMetricsController;
 
 // NEWWW
 Route::get('/analysis',          [CpAnalysisController::class, 'index'])   ->name('cp.analyses.index');
