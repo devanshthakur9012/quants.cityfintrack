@@ -1068,12 +1068,28 @@
             return '<span class="aom-badge b-not" title="NOT TRIGGERED">—</span>';
         }
 
-        function signalBadge(sig, tip) {
+        function signalBadge(sig, strength, tip) {
             var t = tip ? ' title="' + esc(tip) + '"' : '';
-            if (sig === 'BULLISH') return '<span class="sig-bull"' + t + '>▲ BULLISH</span>';
-            if (sig === 'BEARISH') return '<span class="sig-bear"' + t + '>▼ BEARISH</span>';
-            if (sig === 'INSUFFICIENT_DATA') return '<span class="sig-insuff"' + t + '>⚠ N/A</span>';
-            return '<span class="sig-neut"' + t + '>— NEUTRAL</span>';
+            var cls = 'sig-neut',
+                arrow = '—',
+                label = 'NEUTRAL';
+            if (sig === 'BULLISH') {
+                cls = 'sig-bull';
+                arrow = '▲';
+                label = 'BULLISH';
+            } else if (sig === 'BEARISH') {
+                cls = 'sig-bear';
+                arrow = '▼';
+                label = 'BEARISH';
+            } else if (sig === 'INSUFFICIENT_DATA') {
+                cls = 'sig-insuff';
+                arrow = '⚠';
+                label = 'N/A';
+            }
+            var strengthLine = strength ? '<div style="font-size:8px;color:rgba(120,123,134,.6);margin-top:2px;">' +
+                strength + '</div>' : '';
+            return '<div class="aom-val-row"><span class="' + cls + '"' + t + '>' + arrow + ' ' + label + '</span>' +
+                strengthLine + '</div>';
         }
 
         function aomRenderTable(rows) {
@@ -1113,31 +1129,31 @@
                     '<td class="sep-l">' + v(a.decay_velocity.ce) + ' ' + badge(a.decay_velocity.ce_status,
                         'bull') + '</td>' +
                     '<td>' + v(a.decay_velocity.pe) + ' ' + badge(a.decay_velocity.pe_status, 'bear') + '</td>' +
-                    '<td>' + signalBadge(a.decay_signal) + '</td>' +
+                    '<td>' + signalBadge(a.decay_signal, a.decay_strength) + '</td>' +
 
                     // Efficiency: CE, PE, Signal
                     '<td class="sep-l">' + v(a.oi_volume_efficiency.ce) + ' ' + badge(a.oi_volume_efficiency
                         .ce_status, 'bull') + '</td>' +
                     '<td>' + v(a.oi_volume_efficiency.pe) + ' ' + badge(a.oi_volume_efficiency.pe_status, 'bear') +
                     '</td>' +
-                    '<td>' + signalBadge(a.efficiency_signal) + '</td>' +
+                    '<td>' + signalBadge(a.efficiency_signal, a.efficiency_strength) + '</td>' +
 
                     // NTM Bias: Ratio, Bull/Bear badges, Signal
                     '<td class="sep-l">' + (a.ntm_bias.ratio !== null ? a.ntm_bias.ratio :
                         '<span class="na">N/A</span>') + '</td>' +
                     '<td>' + badge(a.ntm_bias.bullish_status, 'bull') + ' ' + badge(a.ntm_bias.bearish_status,
                         'bear') + '</td>' +
-                    '<td>' + signalBadge(a.ntm_signal) + '</td>' +
+                    '<td>' + signalBadge(a.ntm_signal, a.ntm_strength) + '</td>' +
 
                     // Deep OTM: CE, PE, Signal
                     '<td class="sep-l">' + v(a.deep_otm_inflection.ce) + ' ' + badge(a.deep_otm_inflection
                         .ce_status, 'bull') + '</td>' +
                     '<td>' + v(a.deep_otm_inflection.pe) + ' ' + badge(a.deep_otm_inflection.pe_status, 'bear') +
                     '</td>' +
-                    '<td>' + signalBadge(a.deep_otm_signal) + '</td>' +
+                    '<td>' + signalBadge(a.deep_otm_signal, a.deep_otm_strength) + '</td>' +
 
                     // OI Signal — single column, no separate value columns
-                    '<td class="sep-l">' + signalBadge(a.oi_signal.sentiment, oiTip) + '</td>' +
+                    '<td class="sep-l">' + signalBadge(a.oi_signal.sentiment, null, oiTip) + '</td>' +
                     '</tr>';
             });
             html('aom-tbody', h || aomEmptyHtml('No results.'));

@@ -17,41 +17,40 @@ use Illuminate\Support\Facades\Log;
  * Does NOT touch collectors, does NOT touch OIFlowSentimentController,
  * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
  *
- * ── THIS REVISION ────────────────────────────────────────────────────
- * - Added ONE "OI Signal" column using the SAME sentiment logic as
- *   OIFlowSentimentController::calcOISignal() (duplicated here, not
- *   imported, so OIFlowSentimentController stays untouched — but the
- *   math is byte-for-byte identical: CE↑+PE↓ → BULLISH, CE↓+PE↑ → BEARISH,
- *   etc.), computed from total CE/PE OI at the same 14:45 / 15:00 anchor.
- * - Each of the 4 calculable metrics (Decay V, Efficiency, NTM Bias,
- *   Deep OTM) now exposes ONE signal word (BULLISH / BEARISH / NEUTRAL /
- *   INSUFFICIENT_DATA) derived from its own ce_status/pe_status (or
- *   bullish_status/bearish_status for NTM), instead of the UI showing
- *   raw CE/PE numbers + two badges.
- * - bullish_score / bearish_score / overall "signal" (the 8-point
- *   scoring system) REMOVED ENTIRELY, per request.
- * - Added history mode: analyze() now accepts from_date + to_date
- *   (alongside symbols[]) to return one row per trading day for a
- *   given symbol, using the exact same per-day calculation.
+ * ── THIS REVISION — DIRECTIONAL SIGNAL LOGIC ────────────────────────
+ * The old metricSignal() collapsed a metric to NEUTRAL any time neither
+ * side crossed its "strong" threshold. That is wrong: the client's
+ * thresholds (Decay 0.70, Efficiency 0.40, NTM 1.25/0.75, Deep OTM 3.0)
+ * mark a STRONG signal, not the only signal. Whenever valid CE+PE (or
+ * ratio) data exists, the metric must always resolve to a direction by
+ * comparing the two sides — NEUTRAL now means genuinely balanced/equal,
+ * and INSUFFICIENT_DATA means genuinely missing data. Replaced the single
+ * generic metricSignal() with four dedicated methods, since each metric's
+ * directionality is mathematically different:
+ *   - Decay:     LOWER value = stronger directional pull that side
+ *   - Efficiency: HIGHER value = stronger directional pull that side
+ *   - NTM Bias:  ratio > 1 bullish, < 1 bearish (1.25/0.75 = strong)
+ *   - Deep OTM:  HIGHER value = stronger directional pull that side
+ * Each method returns ['signal' => BULLISH|BEARISH|NEUTRAL|INSUFFICIENT_DATA,
+ * 'strength' => STRONG|DIRECTIONAL|null]. Thresholds/formulas themselves
+ * (calcDecayVelocity, calcEfficiency, calcNtmBias, calcDeepOtmIndex) are
+ * UNCHANGED — these new methods only consume their ce/pe/ratio output.
  *
- * ── FIX (this revision) ──
- * PHP method names are case-insensitive, so a private helper named
- * calcOiSignal() collided with the ported calcOISignal() and PHP threw
- * "Cannot redeclare". The wrapper is now named buildOiSignalFromTotals()
- * — no behavior change, purely a rename to avoid the collision.
+ * ── OI Signal (unchanged from previous revision) ──
+ * Ported verbatim from OIFlowSentimentController::calcOISignal() — kept
+ * completely separate from the new directional logic above, per request.
  *
  * ── STRIKE KEY FIX (carried over, unchanged) ──
- * All strike-based lookups route through strikeKey() — a DB strike like
- * "2640.0000" and a ladder-derived float 2640.0 must resolve to the same
- * map key, or Decay/NTM/Deep-OTM silently return INSUFFICIENT_DATA.
+ * All strike-based lookups route through strikeKey() so a DB strike like
+ * "2640.0000" and a ladder-derived float 2640.0 resolve to the same key.
  *
- * ── STRUCTURAL DATA LIMITATIONS (confirmed from CpCollectOption.php) ──
- * 1) STRIKE ROLL-OVER VELOCITY — permanently INSUFFICIENT_DATA. Only one
- *    expiry's option chain is collected per symbol per trade_date.
- * 2) INTRADAY OI MOMENTUM DELTA — permanently INSUFFICIENT_DATA. No
- *    5-minute interval data exists anywhere in the schema.
- * Both are still computed internally (for completeness / future use) but
- * are no longer rendered as UI columns since they can never resolve.
+ * ── STRUCTURAL DATA LIMITATIONS (unchanged, still genuinely N/A) ──
+ * 1) Roll-over Velocity — only one expiry's chain is collected per
+ *    symbol per trade_date, so next-expiry OI never coexists with
+ *    current-expiry OI for the same day.
+ * 2) Intraday OI Momentum Delta — only 15/30/60-min granularity exists
+ *    anywhere in the schema; no genuine 5-minute OI observations.
+ * Both remain INSUFFICIENT_DATA — never faked, never derived.
  */
 class AdvancedOIMetricsController extends Controller
 {
@@ -64,6 +63,13 @@ class AdvancedOIMetricsController extends Controller
     private const BASKET_OFFSETS = [-1, 0, 1];
 
     private const DEEP_OTM_OFFSET = 4;
+
+    /** Strong-signal (client) thresholds — kept exactly as originally specified. */
+    private const DECAY_THRESHOLD      = 0.70;
+    private const EFFICIENCY_THRESHOLD = 0.40;
+    private const NTM_BULL_THRESHOLD   = 1.25;
+    private const NTM_BEAR_THRESHOLD   = 0.75;
+    private const DEEP_OTM_THRESHOLD   = 3.0;
 
     /** Set to true to include the debug block (ATM/ladder diagnostics) per row. */
     private const DEBUG_MODE = false;
@@ -305,6 +311,12 @@ class AdvancedOIMetricsController extends Controller
 
             $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
 
+            // ── Directional signal derivation (this revision) ──
+            $decaySig      = $this->deriveDecaySignal($decay['ce'], $decay['pe']);
+            $efficiencySig = $this->deriveEfficiencySignal($efficiency['ce'], $efficiency['pe']);
+            $ntmSig        = $this->deriveNtmSignal($ntmBias['ratio']);
+            $deepOtmSig    = $this->deriveDeepOtmSignal($deepOtm['ce'], $deepOtm['pe']);
+
             $advanced = [
                 'meta' => [
                     'symbol'        => $symbol,
@@ -323,13 +335,17 @@ class AdvancedOIMetricsController extends Controller
                 'deep_otm_inflection'  => $deepOtm,
                 'intraday_momentum'    => $momentum,   // always INSUFFICIENT_DATA — see class docblock
 
-                // ── One signal word per metric (this revision) ──
-                'decay_signal'      => $this->metricSignal($decay['ce_status'], $decay['pe_status']),
-                'efficiency_signal' => $this->metricSignal($efficiency['ce_status'], $efficiency['pe_status']),
-                'ntm_signal'        => $this->metricSignal($ntmBias['bullish_status'], $ntmBias['bearish_status']),
-                'deep_otm_signal'   => $this->metricSignal($deepOtm['ce_status'], $deepOtm['pe_status']),
+                // ── Directional signal + strength per metric ──
+                'decay_signal'          => $decaySig['signal'],
+                'decay_strength'        => $decaySig['strength'],
+                'efficiency_signal'     => $efficiencySig['signal'],
+                'efficiency_strength'   => $efficiencySig['strength'],
+                'ntm_signal'            => $ntmSig['signal'],
+                'ntm_strength'          => $ntmSig['strength'],
+                'deep_otm_signal'       => $deepOtmSig['signal'],
+                'deep_otm_strength'     => $deepOtmSig['strength'],
 
-                // ── OI Signal — same logic as OIFlowSentimentController ──
+                // ── OI Signal — untouched, same logic as OIFlowSentimentController ──
                 'oi_signal' => $oiSignal,
             ];
 
@@ -360,7 +376,7 @@ class AdvancedOIMetricsController extends Controller
         }
     }
 
-    // ═════════════════════════ METRIC 1 — DECAY VELOCITY ═════════════════════════
+    // ═════════════════════════ METRIC 1 — DECAY VELOCITY (formula unchanged) ═════════════════════════
 
     private function calcDecayVelocity(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
     {
@@ -370,8 +386,8 @@ class AdvancedOIMetricsController extends Controller
         return [
             'ce'        => $ce,
             'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce <= 0.70 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe <= 0.70 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce <= self::DECAY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe <= self::DECAY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
         ];
     }
 
@@ -397,7 +413,35 @@ class AdvancedOIMetricsController extends Controller
         return round($liveSum / $anchorSum, 4);
     }
 
-    // ═════════════════════════ METRIC 2 — OI-TO-VOLUME EFFICIENCY ═════════════════════════
+    /**
+     * DECAY VELOCITY signal: LOWER value = stronger directional pull that
+     * side (faster wall/floor dissolution). Threshold (<=0.70) marks STRONG.
+     */
+    private function deriveDecaySignal(?float $ce, ?float $pe): array
+    {
+        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+
+        if ($ce === null) { // only PE known — one-sided decision only if it crosses its own strong threshold
+            return $pe <= self::DECAY_THRESHOLD
+                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+        if ($pe === null) { // only CE known
+            return $ce <= self::DECAY_THRESHOLD
+                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+
+        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
+
+        $bullish = $ce < $pe; // lower CE decay => bullish
+        $winningValue = $bullish ? $ce : $pe;
+        $strength = $winningValue <= self::DECAY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+
+        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
+    }
+
+    // ═════════════════════════ METRIC 2 — OI-TO-VOLUME EFFICIENCY (formula unchanged) ═════════════════════════
 
     private function calcEfficiency(array $liveOi, array $anchorOi, array $liveVol): array
     {
@@ -407,8 +451,8 @@ class AdvancedOIMetricsController extends Controller
         return [
             'ce'        => $ce,
             'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= 0.40 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= 0.40 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::EFFICIENCY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::EFFICIENCY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
         ];
     }
 
@@ -424,7 +468,35 @@ class AdvancedOIMetricsController extends Controller
         return round(abs($liveTotal - $anchorTotal) / $volTotal, 4);
     }
 
-    // ═════════════════════════ METRIC 3 — NTM BIAS RATIO ═════════════════════════
+    /**
+     * EFFICIENCY signal: HIGHER value = stronger directional pull that
+     * side. Threshold (>=0.40) marks STRONG.
+     */
+    private function deriveEfficiencySignal(?float $ce, ?float $pe): array
+    {
+        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+
+        if ($ce === null) {
+            return $pe >= self::EFFICIENCY_THRESHOLD
+                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+        if ($pe === null) {
+            return $ce >= self::EFFICIENCY_THRESHOLD
+                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+
+        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
+
+        $bullish = $ce > $pe; // higher CE efficiency => bullish
+        $winningValue = $bullish ? $ce : $pe;
+        $strength = $winningValue >= self::EFFICIENCY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+
+        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
+    }
+
+    // ═════════════════════════ METRIC 3 — NTM BIAS RATIO (formula unchanged) ═════════════════════════
 
     private function calcNtmBias(array $ladder, ?int $atmIndex, array $liveOi): array
     {
@@ -459,13 +531,31 @@ class AdvancedOIMetricsController extends Controller
             'ratio'          => $ratio,
             'pe_sum'         => $peSum,
             'ce_sum'         => $ceSum,
-            'bullish_status' => $ratio >= 1.25 ? 'TRIGGERED' : 'NOT_TRIGGERED',
-            'bearish_status' => $ratio <= 0.75 ? 'TRIGGERED' : 'NOT_TRIGGERED',
+            'bullish_status' => $ratio >= self::NTM_BULL_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED',
+            'bearish_status' => $ratio <= self::NTM_BEAR_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED',
         ];
     }
 
-    // ═════════════════════════ METRIC 4 — STRIKE ROLL-OVER VELOCITY ═════════════════════════
-    // Permanently INSUFFICIENT_DATA — see class docblock. Not rendered in UI anymore.
+    /**
+     * NTM BIAS signal: ratio > 1.00 = BULLISH, < 1.00 = BEARISH, exactly
+     * 1.00 = NEUTRAL. 1.25/0.75 mark STRONG; anything else crossing 1.00
+     * is DIRECTIONAL.
+     */
+    private function deriveNtmSignal(?float $ratio): array
+    {
+        if ($ratio === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+
+        if ($ratio == 1.0) return ['signal' => 'NEUTRAL', 'strength' => null];
+
+        if ($ratio > 1.0) {
+            return ['signal' => 'BULLISH', 'strength' => $ratio >= self::NTM_BULL_THRESHOLD ? 'STRONG' : 'DIRECTIONAL'];
+        }
+
+        return ['signal' => 'BEARISH', 'strength' => $ratio <= self::NTM_BEAR_THRESHOLD ? 'STRONG' : 'DIRECTIONAL'];
+    }
+
+    // ═════════════════════════ METRIC 4 — STRIKE ROLL-OVER VELOCITY (unchanged) ═════════════════════════
+    // Permanently INSUFFICIENT_DATA — see class docblock. Never faked.
 
     private function calcRolloverVelocity(): array
     {
@@ -476,7 +566,7 @@ class AdvancedOIMetricsController extends Controller
         ];
     }
 
-    // ═════════════════════════ METRIC 5 — DEEP OTM INFLECTION INDEX ═════════════════════════
+    // ═════════════════════════ METRIC 5 — DEEP OTM INFLECTION INDEX (formula unchanged) ═════════════════════════
 
     private function calcDeepOtmIndex(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
     {
@@ -486,8 +576,8 @@ class AdvancedOIMetricsController extends Controller
         return [
             'ce'        => $ce,
             'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= 3.0 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= 3.0 ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::DEEP_OTM_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::DEEP_OTM_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
         ];
     }
 
@@ -513,8 +603,36 @@ class AdvancedOIMetricsController extends Controller
         return round($otmChange / $atmChange, 4);
     }
 
-    // ═════════════════════════ METRIC 6 — INTRADAY OI MOMENTUM DELTA ═════════════════════════
-    // Permanently INSUFFICIENT_DATA — see class docblock. Not rendered in UI anymore.
+    /**
+     * DEEP OTM signal: HIGHER value = stronger directional pull that
+     * side. Threshold (>=3.0) marks STRONG.
+     */
+    private function deriveDeepOtmSignal(?float $ce, ?float $pe): array
+    {
+        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+
+        if ($ce === null) {
+            return $pe >= self::DEEP_OTM_THRESHOLD
+                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+        if ($pe === null) {
+            return $ce >= self::DEEP_OTM_THRESHOLD
+                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        }
+
+        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
+
+        $bullish = $ce > $pe;
+        $winningValue = $bullish ? $ce : $pe;
+        $strength = $winningValue >= self::DEEP_OTM_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+
+        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
+    }
+
+    // ═════════════════════════ METRIC 6 — INTRADAY OI MOMENTUM DELTA (unchanged) ═════════════════════════
+    // Permanently INSUFFICIENT_DATA — see class docblock. Never faked.
 
     private function calcIntradayMomentum(): array
     {
@@ -525,16 +643,10 @@ class AdvancedOIMetricsController extends Controller
         ];
     }
 
-    // ═════════════════════════ OI SIGNAL — same logic as OIFlowSentimentController ═════════════════════════
+    // ═════════════════════════ OI SIGNAL — untouched, same logic as OIFlowSentimentController ═════════════════════════
     // Duplicated intentionally (not shared/imported) so OIFlowSentimentController
-    // is never touched. Formula and thresholds are identical.
+    // is never touched. Not mixed with the new directional logic above.
 
-    /**
-     * Wraps totals from the live/anchor maps into the same CE%/PE% inputs
-     * that OIFlowSentimentController uses, then hands off to the ported
-     * calcOISignal() below. Renamed (was calcOiSignal) to avoid colliding
-     * with calcOISignal() — PHP method names are case-insensitive.
-     */
     private function buildOiSignalFromTotals(array $liveOi, array $anchorOi): array
     {
         $ceToday = array_sum($liveOi['CE']);
@@ -585,48 +697,25 @@ class AdvancedOIMetricsController extends Controller
         return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }
 
-    // ═════════════════════════ PER-METRIC SIGNAL ═════════════════════════
-
-    /**
-     * Collapses a metric's own bull/bear TRIGGERED status pair into one
-     * signal word. $bullStatus/$bearStatus are the metric's own ce_status/
-     * pe_status (or bullish_status/bearish_status for NTM Bias) — TRIGGERED
-     * on the bull side and not on the bear side => BULLISH, and vice versa.
-     * Both TRIGGERED (conflicting) or neither TRIGGERED => NEUTRAL.
-     */
-    private function metricSignal(?string $bullStatus, ?string $bearStatus): string
-    {
-        if ($bullStatus === 'INSUFFICIENT_DATA' && $bearStatus === 'INSUFFICIENT_DATA') {
-            return 'INSUFFICIENT_DATA';
-        }
-
-        $bull = $bullStatus === 'TRIGGERED';
-        $bear = $bearStatus === 'TRIGGERED';
-
-        if ($bull && !$bear) return 'BULLISH';
-        if ($bear && !$bull) return 'BEARISH';
-        return 'NEUTRAL';
-    }
-
     private function emptyAdvancedOi(): array
     {
         $ins = ['ce' => null, 'pe' => null, 'ce_status' => 'INSUFFICIENT_DATA', 'pe_status' => 'INSUFFICIENT_DATA'];
         return [
-            'decay_velocity'       => $ins,
-            'oi_volume_efficiency' => $ins,
-            'ntm_bias'             => ['ratio' => null, 'pe_sum' => null, 'ce_sum' => null, 'bullish_status' => 'INSUFFICIENT_DATA', 'bearish_status' => 'INSUFFICIENT_DATA'],
-            'rollover_velocity'    => $this->calcRolloverVelocity(),
-            'deep_otm_inflection'  => $ins,
-            'intraday_momentum'    => $this->calcIntradayMomentum(),
-            'decay_signal'         => 'INSUFFICIENT_DATA',
-            'efficiency_signal'    => 'INSUFFICIENT_DATA',
-            'ntm_signal'           => 'INSUFFICIENT_DATA',
-            'deep_otm_signal'      => 'INSUFFICIENT_DATA',
-            'oi_signal'            => ['sentiment' => 'NEUTRAL', 'condition' => 'No Data', 'reason' => 'No data available', 'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'trade_action' => 'WAIT'],
+            'decay_velocity'        => $ins,
+            'oi_volume_efficiency'  => $ins,
+            'ntm_bias'              => ['ratio' => null, 'pe_sum' => null, 'ce_sum' => null, 'bullish_status' => 'INSUFFICIENT_DATA', 'bearish_status' => 'INSUFFICIENT_DATA'],
+            'rollover_velocity'     => $this->calcRolloverVelocity(),
+            'deep_otm_inflection'   => $ins,
+            'intraday_momentum'     => $this->calcIntradayMomentum(),
+            'decay_signal'          => 'INSUFFICIENT_DATA', 'decay_strength' => null,
+            'efficiency_signal'     => 'INSUFFICIENT_DATA', 'efficiency_strength' => null,
+            'ntm_signal'            => 'INSUFFICIENT_DATA', 'ntm_strength' => null,
+            'deep_otm_signal'       => 'INSUFFICIENT_DATA', 'deep_otm_strength' => null,
+            'oi_signal'             => ['sentiment' => 'NEUTRAL', 'condition' => 'No Data', 'reason' => 'No data available', 'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'trade_action' => 'WAIT'],
         ];
     }
 
-    // ═════════════════════════ STRIKE KEY / LADDER HELPERS ═════════════════════════
+    // ═════════════════════════ STRIKE KEY / LADDER HELPERS (unchanged) ═════════════════════════
 
     private function strikeKey($strike): string
     {
@@ -656,7 +745,7 @@ class AdvancedOIMetricsController extends Controller
         return $ladder[$idx] ?? null;
     }
 
-    // ═════════════════════════ SHARED HELPERS ═════════════════════════
+    // ═════════════════════════ SHARED HELPERS (unchanged) ═════════════════════════
 
     private function getActiveConfig(): ?object
     {
