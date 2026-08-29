@@ -790,7 +790,7 @@
                     <table class="aom-table">
                         <thead>
                             <tr class="th-group">
-                                <th colspan="5" class="g-info">Market Info</th>
+                                <th colspan="4" class="g-info">Market Info</th>
                                 <th colspan="3" class="g-decay sep-l">Decay Velocity</th>
                                 <th colspan="3" class="g-eff sep-l">Efficiency</th>
                                 <th colspan="3" class="g-ntm sep-l">NTM Bias</th>
