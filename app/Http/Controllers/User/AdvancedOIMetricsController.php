@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Reuses cp_option_ohlc_15min exactly as-is. Does NOT touch collectors,
  * does NOT touch OIFlowSentimentController, does NOT change BUY CE / BUY PE
- * / WAIT logic. Zero schema changes.
+ * / WAIT logic. Zero schema changes. 15-minute timeframe only.
  *
  * ── STRUCTURAL DATA LIMITATIONS (confirmed from CpCollectOption.php) ──
  *
@@ -70,6 +70,9 @@ class AdvancedOIMetricsController extends Controller
         return response()->json(['success' => true, 'symbols' => $this->getConfigSymbols($config->id)]);
     }
 
+    /**
+     * Single-symbol analysis (kept for backward compatibility / direct API use).
+     */
     public function analyze(Request $request): JsonResponse
     {
         $symbol = $request->get('symbol');
@@ -82,6 +85,39 @@ class AdvancedOIMetricsController extends Controller
             return response()->json(['success' => false, 'message' => 'Symbol and date are required.'], 200);
         }
 
+        $config = $this->getActiveConfig();
+        if (!$config) {
+            return response()->json([
+                'success' => false, 'no_config' => true,
+                'message' => 'No active Analysis Config found. Go to Admin → Analysis Config.',
+            ]);
+        }
+
+        $configSymbols = $this->getConfigSymbols($config->id);
+        if (!in_array($symbol, $configSymbols)) {
+            return response()->json(['success' => false, 'message' => 'Symbol not in active config.', 'available_symbols' => $configSymbols]);
+        }
+
+        $result = $this->runAnalysisForSymbol($config, $symbol, $date, $time);
+
+        return response()->json($result);
+    }
+
+    /**
+     * MAIN ENDPOINT FOR THE PAGE — analyzes every symbol in the active
+     * config for one date/time, returned as a list (one row per symbol).
+     */
+    public function analyzeAll(Request $request): JsonResponse
+    {
+        $date = $request->get('date');
+        $time = $request->get('time', self::ANALYSIS_TIME);
+
+        if (strlen($time) === 5) $time .= ':00'; // "14:45" -> "14:45:00"
+
+        if (!$date) {
+            return response()->json(['success' => false, 'message' => 'Date is required.'], 200);
+        }
+
         try {
             $config = $this->getActiveConfig();
             if (!$config) {
@@ -92,10 +128,46 @@ class AdvancedOIMetricsController extends Controller
             }
 
             $configSymbols = $this->getConfigSymbols($config->id);
-            if (!in_array($symbol, $configSymbols)) {
-                return response()->json(['success' => false, 'message' => 'Symbol not in active config.', 'available_symbols' => $configSymbols]);
+
+            if (empty($configSymbols)) {
+                return response()->json([
+                    'success' => true,
+                    'date'    => $date,
+                    'time'    => substr($time, 0, 5),
+                    'rows'    => [],
+                    'message' => 'No symbols found in the active config.',
+                ]);
             }
 
+            $rows = [];
+            foreach ($configSymbols as $symbol) {
+                $result = $this->runAnalysisForSymbol($config, $symbol, $date, $time);
+                $rows[] = array_merge(['symbol' => $symbol], $result);
+            }
+
+            return response()->json([
+                'success' => true,
+                'date'    => $date,
+                'time'    => substr($time, 0, 5),
+                'rows'    => $rows,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('AdvancedOIMetricsController analyzeAll: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ═════════════════════════ SHARED PER-SYMBOL COMPUTATION ═════════════════════════
+
+    /**
+     * Loads live + anchor OI/volume rows for ONE symbol at ONE date/time,
+     * builds the strike ladder, and computes all six advanced metrics.
+     * Used by both analyze() and analyzeAll() so the logic exists in one place.
+     */
+    private function runAnalysisForSymbol(object $config, string $symbol, string $date, string $time): array
+    {
+        try {
             $prevDate = $this->getPreviousTradingDate($date);
 
             // ── Bulk load: LIVE snapshot rows (selected date + selected time) ──
@@ -121,12 +193,12 @@ class AdvancedOIMetricsController extends Controller
                 ->get();
 
             if ($liveRows->isEmpty()) {
-                return response()->json([
-                    'success'    => true,
-                    'no_data'    => true,
-                    'message'    => "No data found for {$symbol} on {$date} {$time}.",
-                    'advanced_oi'=> $this->emptyAdvancedOi(),
-                ]);
+                return [
+                    'success'     => true,
+                    'no_data'     => true,
+                    'message'     => "No data found for {$symbol} on {$date} {$time}.",
+                    'advanced_oi' => $this->emptyAdvancedOi(),
+                ];
             }
 
             // ── Build lookup maps: [type][strike] => oi / volume ──
@@ -191,14 +263,15 @@ class AdvancedOIMetricsController extends Controller
 
             $advanced['signal'] = $this->deriveSignal($advanced['bullish_score'], $advanced['bearish_score']);
 
-            return response()->json([
-                'success'     => true,
-                'advanced_oi' => $advanced,
-            ]);
+            return ['success' => true, 'no_data' => false, 'advanced_oi' => $advanced];
 
         } catch (\Exception $e) {
-            Log::error('AdvancedOIMetricsController analyze: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            Log::error('AdvancedOIMetricsController runAnalysisForSymbol (' . $symbol . '): ' . $e->getMessage());
+            return [
+                'success'     => false,
+                'message'     => $e->getMessage(),
+                'advanced_oi' => $this->emptyAdvancedOi(),
+            ];
         }
     }
 
