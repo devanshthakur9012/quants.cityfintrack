@@ -801,7 +801,7 @@
                                 <th>#</th>
                                 <th>Symbol</th>
                                 <th>Date</th>
-                                <th>Expiry</th>
+                                {{-- <th>Expiry</th> --}}
                                 <th>ATM</th>
                                 <th class="sep-l">CE ≤0.70</th>
                                 <th>PE ≤0.70</th>
@@ -1064,7 +1064,7 @@
             if (status === 'TRIGGERED') return '<span class="aom-badge ' + (side === 'bear' ? 'b-trig-bear' :
                 'b-trig-bull') + '" title="TRIGGERED">✓</span>';
             if (status === 'INSUFFICIENT_DATA')
-        return '<span class="aom-badge b-insuff" title="INSUFFICIENT DATA">⚠</span>';
+                return '<span class="aom-badge b-insuff" title="INSUFFICIENT DATA">⚠</span>';
             return '<span class="aom-badge b-not" title="NOT TRIGGERED">—</span>';
         }
 
@@ -1100,17 +1100,18 @@
                 var oiTip = a.oi_signal.condition + ' — ' + a.oi_signal.reason + ' (CE ' + a.oi_signal.ce_oi_pct +
                     '% / PE ' + a.oi_signal.pe_oi_pct + '%)';
 
+                // '<td class="c-expiry">' + (meta.expiry_used ? meta.expiry_used.substring(0, 10) : '—') +
+                // '</td>' +
+
                 h += '<tr class="' + zebra + '">' +
                     '<td class="c-num">' + num++ + '</td>' +
                     '<td class="c-sym">' + esc(row.symbol) + '</td>' +
                     '<td class="c-date">' + esc(row.date || meta.date || '') + '</td>' +
-                    '<td class="c-expiry">' + (meta.expiry_used ? meta.expiry_used.substring(0, 10) : '—') +
-                    '</td>' +
                     '<td><span class="c-atm">' + (meta.atm_strike || '—') + '</span></td>' +
 
                     // Decay Velocity: CE, PE, Signal
                     '<td class="sep-l">' + v(a.decay_velocity.ce) + ' ' + badge(a.decay_velocity.ce_status,
-                    'bull') + '</td>' +
+                        'bull') + '</td>' +
                     '<td>' + v(a.decay_velocity.pe) + ' ' + badge(a.decay_velocity.pe_status, 'bear') + '</td>' +
                     '<td>' + signalBadge(a.decay_signal) + '</td>' +
 
