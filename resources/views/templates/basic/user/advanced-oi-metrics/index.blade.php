@@ -25,6 +25,7 @@
             --c-red: #EF5350;
             --c-teal: #26A69A;
             --c-amber: #FFA726;
+            --c-purple: #AB47BC;
             --c-text: #D1D4DC;
             --c-muted: #787B86;
             --f-sans: 'DM Sans', system-ui, sans-serif;
@@ -475,38 +476,72 @@
             width: 100%;
             border-collapse: collapse;
             font-family: var(--f-mono);
-            min-width: 900px;
+            min-width: 1650px;
         }
 
-        .aom-table thead th {
-            padding: 9px 12px;
+        .aom-table thead tr.th-group th {
+            padding: 8px 10px 4px;
             text-align: center;
+            font-family: var(--f-sans);
             font-size: 9px;
             font-weight: 700;
-            letter-spacing: .08em;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            color: var(--c-muted);
+            background: var(--c-panel);
+            white-space: nowrap;
+        }
+
+        .aom-table thead tr.th-cols th {
+            padding: 4px 10px 8px;
+            text-align: center;
+            font-family: var(--f-mono);
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: .05em;
+            text-transform: uppercase;
             background: rgba(0, 0, 0, .25);
+            color: var(--c-muted);
             border-bottom: 1px solid var(--c-border);
             white-space: nowrap;
         }
 
-        .aom-table thead th:nth-child(2) {
-            text-align: left;
+        .g-info {
+            color: var(--c-blue) !important;
+        }
+
+        .g-decay {
+            color: var(--c-teal) !important;
+        }
+
+        .g-eff {
+            color: var(--c-amber) !important;
+        }
+
+        .g-ntm {
+            color: var(--c-purple) !important;
+        }
+
+        .g-otm {
+            color: var(--c-red) !important;
+        }
+
+        .g-oi {
+            color: var(--c-lime) !important;
+        }
+
+        .sep-l {
+            border-left: 1px solid var(--c-border2) !important;
         }
 
         .aom-table tbody td {
-            padding: 11px 12px;
+            padding: 9px 10px;
             text-align: center;
             font-size: 11px;
             border-bottom: 1px solid var(--c-border);
             vertical-align: middle;
             white-space: nowrap;
             color: var(--c-text);
-        }
-
-        .aom-table tbody td:nth-child(2) {
-            text-align: left;
+            transition: background .15s;
         }
 
         .aom-table tbody tr:hover td {
@@ -549,16 +584,57 @@
             color: var(--c-muted);
         }
 
+        .aom-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            font-weight: 800;
+            font-family: var(--f-sans);
+        }
+
+        .b-trig-bull {
+            background: rgba(38, 166, 154, .12);
+            color: #4DB6AC;
+            border: 1px solid rgba(38, 166, 154, .3);
+        }
+
+        .b-trig-bear {
+            background: rgba(239, 83, 80, .1);
+            color: #EF9A9A;
+            border: 1px solid rgba(239, 83, 80, .3);
+        }
+
+        .b-not {
+            background: var(--c-panel);
+            color: var(--c-muted);
+            border: 1px solid var(--c-border2);
+        }
+
+        .b-insuff {
+            background: rgba(255, 167, 38, .1);
+            color: var(--c-amber);
+            border: 1px solid rgba(255, 167, 38, .25);
+        }
+
+        .na {
+            color: rgba(120, 123, 134, .5);
+        }
+
         .sig-bull {
             display: inline-block;
             background: rgba(38, 166, 154, .12);
             color: #4DB6AC;
             border: 1px solid rgba(38, 166, 154, .3);
             border-radius: 5px;
-            padding: 3px 10px;
+            padding: 3px 9px;
             font-family: var(--f-sans);
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         .sig-bear {
@@ -567,10 +643,11 @@
             color: #EF9A9A;
             border: 1px solid rgba(239, 83, 80, .3);
             border-radius: 5px;
-            padding: 3px 10px;
+            padding: 3px 9px;
             font-family: var(--f-sans);
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         .sig-neut {
@@ -579,9 +656,10 @@
             color: var(--c-muted);
             border: 1px solid var(--c-border2);
             border-radius: 5px;
-            padding: 3px 10px;
+            padding: 3px 9px;
             font-family: var(--f-sans);
-            font-size: 10px;
+            font-size: 9px;
+            white-space: nowrap;
         }
 
         .sig-insuff {
@@ -590,14 +668,11 @@
             color: var(--c-amber);
             border: 1px solid rgba(255, 167, 38, .25);
             border-radius: 5px;
-            padding: 3px 10px;
+            padding: 3px 9px;
             font-family: var(--f-sans);
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
-        }
-
-        .na {
-            color: rgba(120, 123, 134, .5);
+            white-space: nowrap;
         }
 
         .aom-empty {
@@ -653,9 +728,9 @@
             <div class="aom-hero-left">
                 <div class="aom-eyebrow">Advanced Confirmation Layer</div>
                 <h1>Advanced <span style="color:var(--c-lime);">OI</span> Metrics</h1>
-                <p>Decay Velocity, OI-to-Volume Efficiency, NTM Bias, Deep OTM Inflection, and OI Signal — computed from
-                    today 14:45 vs. previous trading day 15:00 option chain data. Supplementary layer only — does not
-                    replace or alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment logic.</p>
+                <p>Decay Velocity, OI-to-Volume Efficiency, NTM Bias, Deep OTM Inflection — each with its own signal — plus
+                    OI Signal, computed from today 14:45 vs. previous trading day 15:00 option chain data. Supplementary
+                    layer only — does not replace or alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment logic.</p>
             </div>
             <div class="aom-hero-icon"><i class="las la-layer-group"></i></div>
         </div>
@@ -714,22 +789,38 @@
                 <div class="aom-tscroll">
                     <table class="aom-table">
                         <thead>
-                            <tr>
+                            <tr class="th-group">
+                                <th colspan="5" class="g-info">Market Info</th>
+                                <th colspan="3" class="g-decay sep-l">Decay Velocity</th>
+                                <th colspan="3" class="g-eff sep-l">Efficiency</th>
+                                <th colspan="3" class="g-ntm sep-l">NTM Bias</th>
+                                <th colspan="3" class="g-otm sep-l">Deep OTM</th>
+                                <th colspan="1" class="g-oi sep-l">OI Flow</th>
+                            </tr>
+                            <tr class="th-cols">
                                 <th>#</th>
                                 <th>Symbol</th>
                                 <th>Date</th>
                                 <th>Expiry</th>
                                 <th>ATM</th>
-                                <th>Decay V</th>
-                                <th>Efficiency</th>
-                                <th>NTM Bias</th>
-                                <th>Deep OTM</th>
-                                <th>OI Signal</th>
+                                <th class="sep-l">CE ≤0.70</th>
+                                <th>PE ≤0.70</th>
+                                <th>Signal</th>
+                                <th class="sep-l">CE ≥0.40</th>
+                                <th>PE ≥0.40</th>
+                                <th>Signal</th>
+                                <th class="sep-l">Ratio</th>
+                                <th>Bull/Bear</th>
+                                <th>Signal</th>
+                                <th class="sep-l">CE ≥3.0</th>
+                                <th>PE ≥3.0</th>
+                                <th>Signal</th>
+                                <th class="sep-l">OI Signal</th>
                             </tr>
                         </thead>
                         <tbody id="aom-tbody">
                             <tr>
-                                <td colspan="10">
+                                <td colspan="18">
                                     <div class="aom-spinner-row">
                                         <div class="aom-spinner"></div>Detecting last available date…
                                     </div>
@@ -856,7 +947,6 @@
             }
         }
 
-        // Shows/hides the History panel based on whether a specific symbol is selected
         function aomOnSymbolChange() {
             var sym = el('aom-sym').value;
             if (sym && sym !== 'ALL') {
@@ -883,7 +973,7 @@
             aomHistoryMode = true;
             aomHideWarn();
             html('aom-tbody',
-                '<tr><td colspan="10"><div class="aom-spinner-row"><div class="aom-spinner"></div>Loading history for ' +
+                '<tr><td colspan="18"><div class="aom-spinner-row"><div class="aom-spinner"></div>Loading history for ' +
                 sym + ' (' + from + ' → ' + to + ')…</div></td></tr>');
             txt('aom-subtitle', sym + ' · Loading history…');
             var params = new URLSearchParams({
@@ -906,7 +996,7 @@
                         txt('aom-subtitle', sym + ' · No history found');
                         return;
                     }
-                    aomRenderTable(res.data, true);
+                    aomRenderTable(res.data);
                     txt('aom-subtitle', sym + ' · ' + res.message);
                     txt('aom-upd', 'Updated ' + new Date().toLocaleTimeString());
                     el('aom-info').textContent = 'History: ' + from + ' → ' + to;
@@ -917,13 +1007,13 @@
         }
 
         function aomAnalyze() {
-            if (aomHistoryMode) return; // history panel drives its own fetch
+            if (aomHistoryMode) return;
             var date = aomGetDate(),
                 sym = el('aom-sym').value;
             if (!date) return;
             aomHideWarn();
             html('aom-tbody',
-                '<tr><td colspan="10"><div class="aom-spinner-row"><div class="aom-spinner"></div>Calculating advanced OI metrics for ' +
+                '<tr><td colspan="18"><div class="aom-spinner-row"><div class="aom-spinner"></div>Calculating advanced OI metrics for ' +
                 date + '…</div></td></tr>');
             txt('aom-subtitle', date + ' · Loading…');
             var params = new URLSearchParams({
@@ -956,7 +1046,7 @@
                         txt('aom-subtitle', date + ' · No data found');
                         return;
                     }
-                    aomRenderTable(res.data, false);
+                    aomRenderTable(res.data);
                     txt('aom-subtitle', date + ' · ' + res.message);
                     txt('aom-upd', 'Updated ' + new Date().toLocaleTimeString());
                     el('aom-info').textContent = '';
@@ -970,6 +1060,14 @@
             return (x === null || x === undefined) ? '<span class="na">N/A</span>' : x;
         }
 
+        function badge(status, side) {
+            if (status === 'TRIGGERED') return '<span class="aom-badge ' + (side === 'bear' ? 'b-trig-bear' :
+                'b-trig-bull') + '" title="TRIGGERED">✓</span>';
+            if (status === 'INSUFFICIENT_DATA')
+        return '<span class="aom-badge b-insuff" title="INSUFFICIENT DATA">⚠</span>';
+            return '<span class="aom-badge b-not" title="NOT TRIGGERED">—</span>';
+        }
+
         function signalBadge(sig, tip) {
             var t = tip ? ' title="' + esc(tip) + '"' : '';
             if (sig === 'BULLISH') return '<span class="sig-bull"' + t + '>▲ BULLISH</span>';
@@ -978,7 +1076,7 @@
             return '<span class="sig-neut"' + t + '>— NEUTRAL</span>';
         }
 
-        function aomRenderTable(rows, isHistory) {
+        function aomRenderTable(rows) {
             var h = '',
                 num = 1;
             rows.forEach(function(row, i) {
@@ -987,23 +1085,18 @@
                 if (!row.success) {
                     h += '<tr class="' + zebra + '"><td class="c-num">' + num++ + '</td><td class="c-sym">' + esc(
                             row.symbol) + '</td><td class="c-date">' + esc(row.date || '') +
-                        '</td><td colspan="7" class="na">Error: ' + esc(row.message || 'failed') + '</td></tr>';
+                        '</td><td colspan="15" class="na">Error: ' + esc(row.message || 'failed') + '</td></tr>';
                     return;
                 }
                 if (row.no_data) {
                     h += '<tr class="' + zebra + '"><td class="c-num">' + num++ + '</td><td class="c-sym">' + esc(
                             row.symbol) + '</td><td class="c-date">' + esc(row.date || '') +
-                        '</td><td colspan="7" class="na">No data for this date</td></tr>';
+                        '</td><td colspan="15" class="na">No data for this date</td></tr>';
                     return;
                 }
 
                 var a = row.advanced_oi,
                     meta = a.meta || {};
-                var decayTip = 'CE ' + v(a.decay_velocity.ce) + ' / PE ' + v(a.decay_velocity.pe);
-                var effTip = 'CE ' + v(a.oi_volume_efficiency.ce) + ' / PE ' + v(a.oi_volume_efficiency.pe);
-                var ntmTip = a.ntm_bias.ratio !== null ? ('Ratio ' + a.ntm_bias.ratio + ' (PE ' + a.ntm_bias
-                    .pe_sum + ' / CE ' + a.ntm_bias.ce_sum + ')') : 'Insufficient basket data';
-                var otmTip = 'CE ' + v(a.deep_otm_inflection.ce) + ' / PE ' + v(a.deep_otm_inflection.pe);
                 var oiTip = a.oi_signal.condition + ' — ' + a.oi_signal.reason + ' (CE ' + a.oi_signal.ce_oi_pct +
                     '% / PE ' + a.oi_signal.pe_oi_pct + '%)';
 
@@ -1014,11 +1107,36 @@
                     '<td class="c-expiry">' + (meta.expiry_used ? meta.expiry_used.substring(0, 10) : '—') +
                     '</td>' +
                     '<td><span class="c-atm">' + (meta.atm_strike || '—') + '</span></td>' +
-                    '<td>' + signalBadge(a.decay_signal, decayTip) + '</td>' +
-                    '<td>' + signalBadge(a.efficiency_signal, effTip) + '</td>' +
-                    '<td>' + signalBadge(a.ntm_signal, ntmTip) + '</td>' +
-                    '<td>' + signalBadge(a.deep_otm_signal, otmTip) + '</td>' +
-                    '<td>' + signalBadge(a.oi_signal.sentiment, oiTip) + '</td>' +
+
+                    // Decay Velocity: CE, PE, Signal
+                    '<td class="sep-l">' + v(a.decay_velocity.ce) + ' ' + badge(a.decay_velocity.ce_status,
+                    'bull') + '</td>' +
+                    '<td>' + v(a.decay_velocity.pe) + ' ' + badge(a.decay_velocity.pe_status, 'bear') + '</td>' +
+                    '<td>' + signalBadge(a.decay_signal) + '</td>' +
+
+                    // Efficiency: CE, PE, Signal
+                    '<td class="sep-l">' + v(a.oi_volume_efficiency.ce) + ' ' + badge(a.oi_volume_efficiency
+                        .ce_status, 'bull') + '</td>' +
+                    '<td>' + v(a.oi_volume_efficiency.pe) + ' ' + badge(a.oi_volume_efficiency.pe_status, 'bear') +
+                    '</td>' +
+                    '<td>' + signalBadge(a.efficiency_signal) + '</td>' +
+
+                    // NTM Bias: Ratio, Bull/Bear badges, Signal
+                    '<td class="sep-l">' + (a.ntm_bias.ratio !== null ? a.ntm_bias.ratio :
+                        '<span class="na">N/A</span>') + '</td>' +
+                    '<td>' + badge(a.ntm_bias.bullish_status, 'bull') + ' ' + badge(a.ntm_bias.bearish_status,
+                        'bear') + '</td>' +
+                    '<td>' + signalBadge(a.ntm_signal) + '</td>' +
+
+                    // Deep OTM: CE, PE, Signal
+                    '<td class="sep-l">' + v(a.deep_otm_inflection.ce) + ' ' + badge(a.deep_otm_inflection
+                        .ce_status, 'bull') + '</td>' +
+                    '<td>' + v(a.deep_otm_inflection.pe) + ' ' + badge(a.deep_otm_inflection.pe_status, 'bear') +
+                    '</td>' +
+                    '<td>' + signalBadge(a.deep_otm_signal) + '</td>' +
+
+                    // OI Signal — single column, no separate value columns
+                    '<td class="sep-l">' + signalBadge(a.oi_signal.sentiment, oiTip) + '</td>' +
                     '</tr>';
             });
             html('aom-tbody', h || aomEmptyHtml('No results.'));
@@ -1038,7 +1156,7 @@
         }
 
         function aomEmptyHtml(msg) {
-            return '<tr><td colspan="10"><div class="aom-empty"><div class="aom-empty-icon"><i class="las la-layer-group"></i></div><p>' +
+            return '<tr><td colspan="18"><div class="aom-empty"><div class="aom-empty-icon"><i class="las la-layer-group"></i></div><p>' +
                 (msg || 'No data found.') + '</p></div></td></tr>';
         }
 
