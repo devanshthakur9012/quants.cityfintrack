@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Log;
 /**
  * Advanced OI Metrics — STANDALONE, READ-ONLY analysis page.
  *
- * Reuses cp_option_ohlc_15min exactly as-is. Does NOT touch collectors,
- * does NOT touch OIFlowSentimentController, does NOT change BUY CE / BUY PE
- * / WAIT logic. Zero schema changes. 15-minute timeframe only.
+ * Follows the exact same time convention and page pattern as
+ * OIFlowSentimentController: T = today 14:45, T-1 = previous trading day
+ * 15:00. No user-selectable time — only date (+ optional symbol filter),
+ * same as the OI Flow Sentiment page. Reuses cp_option_ohlc_15min exactly
+ * as-is. Does NOT touch collectors, does NOT touch OIFlowSentimentController,
+ * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
  *
  * ── STRUCTURAL DATA LIMITATIONS (confirmed from CpCollectOption.php) ──
  *
@@ -41,8 +44,8 @@ use Illuminate\Support\Facades\Log;
 class AdvancedOIMetricsController extends Controller
 {
     private const TF             = '15min';
-    private const ANALYSIS_TIME  = '14:45:00'; // default "live" snapshot time
-    private const PREV_DAY_TIME  = '15:00:00'; // anchor snapshot time (same convention as OIFlowSentimentController)
+    private const ANALYSIS_TIME  = '14:45:00'; // today snapshot — same as OI Flow Sentiment
+    private const PREV_DAY_TIME  = '15:00:00'; // previous trading day anchor — same as OI Flow Sentiment
     private const OPT_TABLE      = 'cp_option_ohlc_15min';
 
     /** Strike-ladder offsets used for both NTM Bias and Decay Velocity baskets. */
@@ -54,6 +57,44 @@ class AdvancedOIMetricsController extends Controller
     {
         $pageTitle = 'Advanced OI Metrics';
         return view(activeTemplate() . 'user.advanced-oi-metrics.index', compact('pageTitle'));
+    }
+
+    /**
+     * Same convention as OIFlowSentimentController::lastDate() — finds the
+     * most recent trade_date that actually has a 14:45 snapshot, so the
+     * page opens on real data instead of an empty "today".
+     */
+    public function lastDate(Request $request): JsonResponse
+    {
+        try {
+            $config = $this->getActiveConfig();
+            $today  = Carbon::today()->toDateString();
+
+            if (!$config) {
+                return response()->json(['success' => false, 'last_date' => $today, 'is_today' => true]);
+            }
+
+            $lastDate = DB::table(self::OPT_TABLE)
+                ->where('analysis_config_id', $config->id)
+                ->where('is_missing', false)
+                ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
+                ->max('trade_date');
+
+            if (!$lastDate) {
+                $lastDate = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('is_missing', false)
+                    ->max('trade_date');
+            }
+
+            $lastDate = $lastDate ? Carbon::parse($lastDate)->toDateString() : $today;
+
+            return response()->json(['success' => true, 'last_date' => $lastDate, 'is_today' => $lastDate === $today]);
+
+        } catch (\Exception $e) {
+            Log::error('AdvancedOIMetricsController lastDate: ' . $e->getMessage());
+            return response()->json(['success' => false, 'last_date' => Carbon::today()->toDateString(), 'is_today' => true]);
+        }
     }
 
     public function getSymbols(Request $request): JsonResponse
@@ -71,111 +112,92 @@ class AdvancedOIMetricsController extends Controller
     }
 
     /**
-     * Single-symbol analysis (kept for backward compatibility / direct API use).
+     * Analyzes every symbol (or a filtered subset) for one date, always
+     * using the fixed 14:45 / 15:00 snapshot pair — no time param, same
+     * as OI Flow Sentiment's analyze().
      */
     public function analyze(Request $request): JsonResponse
     {
-        $symbol = $request->get('symbol');
-        $date   = $request->get('date');
-        $time   = $request->get('time', self::ANALYSIS_TIME);
-
-        if (strlen($time) === 5) $time .= ':00'; // "14:45" -> "14:45:00"
-
-        if (!$symbol || !$date) {
-            return response()->json(['success' => false, 'message' => 'Symbol and date are required.'], 200);
-        }
-
-        $config = $this->getActiveConfig();
-        if (!$config) {
-            return response()->json([
-                'success' => false, 'no_config' => true,
-                'message' => 'No active Analysis Config found. Go to Admin → Analysis Config.',
-            ]);
-        }
-
-        $configSymbols = $this->getConfigSymbols($config->id);
-        if (!in_array($symbol, $configSymbols)) {
-            return response()->json(['success' => false, 'message' => 'Symbol not in active config.', 'available_symbols' => $configSymbols]);
-        }
-
-        $result = $this->runAnalysisForSymbol($config, $symbol, $date, $time);
-
-        return response()->json($result);
-    }
-
-    /**
-     * MAIN ENDPOINT FOR THE PAGE — analyzes every symbol in the active
-     * config for one date/time, returned as a list (one row per symbol).
-     */
-    public function analyzeAll(Request $request): JsonResponse
-    {
         $date = $request->get('date');
-        $time = $request->get('time', self::ANALYSIS_TIME);
-
-        if (strlen($time) === 5) $time .= ':00'; // "14:45" -> "14:45:00"
 
         if (!$date) {
-            return response()->json(['success' => false, 'message' => 'Date is required.'], 200);
+            return response()->json(['success' => false, 'message' => 'Please select a date.', 'data' => []]);
         }
+
+        $symbolReq = array_filter((array) $request->get('symbols', []));
 
         try {
             $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
-                    'success' => false, 'no_config' => true,
-                    'message' => 'No active Analysis Config found. Go to Admin → Analysis Config.',
+                    'success'   => false,
+                    'no_config' => true,
+                    'message'   => 'No active Analysis Config found. Go to Admin → Analysis Config.',
+                    'data'      => [],
                 ]);
             }
 
             $configSymbols = $this->getConfigSymbols($config->id);
-
             if (empty($configSymbols)) {
-                return response()->json([
-                    'success' => true,
-                    'date'    => $date,
-                    'time'    => substr($time, 0, 5),
-                    'rows'    => [],
-                    'message' => 'No symbols found in the active config.',
-                ]);
+                return response()->json(['success' => false, 'message' => 'No symbols configured.', 'data' => []]);
             }
+
+            $symbols = !empty($symbolReq)
+                ? array_values(array_intersect($symbolReq, $configSymbols))
+                : $configSymbols;
 
             $rows = [];
-            foreach ($configSymbols as $symbol) {
-                $result = $this->runAnalysisForSymbol($config, $symbol, $date, $time);
-                $rows[] = array_merge(['symbol' => $symbol], $result);
+            foreach ($symbols as $symbol) {
+                $result  = $this->runAnalysisForSymbol($config, $symbol, $date);
+                $rows[]  = array_merge(['symbol' => $symbol], $result);
             }
 
+            usort($rows, fn ($a, $b) => strcmp($a['symbol'], $b['symbol']));
+
+            $withData    = array_filter($rows, fn ($r) => $r['success'] && empty($r['no_data']));
+            $bullish     = count(array_filter($withData, fn ($r) => ($r['advanced_oi']['signal'] ?? null) === 'BULLISH'));
+            $bearish     = count(array_filter($withData, fn ($r) => ($r['advanced_oi']['signal'] ?? null) === 'BEARISH'));
+            $neutral     = count(array_filter($withData, fn ($r) => ($r['advanced_oi']['signal'] ?? null) === 'NEUTRAL'));
+            $noDataCount = count($rows) - count($withData);
+
             return response()->json([
-                'success' => true,
-                'date'    => $date,
-                'time'    => substr($time, 0, 5),
-                'rows'    => $rows,
+                'success'            => true,
+                'data'               => $rows,
+                'date'               => $date,
+                'is_today'           => $date === Carbon::today()->toDateString(),
+                'available_symbols'  => $configSymbols,
+                'total_records'      => count($rows),
+                'bullish_count'      => $bullish,
+                'bearish_count'      => $bearish,
+                'neutral_count'      => $neutral,
+                'no_data_count'      => $noDataCount,
+                'message'            => count($rows) . ' symbol(s) analyzed for ' . $date,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('AdvancedOIMetricsController analyzeAll: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            Log::error('AdvancedOIMetricsController analyze: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'data' => []], 500);
         }
     }
 
     // ═════════════════════════ SHARED PER-SYMBOL COMPUTATION ═════════════════════════
 
     /**
-     * Loads live + anchor OI/volume rows for ONE symbol at ONE date/time,
-     * builds the strike ladder, and computes all six advanced metrics.
-     * Used by both analyze() and analyzeAll() so the logic exists in one place.
+     * Loads live (today 14:45) + anchor (prev trading day 15:00) OI/volume
+     * rows for ONE symbol, builds the strike ladder, and computes all six
+     * advanced metrics. Time is always the class constants — never a param.
      */
-    private function runAnalysisForSymbol(object $config, string $symbol, string $date, string $time): array
+    private function runAnalysisForSymbol(object $config, string $symbol, string $date): array
     {
         try {
             $prevDate = $this->getPreviousTradingDate($date);
 
-            // ── Bulk load: LIVE snapshot rows (selected date + selected time) ──
+            // ── Bulk load: LIVE snapshot rows (selected date, 14:45) ──
             $liveRows = DB::table(self::OPT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->where('base_symbol', $symbol)
                 ->whereDate('trade_date', $date)
-                ->whereRaw('TIME(interval_time) = ?', [$time])
+                ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
                 ->whereIn('instrument_type', ['CE', 'PE'])
                 ->where('is_missing', false)
                 ->select(['instrument_type', 'strike', 'atm_strike', 'expiry_date', 'oi', 'volume'])
@@ -196,7 +218,7 @@ class AdvancedOIMetricsController extends Controller
                 return [
                     'success'     => true,
                     'no_data'     => true,
-                    'message'     => "No data found for {$symbol} on {$date} {$time}.",
+                    'message'     => "No data found for {$symbol} on {$date} " . substr(self::ANALYSIS_TIME, 0, 5) . '.',
                     'advanced_oi' => $this->emptyAdvancedOi(),
                 ];
             }
@@ -233,7 +255,7 @@ class AdvancedOIMetricsController extends Controller
                 'meta' => [
                     'symbol'          => $symbol,
                     'date'            => $date,
-                    'time'            => substr($time, 0, 5),
+                    'time'            => substr(self::ANALYSIS_TIME, 0, 5),
                     'anchor_date'     => $prevDate,
                     'anchor_time'     => substr(self::PREV_DAY_TIME, 0, 5),
                     'expiry_used'     => $expiryUsed,
@@ -298,7 +320,7 @@ class AdvancedOIMetricsController extends Controller
 
         foreach (self::BASKET_OFFSETS as $offset) {
             $strike = $this->strikeAtOffset($ladder, $atmIndex, $offset);
-            if ($strike === null) return null; // basket incomplete
+            if ($strike === null) return null;
 
             $key = (string) $strike;
             if (!array_key_exists($key, $liveMap) || !array_key_exists($key, $anchorMap)) return null;
@@ -307,7 +329,7 @@ class AdvancedOIMetricsController extends Controller
             $anchorSum += $anchorMap[$key];
         }
 
-        if ($anchorSum <= 0) return null; // never silently convert div-by-zero to 0
+        if ($anchorSum <= 0) return null;
 
         return round($liveSum / $anchorSum, 4);
     }
@@ -333,8 +355,8 @@ class AdvancedOIMetricsController extends Controller
         $anchorTotal = array_sum($anchorMap);
         $volTotal    = array_sum($volMap);
 
-        if ($volTotal <= 0) return null; // spec: volume<=0 => N/A / INSUFFICIENT_DATA, never divide by zero
-        if (empty($anchorMap)) return null; // no anchor observation at all
+        if ($volTotal <= 0) return null;
+        if (empty($anchorMap)) return null;
 
         return round(abs($liveTotal - $anchorTotal) / $volTotal, 4);
     }
@@ -380,9 +402,7 @@ class AdvancedOIMetricsController extends Controller
     }
 
     // ═════════════════════════ METRIC 4 — STRIKE ROLL-OVER VELOCITY ═════════════════════════
-    // Permanently INSUFFICIENT_DATA. See class docblock: only one expiry's
-    // option chain is collected per symbol per trade_date, so next-month
-    // expiry data never coexists with current-month data for the same day.
+    // Permanently INSUFFICIENT_DATA — see class docblock.
 
     private function calcRolloverVelocity(): array
     {
@@ -412,9 +432,9 @@ class AdvancedOIMetricsController extends Controller
     {
         if ($atmIndex === null) return null;
 
-        $atmStrike    = $this->strikeAtOffset($ladder, $atmIndex, 0);
-        $otmStrike    = $this->strikeAtOffset($ladder, $atmIndex, self::DEEP_OTM_OFFSET);
-        if ($atmStrike === null || $otmStrike === null) return null; // ladder doesn't extend 4 strikes out
+        $atmStrike = $this->strikeAtOffset($ladder, $atmIndex, 0);
+        $otmStrike = $this->strikeAtOffset($ladder, $atmIndex, self::DEEP_OTM_OFFSET);
+        if ($atmStrike === null || $otmStrike === null) return null;
 
         $atmKey = (string) $atmStrike;
         $otmKey = (string) $otmStrike;
@@ -425,14 +445,13 @@ class AdvancedOIMetricsController extends Controller
         $atmChange = $liveMap[$atmKey] - $anchorMap[$atmKey];
         $otmChange = $liveMap[$otmKey] - $anchorMap[$otmKey];
 
-        if ($atmChange === 0) return null; // never silently convert div-by-zero to 0
+        if ($atmChange === 0) return null;
 
         return round($otmChange / $atmChange, 4);
     }
 
     // ═════════════════════════ METRIC 6 — INTRADAY OI MOMENTUM DELTA ═════════════════════════
-    // Permanently INSUFFICIENT_DATA. See class docblock: only 15min/30min/1hr
-    // granularity is collected anywhere in this schema; no 5-minute source exists.
+    // Permanently INSUFFICIENT_DATA — see class docblock.
 
     private function calculateIntradayOIMomentumDelta(): array
     {
@@ -484,7 +503,6 @@ class AdvancedOIMetricsController extends Controller
             if (abs($s - $atmStrike) < 0.01) return $i;
         }
 
-        // Fallback: nearest strike (float precision safety net only)
         $closestIdx = null; $closestDiff = null;
         foreach ($ladder as $i => $s) {
             $diff = abs($s - $atmStrike);
@@ -500,7 +518,7 @@ class AdvancedOIMetricsController extends Controller
         return $ladder[$idx] ?? null;
     }
 
-    // ═════════════════════════ SHARED HELPERS (mirrors existing controller convention) ═════════════════════════
+    // ═════════════════════════ SHARED HELPERS (mirrors OIFlowSentimentController convention) ═════════════════════════
 
     private function getActiveConfig(): ?object
     {

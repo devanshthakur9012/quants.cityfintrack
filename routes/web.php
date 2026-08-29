@@ -1509,8 +1509,8 @@ Route::controller('SiteController')->group(function () {
     });
 
     Route::middleware(['auth'])->prefix('advanced-oi-metrics')->name('advanced-oi-metrics.')->group(function () {
-        Route::get('/index',   [AdvancedOIMetricsController::class, 'index'])->name('index');
-        Route::get('/symbols', [AdvancedOIMetricsController::class, 'getSymbols'])->name('symbols');
-        Route::get('/analyze', [AdvancedOIMetricsController::class, 'analyze'])->name('analyze');
-        Route::get('/analyze-all', [AdvancedOIMetricsController::class, 'analyzeAll'])->name('analyze-all');
+        Route::get('/index',      [AdvancedOIMetricsController::class, 'index'])->name('index');
+        Route::get('/last-date',  [AdvancedOIMetricsController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',    [AdvancedOIMetricsController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',    [AdvancedOIMetricsController::class, 'analyze'])->name('analyze');
     });
