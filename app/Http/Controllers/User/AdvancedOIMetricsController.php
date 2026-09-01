@@ -17,44 +17,24 @@ use Illuminate\Support\Facades\Log;
  * Does NOT touch collectors, does NOT touch OIFlowSentimentController,
  * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
  *
- * ── 3 INTRADAY SNAPSHOTS, 2 METRICS ONLY ────────────────────────────
- * Three snapshots per day — today 10:15, today 11:15, today 12:15 —
+ * ── THIS REVISION — 3 INTRADAY SNAPSHOTS, 2 METRICS ONLY ───────────
+ * Instead of a single 14:45 snapshot with 4 metrics, this now takes
+ * THREE snapshots per day — today 10:15, today 11:15, today 12:15 —
  * each compared against the SAME previous-day-close anchor (15:00).
  * Only two metrics are computed per snapshot: Decay Velocity and OI
  * Signal. Efficiency, NTM Bias, Deep OTM Inflection, Roll-over
- * Velocity, and Intraday Momentum Delta are not part of this page.
+ * Velocity, and Intraday Momentum Delta have been removed from this
+ * page entirely (per request) — not just hidden in the UI.
  *
- * ── THIS REVISION — THRESHOLD-GATED DECAY SIGNAL ────────────────────
- * Client-requested change: DECAY_THRESHOLD moved to 0.51, AND the
- * signal logic itself changed alongside it. Previously (see prior
- * revision) the metric always resolved to a direction whenever both
- * CE and PE existed, using the threshold only to label STRONG vs
- * DIRECTIONAL. That is INTENTIONALLY REVERSED as of this revision,
- * per explicit client instruction:
- *   - Compare CE decay vs PE decay. The lower value is the
- *     "winning" side (lower decay = stronger directional pull, per
- *     this metric's own definition).
- *   - The winning side must ALSO clear DECAY_THRESHOLD (<=) to
- *     produce a BULLISH/BEARISH call.
- *   - If the winning side does NOT clear the threshold, the result
- *     is NEUTRAL (both sides present, neither confirms) — NOT a
- *     directional call. There is no more DIRECTIONAL strength tier;
- *     strength is only ever 'STRONG' or null.
- *   - CE == PE is always NEUTRAL.
- *   - If only one side has data, that side must clear the threshold
- *     on its own to call BULLISH/BEARISH; otherwise the result is
- *     INSUFFICIENT_DATA (not NEUTRAL — we only have half the picture,
- *     that's not the same as "genuinely balanced").
- * With real data currently sitting well above 0.51 (0.9–1.3 range),
- * expect most/all rows to resolve to NEUTRAL under this stricter
- * rule — that is expected behavior, not a bug. Flagged to client.
+ * ── Decay Velocity (formula unchanged) ──
+ * LOWER value = stronger directional pull that side. Threshold 0.70
+ * marks STRONG; any imbalance between CE/PE still resolves to a
+ * direction (DIRECTIONAL) — NEUTRAL only means genuinely equal, and
+ * INSUFFICIENT_DATA means genuinely missing data.
  *
  * ── OI Signal (unchanged) ──
  * Ported verbatim from OIFlowSentimentController::calcOISignal() — kept
- * completely separate from the decay logic above, per request. Client
- * note: OI alone should not be read as guaranteed direction — this is
- * why Decay Signal and OI Signal remain independently computed rather
- * than being merged into one combined verdict on this page.
+ * completely separate from the decay logic above, per request.
  *
  * ── STRIKE KEY FIX (carried over, unchanged) ──
  * All strike-based lookups route through strikeKey() so a DB strike like
@@ -80,12 +60,8 @@ class AdvancedOIMetricsController extends Controller
     /** Strike-ladder offsets used for the Decay Velocity basket. */
     private const BASKET_OFFSETS = [-1, 0, 1];
 
-    /**
-     * Trigger threshold for Decay Velocity. The winning (lower) CE/PE
-     * side must be <= this value to produce a BULLISH/BEARISH call.
-     * Client-set value.
-     */
-    private const DECAY_THRESHOLD = 0.51;
+    /** Strong-signal (client) threshold — kept exactly as originally specified. */
+    private const DECAY_THRESHOLD = 0.70;
 
     /** Set to true to include the debug block (ATM/ladder diagnostics) per slot. */
     private const DEBUG_MODE = false;
@@ -430,56 +406,31 @@ class AdvancedOIMetricsController extends Controller
     }
 
     /**
-     * DECAY VELOCITY signal: LOWER value = stronger directional pull.
-     * The winning (lower) CE/PE side must ALSO clear DECAY_THRESHOLD to
-     * produce a BULLISH/BEARISH call — otherwise NEUTRAL.
-     *
-     * NEUTRAL   = both sides present but neither confirms (winning side
-     *             didn't clear threshold), or CE == PE exactly.
-     * INSUFFICIENT_DATA = one or both sides genuinely missing, OR only
-     *             one side present and even that side didn't clear the
-     *             threshold on its own (we only have half the picture —
-     *             that's not the same as "genuinely balanced").
-     *
-     * There is no DIRECTIONAL strength tier anymore — strength is only
-     * ever 'STRONG' or null.
+     * DECAY VELOCITY signal: LOWER value = stronger directional pull that
+     * side (faster wall/floor dissolution). Threshold (<=0.70) marks STRONG.
      */
     private function deriveDecaySignal(?float $ce, ?float $pe): array
     {
-        // Neither side has data.
-        if ($ce === null && $pe === null) {
-            return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
+        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
 
-        // Only CE available — must clear threshold on its own.
-        if ($ce !== null && $pe === null) {
-            return $ce <= self::DECAY_THRESHOLD
-                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-
-        // Only PE available — must clear threshold on its own.
-        if ($pe !== null && $ce === null) {
+        if ($ce === null) { // only PE known — one-sided decision only if it crosses its own strong threshold
             return $pe <= self::DECAY_THRESHOLD
                 ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
                 : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
         }
-
-        // Both sides available, exactly equal.
-        if ($ce == $pe) {
-            return ['signal' => 'NEUTRAL', 'strength' => null];
-        }
-
-        // Lower decay wins the direction; winning side must clear the threshold to confirm.
-        if ($ce < $pe) {
+        if ($pe === null) { // only CE known
             return $ce <= self::DECAY_THRESHOLD
                 ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
-                : ['signal' => 'NEUTRAL', 'strength' => null];
+                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
         }
 
-        return $pe <= self::DECAY_THRESHOLD
-            ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
-            : ['signal' => 'NEUTRAL', 'strength' => null];
+        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
+
+        $bullish      = $ce < $pe; // lower CE decay => bullish
+        $winningValue = $bullish ? $ce : $pe;
+        $strength     = $winningValue <= self::DECAY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+
+        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
     }
 
     // ═════════════════════════ OI SIGNAL — untouched, same logic as OIFlowSentimentController ═════════════════════════
@@ -631,100 +582,5 @@ class AdvancedOIMetricsController extends Controller
     private function isHoliday(string $date): bool
     {
         return DB::table('market_holidays')->where('market_name', 'NSE')->where('holiday_date', $date)->exists();
-    }
-
-    /**
-     * TEMPORARY DIAGNOSTIC — NOT FOR PRODUCTION USE.
-     * Reproduces the exact same Decay Velocity calculation the live page
-     * uses, across a date range, so we can see the real distribution of
-     * CE/PE values before picking a threshold. Remove this method (and
-     * its route) once you've got the numbers you need.
-     *
-     * Usage: GET /advanced-oi-metrics/diagnostic?symbol=SBIN&from=2026-08-01&to=2026-09-01
-     */
-    public function diagnosticDecayStats(Request $request): JsonResponse
-    {
-        $symbol   = $request->get('symbol');
-        $fromDate = $request->get('from');
-        $toDate   = $request->get('to');
-
-        if (!$symbol || !$fromDate || !$toDate) {
-            return response()->json(['success' => false, 'message' => 'symbol, from, to are required.']);
-        }
-
-        $config = $this->getActiveConfig();
-        if (!$config) {
-            return response()->json(['success' => false, 'message' => 'No active config.']);
-        }
-
-        $times = array_values(self::ANALYSIS_TIMES);
-
-        $tradeDates = DB::table(self::OPT_TABLE)
-            ->where('analysis_config_id', $config->id)
-            ->where('base_symbol', $symbol)
-            ->whereBetween('trade_date', [$fromDate, $toDate])
-            ->whereRaw('TIME(interval_time) IN (?, ?, ?)', $times)
-            ->select(DB::raw('DATE(trade_date) as d'))
-            ->distinct()->orderBy('d')->pluck('d')->toArray();
-
-        $ceValues = [];
-        $peValues = [];
-        $samples  = [];
-
-        foreach ($tradeDates as $date) {
-            $result = $this->runAnalysisForSymbol($config, $symbol, $date);
-            if (!empty($result['no_data']) || empty($result['advanced_oi']['slots'])) continue;
-
-            foreach ($result['advanced_oi']['slots'] as $label => $slot) {
-                if ($slot['no_data']) continue;
-
-                $ce = $slot['decay_velocity']['ce'];
-                $pe = $slot['decay_velocity']['pe'];
-
-                if ($ce !== null) $ceValues[] = $ce;
-                if ($pe !== null) $peValues[] = $pe;
-
-                if ($ce !== null || $pe !== null) {
-                    $samples[] = ['date' => $date, 'slot' => $label, 'ce' => $ce, 'pe' => $pe];
-                }
-            }
-        }
-
-        return response()->json([
-            'success'      => true,
-            'symbol'       => $symbol,
-            'range'        => "{$fromDate} to {$toDate}",
-            'sample_count' => count($samples),
-            'ce_stats'     => $this->statsFor($ceValues),
-            'pe_stats'     => $this->statsFor($peValues),
-            'raw_samples'  => $samples, // remove this key if the payload gets too large
-        ]);
-    }
-
-    private function statsFor(array $values): array
-    {
-        if (empty($values)) {
-            return ['count' => 0, 'min' => null, 'max' => null, 'avg' => null, 'median' => null, 'p10' => null, 'p25' => null, 'p75' => null, 'p90' => null];
-        }
-
-        sort($values);
-        $count = count($values);
-
-        $percentile = function (array $sorted, float $p) {
-            $idx = (int) floor($p * (count($sorted) - 1));
-            return $sorted[$idx];
-        };
-
-        return [
-            'count'  => $count,
-            'min'    => $values[0],
-            'max'    => $values[$count - 1],
-            'avg'    => round(array_sum($values) / $count, 4),
-            'median' => $percentile($values, 0.50),
-            'p10'    => $percentile($values, 0.10),
-            'p25'    => $percentile($values, 0.25),
-            'p75'    => $percentile($values, 0.75),
-            'p90'    => $percentile($values, 0.90),
-        ];
     }
 }
