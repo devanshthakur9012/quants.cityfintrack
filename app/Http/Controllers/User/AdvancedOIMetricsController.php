@@ -632,4 +632,99 @@ class AdvancedOIMetricsController extends Controller
     {
         return DB::table('market_holidays')->where('market_name', 'NSE')->where('holiday_date', $date)->exists();
     }
+
+    /**
+     * TEMPORARY DIAGNOSTIC — NOT FOR PRODUCTION USE.
+     * Reproduces the exact same Decay Velocity calculation the live page
+     * uses, across a date range, so we can see the real distribution of
+     * CE/PE values before picking a threshold. Remove this method (and
+     * its route) once you've got the numbers you need.
+     *
+     * Usage: GET /advanced-oi-metrics/diagnostic?symbol=SBIN&from=2026-08-01&to=2026-09-01
+     */
+    public function diagnosticDecayStats(Request $request): JsonResponse
+    {
+        $symbol   = $request->get('symbol');
+        $fromDate = $request->get('from');
+        $toDate   = $request->get('to');
+
+        if (!$symbol || !$fromDate || !$toDate) {
+            return response()->json(['success' => false, 'message' => 'symbol, from, to are required.']);
+        }
+
+        $config = $this->getActiveConfig();
+        if (!$config) {
+            return response()->json(['success' => false, 'message' => 'No active config.']);
+        }
+
+        $times = array_values(self::ANALYSIS_TIMES);
+
+        $tradeDates = DB::table(self::OPT_TABLE)
+            ->where('analysis_config_id', $config->id)
+            ->where('base_symbol', $symbol)
+            ->whereBetween('trade_date', [$fromDate, $toDate])
+            ->whereRaw('TIME(interval_time) IN (?, ?, ?)', $times)
+            ->select(DB::raw('DATE(trade_date) as d'))
+            ->distinct()->orderBy('d')->pluck('d')->toArray();
+
+        $ceValues = [];
+        $peValues = [];
+        $samples  = [];
+
+        foreach ($tradeDates as $date) {
+            $result = $this->runAnalysisForSymbol($config, $symbol, $date);
+            if (!empty($result['no_data']) || empty($result['advanced_oi']['slots'])) continue;
+
+            foreach ($result['advanced_oi']['slots'] as $label => $slot) {
+                if ($slot['no_data']) continue;
+
+                $ce = $slot['decay_velocity']['ce'];
+                $pe = $slot['decay_velocity']['pe'];
+
+                if ($ce !== null) $ceValues[] = $ce;
+                if ($pe !== null) $peValues[] = $pe;
+
+                if ($ce !== null || $pe !== null) {
+                    $samples[] = ['date' => $date, 'slot' => $label, 'ce' => $ce, 'pe' => $pe];
+                }
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'symbol'       => $symbol,
+            'range'        => "{$fromDate} to {$toDate}",
+            'sample_count' => count($samples),
+            'ce_stats'     => $this->statsFor($ceValues),
+            'pe_stats'     => $this->statsFor($peValues),
+            'raw_samples'  => $samples, // remove this key if the payload gets too large
+        ]);
+    }
+
+    private function statsFor(array $values): array
+    {
+        if (empty($values)) {
+            return ['count' => 0, 'min' => null, 'max' => null, 'avg' => null, 'median' => null, 'p10' => null, 'p25' => null, 'p75' => null, 'p90' => null];
+        }
+
+        sort($values);
+        $count = count($values);
+
+        $percentile = function (array $sorted, float $p) {
+            $idx = (int) floor($p * (count($sorted) - 1));
+            return $sorted[$idx];
+        };
+
+        return [
+            'count'  => $count,
+            'min'    => $values[0],
+            'max'    => $values[$count - 1],
+            'avg'    => round(array_sum($values) / $count, 4),
+            'median' => $percentile($values, 0.50),
+            'p10'    => $percentile($values, 0.10),
+            'p25'    => $percentile($values, 0.25),
+            'p75'    => $percentile($values, 0.75),
+            'p90'    => $percentile($values, 0.90),
+        ];
+    }
 }

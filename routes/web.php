@@ -1513,4 +1513,5 @@ Route::controller('SiteController')->group(function () {
         Route::get('/last-date',  [AdvancedOIMetricsController::class, 'lastDate'])->name('last.date');
         Route::get('/symbols',    [AdvancedOIMetricsController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',    [AdvancedOIMetricsController::class, 'analyze'])->name('analyze');
+        Route::get('/diagnostic', [AdvancedOIMetricsController::class, 'diagnosticDecayStats'])->name('diagnostic'); // TEMPORARY
     });
