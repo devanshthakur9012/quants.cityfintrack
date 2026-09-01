@@ -61,7 +61,7 @@ class AdvancedOIMetricsController extends Controller
     private const BASKET_OFFSETS = [-1, 0, 1];
 
     /** Strong-signal (client) threshold — kept exactly as originally specified. */
-    private const DECAY_THRESHOLD = 2;
+    private const DECAY_THRESHOLD = 0.51;
 
     /** Set to true to include the debug block (ATM/ladder diagnostics) per slot. */
     private const DEBUG_MODE = false;
