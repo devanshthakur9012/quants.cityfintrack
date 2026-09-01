@@ -12,66 +12,58 @@ use Illuminate\Support\Facades\Log;
 /**
  * Advanced OI Metrics — STANDALONE, READ-ONLY analysis page.
  *
- * T = today 14:45 | T-1 = previous trading day 15:00 (same convention as
- * OIFlowSentimentController). Reuses cp_option_ohlc_15min exactly as-is.
+ * Anchor = previous trading day 15:00 (close), same convention as
+ * OIFlowSentimentController. Reuses cp_option_ohlc_15min exactly as-is.
  * Does NOT touch collectors, does NOT touch OIFlowSentimentController,
  * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
  *
- * ── THIS REVISION — DIRECTIONAL SIGNAL LOGIC ────────────────────────
- * The old metricSignal() collapsed a metric to NEUTRAL any time neither
- * side crossed its "strong" threshold. That is wrong: the client's
- * thresholds (Decay 0.70, Efficiency 0.40, NTM 1.25/0.75, Deep OTM 3.0)
- * mark a STRONG signal, not the only signal. Whenever valid CE+PE (or
- * ratio) data exists, the metric must always resolve to a direction by
- * comparing the two sides — NEUTRAL now means genuinely balanced/equal,
- * and INSUFFICIENT_DATA means genuinely missing data. Replaced the single
- * generic metricSignal() with four dedicated methods, since each metric's
- * directionality is mathematically different:
- *   - Decay:     LOWER value = stronger directional pull that side
- *   - Efficiency: HIGHER value = stronger directional pull that side
- *   - NTM Bias:  ratio > 1 bullish, < 1 bearish (1.25/0.75 = strong)
- *   - Deep OTM:  HIGHER value = stronger directional pull that side
- * Each method returns ['signal' => BULLISH|BEARISH|NEUTRAL|INSUFFICIENT_DATA,
- * 'strength' => STRONG|DIRECTIONAL|null]. Thresholds/formulas themselves
- * (calcDecayVelocity, calcEfficiency, calcNtmBias, calcDeepOtmIndex) are
- * UNCHANGED — these new methods only consume their ce/pe/ratio output.
+ * ── THIS REVISION — 3 INTRADAY SNAPSHOTS, 2 METRICS ONLY ───────────
+ * Instead of a single 14:45 snapshot with 4 metrics, this now takes
+ * THREE snapshots per day — today 10:15, today 11:15, today 12:15 —
+ * each compared against the SAME previous-day-close anchor (15:00).
+ * Only two metrics are computed per snapshot: Decay Velocity and OI
+ * Signal. Efficiency, NTM Bias, Deep OTM Inflection, Roll-over
+ * Velocity, and Intraday Momentum Delta have been removed from this
+ * page entirely (per request) — not just hidden in the UI.
  *
- * ── OI Signal (unchanged from previous revision) ──
+ * ── Decay Velocity (formula unchanged) ──
+ * LOWER value = stronger directional pull that side. Threshold 0.70
+ * marks STRONG; any imbalance between CE/PE still resolves to a
+ * direction (DIRECTIONAL) — NEUTRAL only means genuinely equal, and
+ * INSUFFICIENT_DATA means genuinely missing data.
+ *
+ * ── OI Signal (unchanged) ──
  * Ported verbatim from OIFlowSentimentController::calcOISignal() — kept
- * completely separate from the new directional logic above, per request.
+ * completely separate from the decay logic above, per request.
  *
  * ── STRIKE KEY FIX (carried over, unchanged) ──
  * All strike-based lookups route through strikeKey() so a DB strike like
  * "2640.0000" and a ladder-derived float 2640.0 resolve to the same key.
- *
- * ── STRUCTURAL DATA LIMITATIONS (unchanged, still genuinely N/A) ──
- * 1) Roll-over Velocity — only one expiry's chain is collected per
- *    symbol per trade_date, so next-expiry OI never coexists with
- *    current-expiry OI for the same day.
- * 2) Intraday OI Momentum Delta — only 15/30/60-min granularity exists
- *    anywhere in the schema; no genuine 5-minute OI observations.
- * Both remain INSUFFICIENT_DATA — never faked, never derived.
  */
 class AdvancedOIMetricsController extends Controller
 {
-    private const TF             = '15min';
-    private const ANALYSIS_TIME  = '14:45:00'; // today snapshot
-    private const PREV_DAY_TIME  = '15:00:00'; // previous trading day anchor
-    private const OPT_TABLE      = 'cp_option_ohlc_15min';
+    private const TF        = '15min';
+    private const OPT_TABLE = 'cp_option_ohlc_15min';
 
-    /** Strike-ladder offsets used for both NTM Bias and Decay Velocity baskets. */
+    /** The three intraday snapshots taken today, each vs. the same prev-day-close anchor. */
+    private const ANALYSIS_TIMES = [
+        '10:15' => '10:15:00',
+        '11:15' => '11:15:00',
+        '12:15' => '12:15:00',
+    ];
+
+    /** Used only for "is today's data available yet" checks (lastDate / history range). */
+    private const LAST_SLOT_TIME = '12:15:00';
+
+    private const PREV_DAY_TIME = '15:00:00'; // previous trading day close anchor
+
+    /** Strike-ladder offsets used for the Decay Velocity basket. */
     private const BASKET_OFFSETS = [-1, 0, 1];
 
-    private const DEEP_OTM_OFFSET = 4;
+    /** Strong-signal (client) threshold — kept exactly as originally specified. */
+    private const DECAY_THRESHOLD = 0.70;
 
-    /** Strong-signal (client) thresholds — kept exactly as originally specified. */
-    private const DECAY_THRESHOLD      = 0.70;
-    private const EFFICIENCY_THRESHOLD = 0.40;
-    private const NTM_BULL_THRESHOLD   = 1.25;
-    private const NTM_BEAR_THRESHOLD   = 0.75;
-    private const DEEP_OTM_THRESHOLD   = 3.0;
-
-    /** Set to true to include the debug block (ATM/ladder diagnostics) per row. */
+    /** Set to true to include the debug block (ATM/ladder diagnostics) per slot. */
     private const DEBUG_MODE = false;
 
     public function index()
@@ -93,7 +85,7 @@ class AdvancedOIMetricsController extends Controller
             $lastDate = DB::table(self::OPT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->where('is_missing', false)
-                ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
+                ->whereRaw('TIME(interval_time) = ?', [self::LAST_SLOT_TIME])
                 ->max('trade_date');
 
             if (!$lastDate) {
@@ -207,11 +199,13 @@ class AdvancedOIMetricsController extends Controller
 
     private function analyzeHistory(object $config, array $configSymbols, array $symbols, string $fromDate, string $toDate): JsonResponse
     {
+        $times = array_values(self::ANALYSIS_TIMES);
+
         $tradeDates = DB::table(self::OPT_TABLE)
             ->where('analysis_config_id', $config->id)
             ->whereIn('base_symbol', $symbols)
             ->whereBetween('trade_date', [$fromDate, $toDate])
-            ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
+            ->whereRaw('TIME(interval_time) IN (?, ?, ?)', $times)
             ->select(DB::raw('DATE(trade_date) as d'))
             ->distinct()->orderBy('d')->pluck('d')->toArray();
 
@@ -219,7 +213,7 @@ class AdvancedOIMetricsController extends Controller
         foreach ($tradeDates as $d) {
             foreach ($symbols as $symbol) {
                 $result = $this->runAnalysisForSymbol($config, $symbol, $d);
-                if (!empty($result['no_data'])) continue; // skip days with no snapshot — same convention as OI Flow Sentiment
+                if (!empty($result['no_data'])) continue; // skip days with no snapshot at all — same convention as OI Flow Sentiment
                 $rows[] = array_merge(['symbol' => $symbol, 'date' => $d], $result);
             }
         }
@@ -240,21 +234,16 @@ class AdvancedOIMetricsController extends Controller
 
     // ═════════════════════════ SHARED PER-SYMBOL/DAY COMPUTATION ═════════════════════════
 
+    /**
+     * Runs all 3 intraday snapshots (10:15 / 11:15 / 12:15) for one symbol
+     * on one date, each vs. the SAME previous-trading-day 15:00 anchor.
+     */
     private function runAnalysisForSymbol(object $config, string $symbol, string $date): array
     {
         try {
             $prevDate = $this->getPreviousTradingDate($date);
 
-            $liveRows = DB::table(self::OPT_TABLE)
-                ->where('analysis_config_id', $config->id)
-                ->where('base_symbol', $symbol)
-                ->whereDate('trade_date', $date)
-                ->whereRaw('TIME(interval_time) = ?', [self::ANALYSIS_TIME])
-                ->whereIn('instrument_type', ['CE', 'PE'])
-                ->where('is_missing', false)
-                ->select(['instrument_type', 'strike', 'atm_strike', 'expiry_date', 'oi', 'volume'])
-                ->get();
-
+            // Anchor is fetched once — identical for all 3 slots.
             $anchorRows = DB::table(self::OPT_TABLE)
                 ->where('analysis_config_id', $config->id)
                 ->where('base_symbol', $symbol)
@@ -265,104 +254,107 @@ class AdvancedOIMetricsController extends Controller
                 ->select(['instrument_type', 'strike', 'oi'])
                 ->get();
 
-            if ($liveRows->isEmpty()) {
-                return [
-                    'success'     => true,
-                    'no_data'     => true,
-                    'message'     => "No data found for {$symbol} on {$date} " . substr(self::ANALYSIS_TIME, 0, 5) . '.',
-                    'advanced_oi' => $this->emptyAdvancedOi(),
-                ];
-            }
-
-            $liveOi = ['CE' => [], 'PE' => []];
-            $liveVol = ['CE' => [], 'PE' => []];
-            $atmStrike = null;
-            $expiryUsed = null;
-
-            foreach ($liveRows as $r) {
-                $key = $this->strikeKey($r->strike);
-                $liveOi[$r->instrument_type][$key] = (int) $r->oi;
-                $liveVol[$r->instrument_type][$key] = (int) $r->volume;
-                if ($atmStrike === null) $atmStrike = (float) $r->atm_strike;
-                if ($expiryUsed === null) $expiryUsed = $r->expiry_date;
-            }
-
             $anchorOi = ['CE' => [], 'PE' => []];
             foreach ($anchorRows as $r) {
                 $key = $this->strikeKey($r->strike);
                 $anchorOi[$r->instrument_type][$key] = (int) $r->oi;
             }
 
-            $ladder = collect(array_keys($liveOi['CE']))
-                ->map(fn ($s) => (float) $s)
-                ->unique()
-                ->sort()
-                ->values()
-                ->toArray();
+            $slots          = [];
+            $metaAtm        = null;
+            $metaExpiry     = null;
+            $anySlotHasData = false;
 
-            $atmIndex = $this->findAtmIndex($ladder, $atmStrike);
+            foreach (self::ANALYSIS_TIMES as $label => $time) {
+                $liveRows = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('base_symbol', $symbol)
+                    ->whereDate('trade_date', $date)
+                    ->whereRaw('TIME(interval_time) = ?', [$time])
+                    ->whereIn('instrument_type', ['CE', 'PE'])
+                    ->where('is_missing', false)
+                    ->select(['instrument_type', 'strike', 'atm_strike', 'expiry_date', 'oi'])
+                    ->get();
 
-            $decay      = $this->calcDecayVelocity($ladder, $atmIndex, $liveOi, $anchorOi);
-            $efficiency = $this->calcEfficiency($liveOi, $anchorOi, $liveVol);
-            $ntmBias    = $this->calcNtmBias($ladder, $atmIndex, $liveOi);
-            $deepOtm    = $this->calcDeepOtmIndex($ladder, $atmIndex, $liveOi, $anchorOi);
-            $rollover   = $this->calcRolloverVelocity();
-            $momentum   = $this->calcIntradayMomentum();
+                if ($liveRows->isEmpty()) {
+                    $slots[$label] = $this->emptySlot($time);
+                    continue;
+                }
 
-            $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
+                $anySlotHasData = true;
 
-            // ── Directional signal derivation (this revision) ──
-            $decaySig      = $this->deriveDecaySignal($decay['ce'], $decay['pe']);
-            $efficiencySig = $this->deriveEfficiencySignal($efficiency['ce'], $efficiency['pe']);
-            $ntmSig        = $this->deriveNtmSignal($ntmBias['ratio']);
-            $deepOtmSig    = $this->deriveDeepOtmSignal($deepOtm['ce'], $deepOtm['pe']);
+                $liveOi    = ['CE' => [], 'PE' => []];
+                $atmStrike = null;
+                $expiryUsed = null;
+
+                foreach ($liveRows as $r) {
+                    $key = $this->strikeKey($r->strike);
+                    $liveOi[$r->instrument_type][$key] = (int) $r->oi;
+                    if ($atmStrike === null) $atmStrike = (float) $r->atm_strike;
+                    if ($expiryUsed === null) $expiryUsed = $r->expiry_date;
+                }
+
+                if ($metaAtm === null) $metaAtm = $atmStrike;
+                if ($metaExpiry === null) $metaExpiry = $expiryUsed;
+
+                $ladder = collect(array_keys($liveOi['CE']))
+                    ->map(fn ($s) => (float) $s)
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->toArray();
+
+                $atmIndex = $this->findAtmIndex($ladder, $atmStrike);
+
+                $decay    = $this->calcDecayVelocity($ladder, $atmIndex, $liveOi, $anchorOi);
+                $decaySig = $this->deriveDecaySignal($decay['ce'], $decay['pe']);
+                $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
+
+                $slot = [
+                    'time'           => substr($time, 0, 5),
+                    'no_data'        => false,
+                    'atm_strike'     => $atmStrike,
+                    'decay_velocity' => $decay,
+                    'decay_signal'   => $decaySig['signal'],
+                    'decay_strength' => $decaySig['strength'],
+                    'oi_signal'      => $oiSignal,
+                ];
+
+                if (self::DEBUG_MODE) {
+                    $slot['debug'] = [
+                        'atm_index'              => $atmIndex,
+                        'atm_minus_1'            => $this->strikeAtOffset($ladder, $atmIndex, -1),
+                        'atm_plus_1'             => $this->strikeAtOffset($ladder, $atmIndex, 1),
+                        'live_ce_strike_count'   => count($liveOi['CE']),
+                        'live_pe_strike_count'   => count($liveOi['PE']),
+                        'anchor_ce_strike_count' => count($anchorOi['CE']),
+                        'anchor_pe_strike_count' => count($anchorOi['PE']),
+                    ];
+                }
+
+                $slots[$label] = $slot;
+            }
+
+            if (!$anySlotHasData) {
+                return [
+                    'success'     => true,
+                    'no_data'     => true,
+                    'message'     => "No data found for {$symbol} on {$date}.",
+                    'advanced_oi' => $this->emptyAdvancedOi(),
+                ];
+            }
 
             $advanced = [
                 'meta' => [
-                    'symbol'        => $symbol,
-                    'date'          => $date,
-                    'time'          => substr(self::ANALYSIS_TIME, 0, 5),
-                    'anchor_date'   => $prevDate,
-                    'anchor_time'   => substr(self::PREV_DAY_TIME, 0, 5),
-                    'expiry_used'   => $expiryUsed,
-                    'atm_strike'    => $atmStrike,
-                    'strike_ladder' => $ladder,
+                    'symbol'      => $symbol,
+                    'date'        => $date,
+                    'anchor_date' => $prevDate,
+                    'anchor_time' => substr(self::PREV_DAY_TIME, 0, 5),
+                    'expiry_used' => $metaExpiry,
+                    'atm_strike'  => $metaAtm,
                 ],
-                'decay_velocity'       => $decay,
-                'oi_volume_efficiency' => $efficiency,
-                'ntm_bias'             => $ntmBias,
-                'rollover_velocity'    => $rollover,   // always INSUFFICIENT_DATA — see class docblock
-                'deep_otm_inflection'  => $deepOtm,
-                'intraday_momentum'    => $momentum,   // always INSUFFICIENT_DATA — see class docblock
-
-                // ── Directional signal + strength per metric ──
-                'decay_signal'          => $decaySig['signal'],
-                'decay_strength'        => $decaySig['strength'],
-                'efficiency_signal'     => $efficiencySig['signal'],
-                'efficiency_strength'   => $efficiencySig['strength'],
-                'ntm_signal'            => $ntmSig['signal'],
-                'ntm_strength'          => $ntmSig['strength'],
-                'deep_otm_signal'       => $deepOtmSig['signal'],
-                'deep_otm_strength'     => $deepOtmSig['strength'],
-
-                // ── OI Signal — untouched, same logic as OIFlowSentimentController ──
-                'oi_signal' => $oiSignal,
+                'slots' => $slots,
             ];
-
-            if (self::DEBUG_MODE) {
-                $atmVal = $this->strikeAtOffset($ladder, $atmIndex, 0);
-                $advanced['debug'] = [
-                    'atm'                    => $atmVal,
-                    'atm_index'              => $atmIndex,
-                    'atm_minus_1'            => $this->strikeAtOffset($ladder, $atmIndex, -1),
-                    'atm_plus_1'             => $this->strikeAtOffset($ladder, $atmIndex, 1),
-                    'atm_plus_4'             => $this->strikeAtOffset($ladder, $atmIndex, self::DEEP_OTM_OFFSET),
-                    'live_ce_strike_count'   => count($liveOi['CE']),
-                    'live_pe_strike_count'   => count($liveOi['PE']),
-                    'anchor_ce_strike_count' => count($anchorOi['CE']),
-                    'anchor_pe_strike_count' => count($anchorOi['PE']),
-                ];
-            }
 
             return ['success' => true, 'no_data' => false, 'advanced_oi' => $advanced];
 
@@ -376,7 +368,7 @@ class AdvancedOIMetricsController extends Controller
         }
     }
 
-    // ═════════════════════════ METRIC 1 — DECAY VELOCITY (formula unchanged) ═════════════════════════
+    // ═════════════════════════ DECAY VELOCITY (formula unchanged) ═════════════════════════
 
     private function calcDecayVelocity(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
     {
@@ -434,218 +426,15 @@ class AdvancedOIMetricsController extends Controller
 
         if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
 
-        $bullish = $ce < $pe; // lower CE decay => bullish
+        $bullish      = $ce < $pe; // lower CE decay => bullish
         $winningValue = $bullish ? $ce : $pe;
-        $strength = $winningValue <= self::DECAY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+        $strength     = $winningValue <= self::DECAY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
 
         return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
-    }
-
-    // ═════════════════════════ METRIC 2 — OI-TO-VOLUME EFFICIENCY (formula unchanged) ═════════════════════════
-
-    private function calcEfficiency(array $liveOi, array $anchorOi, array $liveVol): array
-    {
-        $ce = $this->efficiencyForSide($liveOi['CE'], $anchorOi['CE'], $liveVol['CE']);
-        $pe = $this->efficiencyForSide($liveOi['PE'], $anchorOi['PE'], $liveVol['PE']);
-
-        return [
-            'ce'        => $ce,
-            'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::EFFICIENCY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::EFFICIENCY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-        ];
-    }
-
-    private function efficiencyForSide(array $liveMap, array $anchorMap, array $volMap): ?float
-    {
-        $liveTotal   = array_sum($liveMap);
-        $anchorTotal = array_sum($anchorMap);
-        $volTotal    = array_sum($volMap);
-
-        if ($volTotal <= 0) return null;
-        if (empty($anchorMap)) return null;
-
-        return round(abs($liveTotal - $anchorTotal) / $volTotal, 4);
-    }
-
-    /**
-     * EFFICIENCY signal: HIGHER value = stronger directional pull that
-     * side. Threshold (>=0.40) marks STRONG.
-     */
-    private function deriveEfficiencySignal(?float $ce, ?float $pe): array
-    {
-        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-
-        if ($ce === null) {
-            return $pe >= self::EFFICIENCY_THRESHOLD
-                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-        if ($pe === null) {
-            return $ce >= self::EFFICIENCY_THRESHOLD
-                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-
-        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
-
-        $bullish = $ce > $pe; // higher CE efficiency => bullish
-        $winningValue = $bullish ? $ce : $pe;
-        $strength = $winningValue >= self::EFFICIENCY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
-
-        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
-    }
-
-    // ═════════════════════════ METRIC 3 — NTM BIAS RATIO (formula unchanged) ═════════════════════════
-
-    private function calcNtmBias(array $ladder, ?int $atmIndex, array $liveOi): array
-    {
-        if ($atmIndex === null) {
-            return [
-                'ratio' => null, 'pe_sum' => null, 'ce_sum' => null,
-                'bullish_status' => 'INSUFFICIENT_DATA', 'bearish_status' => 'INSUFFICIENT_DATA',
-            ];
-        }
-
-        $peSum = 0; $ceSum = 0; $complete = true;
-
-        foreach (self::BASKET_OFFSETS as $offset) {
-            $strike = $this->strikeAtOffset($ladder, $atmIndex, $offset);
-            if ($strike === null) { $complete = false; break; }
-            $key = $this->strikeKey($strike);
-            if (!array_key_exists($key, $liveOi['PE']) || !array_key_exists($key, $liveOi['CE'])) { $complete = false; break; }
-            $peSum += $liveOi['PE'][$key];
-            $ceSum += $liveOi['CE'][$key];
-        }
-
-        if (!$complete || $ceSum <= 0) {
-            return [
-                'ratio' => null, 'pe_sum' => $complete ? $peSum : null, 'ce_sum' => $complete ? $ceSum : null,
-                'bullish_status' => 'INSUFFICIENT_DATA', 'bearish_status' => 'INSUFFICIENT_DATA',
-            ];
-        }
-
-        $ratio = round($peSum / $ceSum, 4);
-
-        return [
-            'ratio'          => $ratio,
-            'pe_sum'         => $peSum,
-            'ce_sum'         => $ceSum,
-            'bullish_status' => $ratio >= self::NTM_BULL_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED',
-            'bearish_status' => $ratio <= self::NTM_BEAR_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED',
-        ];
-    }
-
-    /**
-     * NTM BIAS signal: ratio > 1.00 = BULLISH, < 1.00 = BEARISH, exactly
-     * 1.00 = NEUTRAL. 1.25/0.75 mark STRONG; anything else crossing 1.00
-     * is DIRECTIONAL.
-     */
-    private function deriveNtmSignal(?float $ratio): array
-    {
-        if ($ratio === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-
-        if ($ratio == 1.0) return ['signal' => 'NEUTRAL', 'strength' => null];
-
-        if ($ratio > 1.0) {
-            return ['signal' => 'BULLISH', 'strength' => $ratio >= self::NTM_BULL_THRESHOLD ? 'STRONG' : 'DIRECTIONAL'];
-        }
-
-        return ['signal' => 'BEARISH', 'strength' => $ratio <= self::NTM_BEAR_THRESHOLD ? 'STRONG' : 'DIRECTIONAL'];
-    }
-
-    // ═════════════════════════ METRIC 4 — STRIKE ROLL-OVER VELOCITY (unchanged) ═════════════════════════
-    // Permanently INSUFFICIENT_DATA — see class docblock. Never faked.
-
-    private function calcRolloverVelocity(): array
-    {
-        return [
-            'ce' => null, 'pe' => null,
-            'ce_status' => 'INSUFFICIENT_DATA', 'pe_status' => 'INSUFFICIENT_DATA',
-            'reason' => 'Only a single expiry is collected per symbol per trade_date. Next-month expiry OI is not stored alongside current-month data.',
-        ];
-    }
-
-    // ═════════════════════════ METRIC 5 — DEEP OTM INFLECTION INDEX (formula unchanged) ═════════════════════════
-
-    private function calcDeepOtmIndex(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
-    {
-        $ce = $this->deepOtmForSide($ladder, $atmIndex, $liveOi['CE'], $anchorOi['CE']);
-        $pe = $this->deepOtmForSide($ladder, $atmIndex, $liveOi['PE'], $anchorOi['PE']);
-
-        return [
-            'ce'        => $ce,
-            'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::DEEP_OTM_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::DEEP_OTM_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-        ];
-    }
-
-    private function deepOtmForSide(array $ladder, ?int $atmIndex, array $liveMap, array $anchorMap): ?float
-    {
-        if ($atmIndex === null) return null;
-
-        $atmStrike = $this->strikeAtOffset($ladder, $atmIndex, 0);
-        $otmStrike = $this->strikeAtOffset($ladder, $atmIndex, self::DEEP_OTM_OFFSET);
-        if ($atmStrike === null || $otmStrike === null) return null;
-
-        $atmKey = $this->strikeKey($atmStrike);
-        $otmKey = $this->strikeKey($otmStrike);
-
-        if (!array_key_exists($atmKey, $liveMap) || !array_key_exists($atmKey, $anchorMap)) return null;
-        if (!array_key_exists($otmKey, $liveMap) || !array_key_exists($otmKey, $anchorMap)) return null;
-
-        $atmChange = $liveMap[$atmKey] - $anchorMap[$atmKey];
-        $otmChange = $liveMap[$otmKey] - $anchorMap[$otmKey];
-
-        if ($atmChange === 0) return null;
-
-        return round($otmChange / $atmChange, 4);
-    }
-
-    /**
-     * DEEP OTM signal: HIGHER value = stronger directional pull that
-     * side. Threshold (>=3.0) marks STRONG.
-     */
-    private function deriveDeepOtmSignal(?float $ce, ?float $pe): array
-    {
-        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-
-        if ($ce === null) {
-            return $pe >= self::DEEP_OTM_THRESHOLD
-                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-        if ($pe === null) {
-            return $ce >= self::DEEP_OTM_THRESHOLD
-                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-
-        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
-
-        $bullish = $ce > $pe;
-        $winningValue = $bullish ? $ce : $pe;
-        $strength = $winningValue >= self::DEEP_OTM_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
-
-        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
-    }
-
-    // ═════════════════════════ METRIC 6 — INTRADAY OI MOMENTUM DELTA (unchanged) ═════════════════════════
-    // Permanently INSUFFICIENT_DATA — see class docblock. Never faked.
-
-    private function calcIntradayMomentum(): array
-    {
-        return [
-            'ce' => null, 'pe' => null,
-            'ce_status' => 'INSUFFICIENT_DATA', 'pe_status' => 'INSUFFICIENT_DATA',
-            'reason' => 'No 5-minute OI observations exist in this schema.',
-        ];
     }
 
     // ═════════════════════════ OI SIGNAL — untouched, same logic as OIFlowSentimentController ═════════════════════════
-    // Duplicated intentionally (not shared/imported) so OIFlowSentimentController
-    // is never touched. Not mixed with the new directional logic above.
+    // Duplicated intentionally (not shared/imported) so OIFlowSentimentController is never touched.
 
     private function buildOiSignalFromTotals(array $liveOi, array $anchorOi): array
     {
@@ -697,21 +486,37 @@ class AdvancedOIMetricsController extends Controller
         return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }
 
-    private function emptyAdvancedOi(): array
+    private function emptySlot(string $time): array
     {
         $ins = ['ce' => null, 'pe' => null, 'ce_status' => 'INSUFFICIENT_DATA', 'pe_status' => 'INSUFFICIENT_DATA'];
+
         return [
-            'decay_velocity'        => $ins,
-            'oi_volume_efficiency'  => $ins,
-            'ntm_bias'              => ['ratio' => null, 'pe_sum' => null, 'ce_sum' => null, 'bullish_status' => 'INSUFFICIENT_DATA', 'bearish_status' => 'INSUFFICIENT_DATA'],
-            'rollover_velocity'     => $this->calcRolloverVelocity(),
-            'deep_otm_inflection'   => $ins,
-            'intraday_momentum'     => $this->calcIntradayMomentum(),
-            'decay_signal'          => 'INSUFFICIENT_DATA', 'decay_strength' => null,
-            'efficiency_signal'     => 'INSUFFICIENT_DATA', 'efficiency_strength' => null,
-            'ntm_signal'            => 'INSUFFICIENT_DATA', 'ntm_strength' => null,
-            'deep_otm_signal'       => 'INSUFFICIENT_DATA', 'deep_otm_strength' => null,
-            'oi_signal'             => ['sentiment' => 'NEUTRAL', 'condition' => 'No Data', 'reason' => 'No data available', 'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'trade_action' => 'WAIT'],
+            'time'           => substr($time, 0, 5),
+            'no_data'        => true,
+            'atm_strike'     => null,
+            'decay_velocity' => $ins,
+            'decay_signal'   => 'INSUFFICIENT_DATA',
+            'decay_strength' => null,
+            'oi_signal'      => [
+                'sentiment' => 'NEUTRAL', 'condition' => 'No Data', 'reason' => 'No data available at this time',
+                'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'trade_action' => 'WAIT',
+            ],
+        ];
+    }
+
+    private function emptyAdvancedOi(): array
+    {
+        $slots = [];
+        foreach (self::ANALYSIS_TIMES as $label => $time) {
+            $slots[$label] = $this->emptySlot($time);
+        }
+
+        return [
+            'meta' => [
+                'symbol' => null, 'date' => null, 'anchor_date' => null,
+                'anchor_time' => substr(self::PREV_DAY_TIME, 0, 5), 'expiry_used' => null, 'atm_strike' => null,
+            ],
+            'slots' => $slots,
         ];
     }
 
