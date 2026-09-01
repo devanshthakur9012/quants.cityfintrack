@@ -1514,3 +1514,10 @@ Route::controller('SiteController')->group(function () {
         Route::get('/symbols',    [AdvancedOIMetricsController::class, 'getSymbols'])->name('symbols');
         Route::get('/analyze',    [AdvancedOIMetricsController::class, 'analyze'])->name('analyze');
     });
+
+    Route::middleware(['auth'])->prefix('price-oi-confirmation')->name('price-oi-confirmation.')->group(function () {
+        Route::get('/index',     [\App\Http\Controllers\User\PriceOiConfirmationController::class, 'index'])->name('index');
+        Route::get('/last-date', [\App\Http\Controllers\User\PriceOiConfirmationController::class, 'lastDate'])->name('last.date');
+        Route::get('/symbols',   [\App\Http\Controllers\User\PriceOiConfirmationController::class, 'getSymbols'])->name('symbols');
+        Route::get('/analyze',   [\App\Http\Controllers\User\PriceOiConfirmationController::class, 'analyze'])->name('analyze');
+    });
