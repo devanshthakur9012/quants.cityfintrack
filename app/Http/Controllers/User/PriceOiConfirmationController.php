@@ -12,26 +12,66 @@ use Illuminate\Support\Facades\Log;
 /**
  * Price + OI Buy Confirmation — STANDALONE, READ-ONLY analysis page.
  *
- * ⚠️ CONFIRM THIS ONE VALUE BEFORE USE ⚠️
- * Both price (spot) and OI (CE/PE) data live in the SAME table —
- * cp_option_ohlc_15min — distinguished only by `instrument_type`.
- * CE/PE = options chain (used for OI side, exactly as
- * AdvancedOIMetricsController already does). The spot/underlying
- * candle (open/high/low/close/volume/vwap) is a row in this same
- * table with a DIFFERENT instrument_type value — set it here:
+ * ── DATA SOURCES (confirmed against your actual collector commands) ──
+ * OI side  → cp_option_ohlc_15min (CE/PE rows) — same table/convention
+ *            as AdvancedOIMetricsController, untouched.
+ * Price side → cp_fut_ohlc_15min. This covers EVERY symbol in your
+ *            config, including indices like BANKNIFTY (CpCollectFut
+ *            runs for all config symbols) — cp_stock_ohlc_15min does
+ *            NOT (EQ stocks only), so it can't be used here without
+ *            breaking on index symbols.
+ * NEITHER table stores VWAP. This page computes a running intraday
+ * VWAP itself from OHLCV: cumulative(typical price × volume) ÷
+ * cumulative(volume), accumulated candle-by-candle through the day.
+ * Typical price = (high + low + close) / 3, standard convention.
+ *
+ * ── WHAT THIS PAGE DOES ─────────────────────────────────────────────
+ * For each symbol, at 3 intraday checkpoints (10:15, 11:15, 12:15),
+ * combines TWO independent confirmations into one BUY / WAIT call:
+ *
+ *   1) PRICE LOGIC — ported from client's checkBuyPriceLogic(). Runs on
+ *      15-MINUTE candles (cp_fut_ohlc_15min). Scoring UNCHANGED from
+ *      what was supplied; the only adjustment is the "15 minutes ago"
+ *      lookup, which is the previous candle (t-1) instead of t-3,
+ *      since each candle already spans 15 minutes:
+ *        Price > VWAP                                   → +2
+ *        VWAP rising (VWAP(t) > VWAP(t-1), 15m ago)      → +1
+ *        Higher Low (low[t-1] > low[t-3])                → +2
+ *        Breakout (close > previous 15-min candle high)  → +2
+ *        Volume > avg volume of previous 5 candles       → +1
+ *      Max score = 8. PRICE_SCORE_THRESHOLD (6) needed for PRICE = BUY.
+ *
+ *   2) OI SCORE — built from the SAME Decay Velocity + OI Signal this
+ *      platform already computes in AdvancedOIMetricsController.
+ *      Duplicated here intentionally (same convention as that
+ *      controller — nothing shared/imported, that controller is never
+ *      touched):
+ *        Decay Signal BULLISH → +2, BEARISH → -2, else 0
+ *        OI Signal    BULLISH → +2, BEARISH → -2, else 0
+ *      Range: -4 to +4. OI_SCORE_THRESHOLD (2) needed to confirm.
+ *
+ *   FINAL SIGNAL = BUY only if PRICE signal = BUY AND OI score >=
+ *   OI_SCORE_THRESHOLD. Otherwise WAIT.
+ *
+ * This is a BULLISH-ONLY (BUY CE) confirmation page — that's the exact
+ * logic supplied. A mirrored bearish/PE version can be built the same
+ * way later if needed.
+ *
+ * OI anchor = previous trading day 15:00 close, same convention as
+ * OIFlowSentimentController / AdvancedOIMetricsController.
  */
 class PriceOiConfirmationController extends Controller
 {
-    private const OPT_TABLE = 'cp_option_ohlc_15min';
-
-    /** ⚠️ CONFIRM: the instrument_type value used for spot/underlying rows in this table. */
-    private const SPOT_INSTRUMENT_TYPE = 'FUT'; // change to 'INDEX' / 'EQ' / whatever your rows actually use
-
+    // ── OI side (options chain) ──
+    private const OPT_TABLE      = 'cp_option_ohlc_15min';
     private const PREV_DAY_TIME  = '15:00:00'; // previous trading day close anchor
     private const BASKET_OFFSETS = [-1, 0, 1];
 
     /** Keep in sync with AdvancedOIMetricsController::DECAY_THRESHOLD if you change it there. */
     private const DECAY_THRESHOLD = 0.51;
+
+    // ── Price side (futures/underlying candles) — confirmed table, no vwap column ──
+    private const FUT_TABLE = 'cp_fut_ohlc_15min';
 
     /** The three intraday checkpoints this page evaluates. */
     private const ANALYSIS_TIMES = [
@@ -194,30 +234,29 @@ class PriceOiConfirmationController extends Controller
         }
     }
 
-    // ═════════════════════════ PRICE SIDE — SAME TABLE, instrument_type = SPOT_INSTRUMENT_TYPE ═════════════════════════
+    // ═════════════════════════ PRICE SIDE — cp_fut_ohlc_15min, VWAP computed here ═════════════════════════
 
     /**
-     * Pulls 15-min spot candles for `date` up to and including `time`
-     * from the SAME cp_option_ohlc_15min table, filtered to the spot
-     * instrument_type row instead of CE/PE, then runs the client's
-     * checkBuyPriceLogic against them.
+     * Pulls 15-min FUT candles for `date` up to and including `time`,
+     * computes a running intraday VWAP for each candle (no vwap column
+     * exists in the source table), then runs the client's
+     * checkBuyPriceLogic against the enriched candles.
      */
     private function evaluatePriceForSlot(object $config, string $symbol, string $date, string $time): array
     {
-        $candles = DB::table(self::OPT_TABLE)
+        $rawCandles = DB::table(self::FUT_TABLE)
             ->where('analysis_config_id', $config->id)
             ->where('base_symbol', $symbol)
-            ->where('instrument_type', self::SPOT_INSTRUMENT_TYPE)
             ->whereDate('trade_date', $date)
             ->whereTime('interval_time', '<=', $time)
             ->where('is_missing', false)
             ->orderBy('interval_time')
-            ->select(['interval_time as time', 'open', 'high', 'low', 'close', 'volume', 'vwap']) // ⚠️ confirm these column names exist on this table
+            ->select(['interval_time as time', 'open', 'high', 'low', 'close', 'volume'])
             ->get()
             ->map(fn ($r) => (array) $r)
             ->toArray();
 
-        if (count($candles) < 4) {
+        if (count($rawCandles) < 4) {
             return [
                 'has_data' => false,
                 'signal'   => 'INSUFFICIENT_DATA',
@@ -227,7 +266,8 @@ class PriceOiConfirmationController extends Controller
             ];
         }
 
-        $result = $this->checkBuyPriceLogic($candles);
+        $candles = $this->computeRunningVwap($rawCandles);
+        $result  = $this->checkBuyPriceLogic($candles);
 
         return [
             'has_data'            => true,
@@ -243,6 +283,31 @@ class PriceOiConfirmationController extends Controller
             'volume_confirmation' => $result['volume_confirmation'],
             'reasons'             => $result['reasons'],
         ];
+    }
+
+    /**
+     * Adds a running (cumulative) intraday VWAP to each candle, since
+     * cp_fut_ohlc_15min has no vwap column. Standard formula:
+     *   typical price = (high + low + close) / 3
+     *   VWAP(t) = Σ(typical price × volume) up to t ÷ Σ(volume) up to t
+     * $candles must already be chronologically ordered.
+     */
+    private function computeRunningVwap(array $candles): array
+    {
+        $cumPV  = 0.0;
+        $cumVol = 0.0;
+
+        foreach ($candles as $i => $c) {
+            $typical = ((float) $c['high'] + (float) $c['low'] + (float) $c['close']) / 3;
+            $vol     = (float) $c['volume'];
+
+            $cumPV  += $typical * $vol;
+            $cumVol += $vol;
+
+            $candles[$i]['vwap'] = $cumVol > 0 ? round($cumPV / $cumVol, 4) : round($typical, 4);
+        }
+
+        return $candles;
     }
 
     /**
