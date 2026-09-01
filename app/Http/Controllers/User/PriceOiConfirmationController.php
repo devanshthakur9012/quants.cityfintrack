@@ -13,27 +13,33 @@ use Illuminate\Support\Facades\Log;
  * Price + OI Buy Confirmation — STANDALONE, READ-ONLY analysis page.
  *
  * ⚠️ SCHEMA ASSUMPTION — VERIFY BEFORE USE ⚠️
- * This page needs 5-minute OHLCV+VWAP candles for the underlying
+ * This page needs 15-minute OHLCV+VWAP candles for the underlying
  * (spot/index) — a DIFFERENT table from cp_option_ohlc_15min (that one
  * is options chain data, used only for the OI half below). I don't
  * have your real spot-candle table/columns, so I've assumed:
- *   Table:   cp_spot_ohlc_5min
+ *   Table:   cp_spot_ohlc_15min
  *   Columns: base_symbol, trade_date, interval_time,
  *            open, high, low, close, volume, vwap
  * If your real table/columns differ, only the CANDLE_TABLE constant
  * and the ->select([...]) list inside evaluatePriceForSlot() need to
  * change — nothing else in this file depends on the exact names.
+ * VWAP must already be a stored column per 15-min interval — this
+ * page does not compute VWAP itself.
  *
  * ── WHAT THIS PAGE DOES ─────────────────────────────────────────────
  * For each symbol, at 3 intraday checkpoints (10:15, 11:15, 12:15),
  * combines TWO independent confirmations into one BUY / WAIT call:
  *
- *   1) PRICE LOGIC — ported verbatim from client's checkBuyPriceLogic().
- *      Formula/scoring UNCHANGED from what was supplied:
+ *   1) PRICE LOGIC — ported from client's checkBuyPriceLogic(). Runs on
+ *      15-MINUTE candles (matching the OI side's granularity — no
+ *      separate 5-min table). Scoring UNCHANGED from what was supplied;
+ *      the only adjustment is the "15 minutes ago" lookup, which is now
+ *      the previous candle (t-1) instead of t-3, since each candle
+ *      already spans 15 minutes:
  *        Price > VWAP                                   → +2
- *        VWAP rising (VWAP(t) > VWAP(t-3), i.e. 15m ago) → +1
+ *        VWAP rising (VWAP(t) > VWAP(t-1), 15m ago)      → +1
  *        Higher Low (low[t-1] > low[t-3])                → +2
- *        Breakout (close > previous 5-min candle high)   → +2
+ *        Breakout (close > previous 15-min candle high)  → +2
  *        Volume > avg volume of previous 5 candles       → +1
  *      Max score = 8. PRICE_SCORE_THRESHOLD (6) needed for PRICE = BUY.
  *
@@ -67,7 +73,8 @@ class PriceOiConfirmationController extends Controller
     private const DECAY_THRESHOLD = 0.70;
 
     // ── Price side (spot/index candles) — ⚠️ ADJUST TO YOUR REAL TABLE ──
-    private const CANDLE_TABLE = 'cp_spot_ohlc_5min';
+    // 15-MINUTE candles, matching the OI side's granularity. No 5-min table used anywhere.
+    private const CANDLE_TABLE = 'cp_spot_ohlc_15min';
 
     /** The three intraday checkpoints this page evaluates. */
     private const ANALYSIS_TIMES = [
@@ -231,10 +238,10 @@ class PriceOiConfirmationController extends Controller
         }
     }
 
-    // ═════════════════════════ PRICE SIDE ═════════════════════════
+    // ═════════════════════════ PRICE SIDE (15-MIN CANDLES) ═════════════════════════
 
     /**
-     * Pulls candles for `date` up to and including `time`, then runs
+     * Pulls 15-min candles for `date` up to and including `time`, then runs
      * the client's checkBuyPriceLogic against them.
      */
     private function evaluatePriceForSlot(string $symbol, string $date, string $time): array
@@ -278,9 +285,18 @@ class PriceOiConfirmationController extends Controller
     }
 
     /**
-     * Ported verbatim (logic untouched) from the client's supplied
-     * checkBuyPriceLogic(). $candles must be chronologically ordered,
-     * each entry with keys: time, open, high, low, close, volume, vwap.
+     * Ported from the client's checkBuyPriceLogic() — SCORING LOGIC
+     * UNCHANGED. Only the "15 minutes ago" lookup was adjusted: the
+     * client's original formula assumed 5-min candles (t-3 = 15 min
+     * back). On 15-min candles, each candle already IS 15 minutes, so
+     * "15 minutes ago" = the immediately previous candle, t-1 — not
+     * t-3. Higher Low still compares t-1 vs t-3 (unchanged, per the
+     * client's original swing-comparison intent). Volume average
+     * window (previous 5 candles) is also unchanged, now spanning
+     * 75 minutes instead of 25.
+     *
+     * $candles must be chronologically ordered, each entry with keys:
+     * time, open, high, low, close, volume, vwap.
      */
     private function checkBuyPriceLogic(array $candles): array
     {
@@ -291,20 +307,44 @@ class PriceOiConfirmationController extends Controller
         }
 
         $t = $count - 1;
-        $current    = $candles[$t];
-        $previous15 = $candles[$t - 3];
+        $current = $candles[$t];
+
+        // 15-min candles: "15 minutes ago" = previous candle (t-1), not t-3.
+        $previous15 = $candles[$t - 1];
 
         $price        = (float) $current['close'];
         $vwap         = (float) $current['vwap'];
         $vwap15MinAgo = (float) $previous15['vwap'];
 
-        // 1. Price above VWAP
+        /*
+         * --------------------------------------------------
+         * 1. PRICE ABOVE VWAP
+         * --------------------------------------------------
+         */
         $priceAboveVWAP = $price > $vwap;
 
-        // 2. VWAP rising: VWAP(t) > VWAP(t-3)
+        /*
+         * --------------------------------------------------
+         * 2. VWAP IS RISING
+         * VWAP(t) > VWAP(t-1)  [t-1 = 15 min ago on 15-min bars]
+         *
+         * At 10:15:
+         * VWAP(10:15) > VWAP(10:00)
+         * --------------------------------------------------
+         */
         $vwapRising = $vwap > $vwap15MinAgo;
 
-        // 3. Higher Low: low(t-1) > low(t-3)
+        /*
+         * --------------------------------------------------
+         * 3. HIGHER LOW
+         *
+         * Compare the previous swing low with the low
+         * before it.
+         *
+         * Simple implementation:
+         * candle t-1 low > candle t-3 low
+         * --------------------------------------------------
+         */
         $higherLow = false;
         if ($count >= 4) {
             $lowRecent   = (float) $candles[$t - 1]['low'];
@@ -312,31 +352,70 @@ class PriceOiConfirmationController extends Controller
             $higherLow   = $lowRecent > $lowPrevious;
         }
 
-        // 4. Breakout of previous 5-min candle high
+        /*
+         * --------------------------------------------------
+         * 4. BREAKOUT OF PREVIOUS 15-MIN CANDLE HIGH
+         * --------------------------------------------------
+         */
         $previousHigh = (float) $candles[$t - 1]['high'];
         $breakout     = $price > $previousHigh;
 
-        // 5. Volume confirmation: current volume > avg of previous 5 candles
+        /*
+         * --------------------------------------------------
+         * 5. VOLUME CONFIRMATION
+         *
+         * Current volume > average volume
+         * of previous 5 candles
+         * --------------------------------------------------
+         */
         $volumeConfirmation = false;
         if ($count >= 6) {
             $totalVolume = 0;
             for ($i = $t - 5; $i < $t; $i++) {
                 $totalVolume += (float) $candles[$i]['volume'];
             }
-            $averageVolume  = $totalVolume / 5;
-            $currentVolume  = (float) $current['volume'];
+            $averageVolume = $totalVolume / 5;
+            $currentVolume = (float) $current['volume'];
             $volumeConfirmation = $currentVolume > $averageVolume;
         }
 
+        /*
+         * --------------------------------------------------
+         * SCORE
+         * --------------------------------------------------
+         */
         $score   = 0;
         $reasons = [];
 
-        if ($priceAboveVWAP)      { $score += 2; $reasons[] = 'Price above VWAP'; }
-        if ($vwapRising)          { $score += 1; $reasons[] = 'VWAP rising'; }
-        if ($higherLow)           { $score += 2; $reasons[] = 'Higher Low formed'; }
-        if ($breakout)            { $score += 2; $reasons[] = 'Breakout above previous 5-min high'; }
-        if ($volumeConfirmation)  { $score += 1; $reasons[] = 'Volume confirmation'; }
+        if ($priceAboveVWAP) {
+            $score += 2;
+            $reasons[] = 'Price above VWAP';
+        }
+        if ($vwapRising) {
+            $score += 1;
+            $reasons[] = 'VWAP rising';
+        }
+        if ($higherLow) {
+            $score += 2;
+            $reasons[] = 'Higher Low formed';
+        }
+        if ($breakout) {
+            $score += 2;
+            $reasons[] = 'Breakout above previous 15-min high';
+        }
+        if ($volumeConfirmation) {
+            $score += 1;
+            $reasons[] = 'Volume confirmation';
+        }
 
+        /*
+         * --------------------------------------------------
+         * FINAL PRICE SIGNAL
+         *
+         * Maximum price score = 8
+         * Require at least PRICE_SCORE_THRESHOLD (6) points.
+         * --------------------------------------------------
+         */
         $signal = $score >= self::PRICE_SCORE_THRESHOLD ? 'BUY' : 'WAIT';
 
         return [
