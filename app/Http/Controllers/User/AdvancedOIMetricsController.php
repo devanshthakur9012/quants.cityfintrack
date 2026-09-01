@@ -17,20 +17,31 @@ use Illuminate\Support\Facades\Log;
  * Does NOT touch collectors, does NOT touch OIFlowSentimentController,
  * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
  *
- * ── THIS REVISION — 3 INTRADAY SNAPSHOTS, 2 METRICS ONLY ───────────
- * Instead of a single 14:45 snapshot with 4 metrics, this now takes
- * THREE snapshots per day — today 10:15, today 11:15, today 12:15 —
- * each compared against the SAME previous-day-close anchor (15:00).
- * Only two metrics are computed per snapshot: Decay Velocity and OI
- * Signal. Efficiency, NTM Bias, Deep OTM Inflection, Roll-over
- * Velocity, and Intraday Momentum Delta have been removed from this
- * page entirely (per request) — not just hidden in the UI.
+ * ── THIS REVISION — TRUE OI DECAY VELOCITY (formula corrected) ─────
+ * Previous revision computed liveSum/anchorSum, which is actually the
+ * OI RETENTION RATIO, not a velocity — it had no time component at
+ * all. This revision implements the actual OI Decay Velocity formula:
  *
- * ── Decay Velocity (formula unchanged) ──
- * LOWER value = stronger directional pull that side. Threshold 0.70
- * marks STRONG; any imbalance between CE/PE still resolves to a
- * direction (DIRECTIONAL) — NEUTRAL only means genuinely equal, and
- * INSUFFICIENT_DATA means genuinely missing data.
+ *     OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
+ *
+ * Δt = trading hours elapsed between the anchor (previous day 15:00
+ * close) and the snapshot, measured as hours-since-market-open on the
+ * snapshot's own day (09:15 → 10:15 = 1hr, → 11:15 = 2hr, → 12:15 =
+ * 3hr). OI only accrues during trading hours and the anchor is fixed
+ * at the prior close, so this is the meaningful elapsed-time base for
+ * the rate, rather than raw calendar time (which would include the
+ * overnight gap).
+ *
+ * Sign/scale: a POSITIVE result means OI is shrinking (decaying) at
+ * that %-per-hour rate; a NEGATIVE result means OI is still building.
+ * This is now HIGHER-is-stronger (unlike the old ratio, which was
+ * LOWER-is-stronger) — DECAY_VELOCITY_THRESHOLD below is the trigger
+ * point for "STRONG" decay.
+ *
+ * ⚠ DECAY_VELOCITY_THRESHOLD is a PLACEHOLDER (5.0 %/hr). The old
+ * 0.51/0.70 thresholds were calibrated for a 0–1 retention ratio and
+ * do not carry over to this %/hour scale. Backtest against real data
+ * and adjust this single constant.
  *
  * ── OI Signal (unchanged) ──
  * Ported verbatim from OIFlowSentimentController::calcOISignal() — kept
@@ -57,11 +68,19 @@ class AdvancedOIMetricsController extends Controller
 
     private const PREV_DAY_TIME = '15:00:00'; // previous trading day close anchor
 
+    /** Market open — used to compute Δt (hours elapsed) for each snapshot. */
+    private const MARKET_OPEN_TIME = '09:15:00';
+
     /** Strike-ladder offsets used for the Decay Velocity basket. */
     private const BASKET_OFFSETS = [-1, 0, 1];
 
-    /** Strong-signal (client) threshold — kept exactly as originally specified. */
-    private const DECAY_THRESHOLD = 0.51;
+    /**
+     * Strong-signal threshold, in %-per-hour. HIGHER decay velocity =
+     * stronger directional pull. PLACEHOLDER — needs empirical tuning
+     * against real OI data; the old 0.51/0.70 values do not apply to
+     * this scale.
+     */
+    private const DECAY_VELOCITY_THRESHOLD = 5.0;
 
     /** Set to true to include the debug block (ATM/ladder diagnostics) per slot. */
     private const DEBUG_MODE = false;
@@ -305,8 +324,9 @@ class AdvancedOIMetricsController extends Controller
                     ->toArray();
 
                 $atmIndex = $this->findAtmIndex($ladder, $atmStrike);
+                $deltaT   = $this->hoursSinceOpen($time);
 
-                $decay    = $this->calcDecayVelocity($ladder, $atmIndex, $liveOi, $anchorOi);
+                $decay    = $this->calcDecayVelocity($ladder, $atmIndex, $liveOi, $anchorOi, $deltaT);
                 $decaySig = $this->deriveDecaySignal($decay['ce'], $decay['pe']);
                 $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
 
@@ -314,6 +334,7 @@ class AdvancedOIMetricsController extends Controller
                     'time'           => substr($time, 0, 5),
                     'no_data'        => false,
                     'atm_strike'     => $atmStrike,
+                    'delta_t_hours'  => $deltaT,
                     'decay_velocity' => $decay,
                     'decay_signal'   => $decaySig['signal'],
                     'decay_strength' => $decaySig['strength'],
@@ -368,24 +389,33 @@ class AdvancedOIMetricsController extends Controller
         }
     }
 
-    // ═════════════════════════ DECAY VELOCITY (formula unchanged) ═════════════════════════
+    // ═════════════════════════ OI DECAY VELOCITY (formula corrected, per image) ═════════════════════════
+    //
+    //   OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
+    //
+    // Computed per basket (CE / PE), summed across the ATM±1 strike ladder.
+    // OI_previous = anchor sum (prev day 15:00 close), OI_current = live
+    // sum, Δt = trading hours since today's market open (see hoursSinceOpen()).
+    // POSITIVE = OI shrinking (decaying) at that %/hr rate. NEGATIVE = OI
+    // still building. HIGHER positive value = stronger/faster decay.
 
-    private function calcDecayVelocity(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
+    private function calcDecayVelocity(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi, float $deltaT): array
     {
-        $ce = $this->basketVelocity($ladder, $atmIndex, $liveOi['CE'], $anchorOi['CE']);
-        $pe = $this->basketVelocity($ladder, $atmIndex, $liveOi['PE'], $anchorOi['PE']);
+        $ce = $this->basketVelocity($ladder, $atmIndex, $liveOi['CE'], $anchorOi['CE'], $deltaT);
+        $pe = $this->basketVelocity($ladder, $atmIndex, $liveOi['PE'], $anchorOi['PE'], $deltaT);
 
         return [
             'ce'        => $ce,
             'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce <= self::DECAY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe <= self::DECAY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::DECAY_VELOCITY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
+            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::DECAY_VELOCITY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
         ];
     }
 
-    private function basketVelocity(array $ladder, ?int $atmIndex, array $liveMap, array $anchorMap): ?float
+    private function basketVelocity(array $ladder, ?int $atmIndex, array $liveMap, array $anchorMap, float $deltaT): ?float
     {
         if ($atmIndex === null) return null;
+        if ($deltaT <= 0) return null;
 
         $liveSum = 0; $anchorSum = 0;
 
@@ -402,33 +432,35 @@ class AdvancedOIMetricsController extends Controller
 
         if ($anchorSum <= 0) return null;
 
-        return round($liveSum / $anchorSum, 4);
+        // OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
+        return round((($anchorSum - $liveSum) / ($anchorSum * $deltaT)) * 100, 4);
     }
 
     /**
-     * DECAY VELOCITY signal: LOWER value = stronger directional pull that
-     * side (faster wall/floor dissolution). Threshold (<=0.70) marks STRONG.
+     * DECAY VELOCITY signal: HIGHER value = stronger directional pull that
+     * side (faster OI melt / wall-floor dissolution per hour). Threshold
+     * (>= DECAY_VELOCITY_THRESHOLD) marks STRONG.
      */
     private function deriveDecaySignal(?float $ce, ?float $pe): array
     {
         if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
 
         if ($ce === null) { // only PE known — one-sided decision only if it crosses its own strong threshold
-            return $pe <= self::DECAY_THRESHOLD
+            return $pe >= self::DECAY_VELOCITY_THRESHOLD
                 ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
                 : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
         }
         if ($pe === null) { // only CE known
-            return $ce <= self::DECAY_THRESHOLD
+            return $ce >= self::DECAY_VELOCITY_THRESHOLD
                 ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
                 : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
         }
 
         if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
 
-        $bullish      = $ce < $pe; // lower CE decay => bullish
+        $bullish      = $ce > $pe; // higher CE decay velocity => CE melting faster => bullish
         $winningValue = $bullish ? $ce : $pe;
-        $strength     = $winningValue <= self::DECAY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+        $strength     = $winningValue >= self::DECAY_VELOCITY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
 
         return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
     }
@@ -494,6 +526,7 @@ class AdvancedOIMetricsController extends Controller
             'time'           => substr($time, 0, 5),
             'no_data'        => true,
             'atm_strike'     => null,
+            'delta_t_hours'  => $this->hoursSinceOpen($time),
             'decay_velocity' => $ins,
             'decay_signal'   => 'INSUFFICIENT_DATA',
             'decay_strength' => null,
@@ -518,6 +551,17 @@ class AdvancedOIMetricsController extends Controller
             ],
             'slots' => $slots,
         ];
+    }
+
+    // ═════════════════════════ Δt HELPER ═════════════════════════
+
+    /** Hours elapsed from market open (09:15) to the given HH:MM:SS time. */
+    private function hoursSinceOpen(string $time): float
+    {
+        $open = Carbon::createFromFormat('H:i:s', self::MARKET_OPEN_TIME);
+        $t    = Carbon::createFromFormat('H:i:s', $time);
+        $minutes = $open->diffInMinutes($t, false);
+        return $minutes > 0 ? round($minutes / 60, 4) : 0.0;
     }
 
     // ═════════════════════════ STRIKE KEY / LADDER HELPERS (unchanged) ═════════════════════════

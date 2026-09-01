@@ -715,9 +715,11 @@
             <div class="aom-hero-left">
                 <div class="aom-eyebrow">Advanced Confirmation Layer</div>
                 <h1>Advanced <span style="color:var(--c-lime);">OI</span> Metrics</h1>
-                <p>Decay Velocity + OI Signal, computed at three intraday checkpoints today — 10:15, 11:15 and
-                    12:15 — each measured against the previous trading day's 15:00 close. Supplementary layer only —
-                    does not replace or alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment logic.</p>
+                <p>OI Decay Velocity ((OI_prev − OI_curr) / (OI_prev × Δt) × 100) + OI Signal, computed at three
+                    intraday checkpoints today — 10:15, 11:15 and 12:15 — each measured against the previous
+                    trading day's 15:00 close, with Δt = trading hours since today's market open. Supplementary
+                    layer only — does not replace or alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment
+                    logic.</p>
             </div>
             <div class="aom-hero-icon"><i class="las la-layer-group"></i></div>
         </div>
@@ -778,25 +780,25 @@
                         <thead>
                             <tr class="th-group">
                                 <th colspan="4" class="g-info">Market Info</th>
-                                <th colspan="4" class="g-slot1 sep-l">10:15 (vs prev close)</th>
-                                <th colspan="4" class="g-slot2 sep-l">11:15 (vs prev close)</th>
-                                <th colspan="4" class="g-slot3 sep-l">12:15 (vs prev close)</th>
+                                <th colspan="4" class="g-slot1 sep-l">10:15 · Δt=1hr (vs prev close)</th>
+                                <th colspan="4" class="g-slot2 sep-l">11:15 · Δt=2hr (vs prev close)</th>
+                                <th colspan="4" class="g-slot3 sep-l">12:15 · Δt=3hr (vs prev close)</th>
                             </tr>
                             <tr class="th-cols">
                                 <th>#</th>
                                 <th>Symbol</th>
                                 <th>Date</th>
                                 <th>ATM</th>
-                                <th class="sep-l">CE ≤0.70</th>
-                                <th>PE ≤0.70</th>
+                                <th class="sep-l">CE ≥5%/hr</th>
+                                <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
-                                <th class="sep-l">CE ≤0.70</th>
-                                <th>PE ≤0.70</th>
+                                <th class="sep-l">CE ≥5%/hr</th>
+                                <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
-                                <th class="sep-l">CE ≤0.70</th>
-                                <th>PE ≤0.70</th>
+                                <th class="sep-l">CE ≥5%/hr</th>
+                                <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
                             </tr>
@@ -1044,6 +1046,11 @@
             return (x === null || x === undefined) ? '<span class="na">N/A</span>' : x;
         }
 
+        // Decay Velocity values are a %/hr rate now (not a 0–1 ratio) — append '%' for clarity.
+        function vPct(x) {
+            return (x === null || x === undefined) ? '<span class="na">N/A</span>' : x + '%';
+        }
+
         function badge(status, side) {
             if (status === 'TRIGGERED') return '<span class="aom-badge ' + (side === 'bear' ? 'b-trig-bear' :
                 'b-trig-bull') + '" title="TRIGGERED">✓</span>';
@@ -1116,10 +1123,11 @@
                         .ce_oi_pct + '% / PE ' + s.oi_signal.pe_oi_pct + '%)';
 
                     rowHtml +=
-                        '<td class="sep-l">' + v(s.decay_velocity.ce) + ' ' + badge(s.decay_velocity
+                        '<td class="sep-l">' + vPct(s.decay_velocity.ce) + ' ' + badge(s.decay_velocity
                             .ce_status,
                             'bull') + '</td>' +
-                        '<td>' + v(s.decay_velocity.pe) + ' ' + badge(s.decay_velocity.pe_status, 'bear') +
+                        '<td>' + vPct(s.decay_velocity.pe) + ' ' + badge(s.decay_velocity.pe_status,
+                        'bear') +
                         '</td>' +
                         '<td>' + signalBadge(s.decay_signal, s.decay_strength) + '</td>' +
                         '<td>' + signalBadge(s.oi_signal.sentiment, null, oiTip) + '</td>';
