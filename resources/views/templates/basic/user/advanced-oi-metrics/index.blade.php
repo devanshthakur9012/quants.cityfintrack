@@ -476,7 +476,7 @@
             width: 100%;
             border-collapse: collapse;
             font-family: var(--f-mono);
-            min-width: 1500px;
+            min-width: 2100px;
         }
 
         .aom-table thead tr.th-group th {
@@ -715,11 +715,11 @@
             <div class="aom-hero-left">
                 <div class="aom-eyebrow">Advanced Confirmation Layer</div>
                 <h1>Advanced <span style="color:var(--c-lime);">OI</span> Metrics</h1>
-                <p>OI Decay Velocity ((OI_prev − OI_curr) / (OI_prev × Δt) × 100) + OI Signal, computed at three
-                    intraday checkpoints today — 10:15, 11:15 and 12:15 — each measured against the previous
-                    trading day's 15:00 close, with Δt = trading hours since today's market open. Supplementary
-                    layer only — does not replace or alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment
-                    logic.</p>
+                <p>OI Decay Velocity ((OI_prev − OI_curr) / (OI_prev × Δt) × 100) + OI Signal + Price Signal / VWAP
+                    Slope (from the ATM CE candle series), computed at three intraday checkpoints today — 10:15,
+                    11:15 and 12:15 — each measured against the previous trading day's 15:00 close, with
+                    Δt = trading hours since today's market open. Supplementary layer only — does not replace or
+                    alter the primary BUY&nbsp;CE / BUY&nbsp;PE / WAIT sentiment logic.</p>
             </div>
             <div class="aom-hero-icon"><i class="las la-layer-group"></i></div>
         </div>
@@ -780,9 +780,9 @@
                         <thead>
                             <tr class="th-group">
                                 <th colspan="4" class="g-info">Market Info</th>
-                                <th colspan="4" class="g-slot1 sep-l">10:15 · Δt=1hr (vs prev close)</th>
-                                <th colspan="4" class="g-slot2 sep-l">11:15 · Δt=2hr (vs prev close)</th>
-                                <th colspan="4" class="g-slot3 sep-l">12:15 · Δt=3hr (vs prev close)</th>
+                                <th colspan="6" class="g-slot1 sep-l">10:15 · Δt=1hr (vs prev close)</th>
+                                <th colspan="6" class="g-slot2 sep-l">11:15 · Δt=2hr (vs prev close)</th>
+                                <th colspan="6" class="g-slot3 sep-l">12:15 · Δt=3hr (vs prev close)</th>
                             </tr>
                             <tr class="th-cols">
                                 <th>#</th>
@@ -793,19 +793,25 @@
                                 <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
+                                <th>Price Signal</th>
+                                <th>VWAP Slope</th>
                                 <th class="sep-l">CE ≥5%/hr</th>
                                 <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
+                                <th>Price Signal</th>
+                                <th>VWAP Slope</th>
                                 <th class="sep-l">CE ≥5%/hr</th>
                                 <th>PE ≥5%/hr</th>
                                 <th>Signal</th>
                                 <th>OI Signal</th>
+                                <th>Price Signal</th>
+                                <th>VWAP Slope</th>
                             </tr>
                         </thead>
                         <tbody id="aom-tbody">
                             <tr>
-                                <td colspan="16">
+                                <td colspan="22">
                                     <div class="aom-spinner-row">
                                         <div class="aom-spinner"></div>Detecting last available date…
                                     </div>
@@ -959,7 +965,7 @@
             aomHistoryMode = true;
             aomHideWarn();
             html('aom-tbody',
-                '<tr><td colspan="16"><div class="aom-spinner-row"><div class="aom-spinner"></div>Loading history for ' +
+                '<tr><td colspan="22"><div class="aom-spinner-row"><div class="aom-spinner"></div>Loading history for ' +
                 sym + ' (' + from + ' → ' + to + ')…</div></td></tr>');
             txt('aom-subtitle', sym + ' · Loading history…');
             var params = new URLSearchParams({
@@ -999,7 +1005,7 @@
             if (!date) return;
             aomHideWarn();
             html('aom-tbody',
-                '<tr><td colspan="16"><div class="aom-spinner-row"><div class="aom-spinner"></div>Calculating advanced OI metrics for ' +
+                '<tr><td colspan="22"><div class="aom-spinner-row"><div class="aom-spinner"></div>Calculating advanced OI metrics for ' +
                 date + '…</div></td></tr>');
             txt('aom-subtitle', date + ' · Loading…');
             var params = new URLSearchParams({
@@ -1051,6 +1057,27 @@
             return (x === null || x === undefined) ? '<span class="na">N/A</span>' : x + '%';
         }
 
+        function priceSignalBadge(sig, score, tip) {
+            var t = tip ? ' title="' + esc(tip) + '"' : '';
+            var cls = 'sig-neut',
+                label = 'WAIT';
+            if (sig === 'BUY') {
+                cls = 'sig-bull';
+                label = 'BUY';
+            }
+            var scoreLine = (score === null || score === undefined) ? '' :
+                '<div style="font-size:8px;color:rgba(120,123,134,.6);margin-top:2px;">' + score + '/8</div>';
+            return '<div class="aom-val-row"><span class="' + cls + '"' + t + '>' + label + '</span>' + scoreLine +
+            '</div>';
+        }
+
+        function vwapSlopeBadge(slope) {
+            if (slope === 'RISING') return '<span class="sig-bull">▲ RISING</span>';
+            if (slope === 'FALLING') return '<span class="sig-bear">▼ FALLING</span>';
+            if (slope === 'INSUFFICIENT_DATA') return '<span class="sig-insuff">⚠ N/A</span>';
+            return '<span class="sig-neut">— FLAT</span>';
+        }
+
         function badge(status, side) {
             if (status === 'TRIGGERED') return '<span class="aom-badge ' + (side === 'bear' ? 'b-trig-bear' :
                 'b-trig-bull') + '" title="TRIGGERED">✓</span>';
@@ -1092,13 +1119,13 @@
                 if (!row.success) {
                     h += '<tr class="' + zebra + '"><td class="c-num">' + num++ + '</td><td class="c-sym">' + esc(
                             row.symbol) + '</td><td class="c-date">' + esc(row.date || '') +
-                        '</td><td colspan="13" class="na">Error: ' + esc(row.message || 'failed') + '</td></tr>';
+                        '</td><td colspan="19" class="na">Error: ' + esc(row.message || 'failed') + '</td></tr>';
                     return;
                 }
                 if (row.no_data) {
                     h += '<tr class="' + zebra + '"><td class="c-num">' + num++ + '</td><td class="c-sym">' + esc(
                             row.symbol) + '</td><td class="c-date">' + esc(row.date || '') +
-                        '</td><td colspan="13" class="na">No data for this date</td></tr>';
+                        '</td><td colspan="19" class="na">No data for this date</td></tr>';
                     return;
                 }
 
@@ -1115,12 +1142,20 @@
                     var s = a.slots && a.slots[label] ? a.slots[label] : null;
 
                     if (!s || s.no_data) {
-                        rowHtml += '<td class="sep-l na" colspan="4">No data (' + label + ')</td>';
+                        rowHtml += '<td class="sep-l na" colspan="6">No data (' + label + ')</td>';
                         return;
                     }
 
                     var oiTip = s.oi_signal.condition + ' — ' + s.oi_signal.reason + ' (CE ' + s.oi_signal
                         .ce_oi_pct + '% / PE ' + s.oi_signal.pe_oi_pct + '%)';
+
+                    var p = s.price_signal || {
+                        signal: 'WAIT',
+                        score: null,
+                        vwap_slope: 'INSUFFICIENT_DATA',
+                        reasons: []
+                    };
+                    var priceTip = p.reasons && p.reasons.length ? p.reasons.join(', ') : (p.reason || '');
 
                     rowHtml +=
                         '<td class="sep-l">' + vPct(s.decay_velocity.ce) + ' ' + badge(s.decay_velocity
@@ -1130,7 +1165,9 @@
                         'bear') +
                         '</td>' +
                         '<td>' + signalBadge(s.decay_signal, s.decay_strength) + '</td>' +
-                        '<td>' + signalBadge(s.oi_signal.sentiment, null, oiTip) + '</td>';
+                        '<td>' + signalBadge(s.oi_signal.sentiment, null, oiTip) + '</td>' +
+                        '<td>' + priceSignalBadge(p.signal, p.score, priceTip) + '</td>' +
+                        '<td>' + vwapSlopeBadge(p.vwap_slope) + '</td>';
                 });
 
                 rowHtml += '</tr>';
@@ -1153,7 +1190,7 @@
         }
 
         function aomEmptyHtml(msg) {
-            return '<tr><td colspan="16"><div class="aom-empty"><div class="aom-empty-icon"><i class="las la-layer-group"></i></div><p>' +
+            return '<tr><td colspan="22"><div class="aom-empty"><div class="aom-empty-icon"><i class="las la-layer-group"></i></div><p>' +
                 (msg || 'No data found.') + '</p></div></td></tr>';
         }
 

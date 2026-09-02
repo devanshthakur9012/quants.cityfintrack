@@ -528,6 +528,13 @@ class AdvancedOIMetricsController extends Controller
      * for the strike matching $atmStrike on that symbol/date. Uses the
      * SAME table (cp_option_ohlc_15min) — no schema changes.
      *
+     * NOTE: cp_option_ohlc_15min (like cp_fut_ohlc_15min / cp_stock_ohlc_15min)
+     * has no `vwap` column — only open/high/low/close/volume/oi. VWAP is
+     * therefore computed here as a running cumulative value from the OHLCV
+     * data itself: typical price = (high+low+close)/3, VWAP = cumulative
+     * (typical price × volume) / cumulative volume, accumulated from
+     * market open onward — the standard intraday VWAP definition.
+     *
      * Returns candles ordered oldest→newest, shaped for checkBuyPriceLogic():
      * ['time','open','high','low','close','volume','vwap'].
      */
@@ -542,15 +549,31 @@ class AdvancedOIMetricsController extends Controller
             ->whereDate('trade_date', $date)
             ->whereRaw('TIME(interval_time) BETWEEN ? AND ?', [self::MARKET_OPEN_TIME, $time])
             ->where('is_missing', false)
-            ->select(['interval_time', 'strike', 'open', 'high', 'low', 'close', 'volume', 'vwap'])
+            ->select(['interval_time', 'strike', 'open', 'high', 'low', 'close', 'volume'])
             ->orderBy('interval_time')
             ->get();
 
         $atmKey = $this->strikeKey($atmStrike);
 
-        $candles = [];
+        $candles          = [];
+        $cumTradedValue   = 0.0; // Σ(typical price × volume)
+        $cumVolume        = 0.0; // Σ volume
+
         foreach ($rows as $r) {
             if ($this->strikeKey($r->strike) !== $atmKey) continue;
+
+            $high   = (float) $r->high;
+            $low    = (float) $r->low;
+            $close  = (float) $r->close;
+            $volume = (float) $r->volume;
+
+            $typicalPrice   = ($high + $low + $close) / 3;
+            $cumTradedValue += $typicalPrice * $volume;
+            $cumVolume      += $volume;
+
+            // Running VWAP; if no volume traded yet, fall back to close (avoids div-by-zero).
+            $vwap = $cumVolume > 0 ? round($cumTradedValue / $cumVolume, 4) : $close;
+
             $candles[] = [
                 'time'   => substr((string) $r->interval_time, -8, 5),
                 'open'   => $r->open,
@@ -558,7 +581,7 @@ class AdvancedOIMetricsController extends Controller
                 'low'    => $r->low,
                 'close'  => $r->close,
                 'volume' => $r->volume,
-                'vwap'   => $r->vwap,
+                'vwap'   => $vwap,
             ];
         }
 
