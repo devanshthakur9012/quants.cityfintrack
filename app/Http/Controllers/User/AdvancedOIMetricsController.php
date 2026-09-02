@@ -12,36 +12,39 @@ use Illuminate\Support\Facades\Log;
 /**
  * Advanced OI Metrics — STANDALONE, READ-ONLY analysis page.
  *
- * Anchor = previous trading day 15:00 (close), same convention as
- * OIFlowSentimentController. Reuses cp_option_ohlc_15min exactly as-is.
- * Does NOT touch collectors, does NOT touch OIFlowSentimentController,
- * does NOT change BUY CE / BUY PE / WAIT logic. Zero schema changes.
+ * Anchor = previous trading day 15:00 (3:30 PM close), same convention
+ * as OIFlowSentimentController. Reuses cp_option_ohlc_15min exactly
+ * as-is. Does NOT touch collectors, does NOT touch
+ * OIFlowSentimentController, does NOT change BUY CE / BUY PE / WAIT
+ * logic. Zero schema changes.
  *
- * ── OI DECAY VELOCITY (formula corrected to match spec) ─────────────
+ * ── THIS REVISION — NEW DV (DECAY VELOCITY) FORMULA ─────────────────
+ * Complete replacement of the previous ratio-based Decay Velocity.
+ * Client-specified formula, implemented exactly as given:
  *
- *     OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
+ *   1) Sum OI across exactly 3 strikes — ATM-1, ATM, ATM+1 — for CE
+ *      and PE, separately, for BOTH current-day live data AND
+ *      previous-trading-day 3:30 PM data. NO PARTIAL BASKETS: if any
+ *      of the 3 required strikes is missing on either side, that side
+ *      is INSUFFICIENT_DATA — never computed from 1 or 2 strikes.
  *
- * Δt = trading hours elapsed between the anchor (previous day 15:00
- * close) and the snapshot, measured as hours-since-market-open on the
- * snapshot's own day (09:15 → 10:15 = 1hr, → 11:15 = 2hr, → 12:15 =
- * 3hr). Sign: POSITIVE = OI shrinking (decaying) at that %/hr rate;
- * NEGATIVE = OI still building. HIGHER = stronger pull.
- * DECAY_VELOCITY_THRESHOLD is a PLACEHOLDER (5.0 %/hr) — needs
- * backtesting/tuning against real data.
+ *   2) Apply the DV formula ONCE to the 3-strike totals (never
+ *      per-strike then averaged/summed):
+ *        CE_DV = ((Previous CE OI - Current CE OI) / Previous CE OI * 60) * 100
+ *        PE_DV = ((Previous PE OI - Current PE OI) / Previous PE OI * 60) * 100
+ *
+ *   3) Signal (column: dv_signal):
+ *        PE_DV > CE_DV → BULLISH
+ *        CE_DV > PE_DV → BEARISH
+ *        CE_DV == PE_DV → NEUTRAL
+ *      No STRONG/DIRECTIONAL tier in this revision — pure comparison,
+ *      per client spec. INSUFFICIENT_DATA only when either side's
+ *      3-strike basket is incomplete or the previous-day denominator
+ *      is 0 (would divide by zero).
  *
  * ── OI Signal (unchanged) ──
  * Ported verbatim from OIFlowSentimentController::calcOISignal() — kept
- * completely separate from the decay logic above, per request.
- *
- * ── PRICE SIGNAL + VWAP SLOPE (new columns) ─────────────────────────
- * checkBuyPriceLogic() is pasted in verbatim from the user's spec —
- * untouched. It is fed a 15-min candle series built from the SAME
- * table (cp_option_ohlc_15min), no new table/columns: the candle
- * series used is the ATM strike's CE row history for that symbol/day,
- * from market open up to (and including) the snapshot time. "ATM" is
- * re-resolved independently per slot (10:15/11:15/12:15), same as the
- * OI Decay Velocity basket above, since the ATM strike can shift
- * intraday.
+ * completely separate from the DV logic above, per request.
  *
  * ── STRIKE KEY FIX (carried over, unchanged) ──
  * All strike-based lookups route through strikeKey() so a DB strike like
@@ -62,20 +65,14 @@ class AdvancedOIMetricsController extends Controller
     /** Used only for "is today's data available yet" checks (lastDate / history range). */
     private const LAST_SLOT_TIME = '12:15:00';
 
-    private const PREV_DAY_TIME = '15:00:00'; // previous trading day close anchor
+    private const PREV_DAY_TIME = '15:00:00'; // previous trading day 3:30 PM close anchor
 
-    /** Market open — used to compute Δt (hours elapsed) for each snapshot, and as the candle-series start. */
-    private const MARKET_OPEN_TIME = '09:15:00';
-
-    /** Strike-ladder offsets used for the Decay Velocity basket. */
+    /** Strike-ladder offsets used for the DV basket — MUST be exactly these 3. */
     private const BASKET_OFFSETS = [-1, 0, 1];
 
-    /**
-     * Strong-signal threshold, in %-per-hour. HIGHER decay velocity =
-     * stronger directional pull. PLACEHOLDER — needs empirical tuning
-     * against real OI data.
-     */
-    private const DECAY_VELOCITY_THRESHOLD = 5.0;
+    /** Fixed multiplier in the client's DV formula: ( ... * 60) * 100 */
+    private const DV_TIME_FACTOR = 60;
+    private const DV_PERCENT_FACTOR = 100;
 
     /** Set to true to include the debug block (ATM/ladder diagnostics) per slot. */
     private const DEBUG_MODE = false;
@@ -319,27 +316,18 @@ class AdvancedOIMetricsController extends Controller
                     ->toArray();
 
                 $atmIndex = $this->findAtmIndex($ladder, $atmStrike);
-                $deltaT   = $this->hoursSinceOpen($time);
 
-                $decay    = $this->calcDecayVelocity($ladder, $atmIndex, $liveOi, $anchorOi, $deltaT);
-                $decaySig = $this->deriveDecaySignal($decay['ce'], $decay['pe']);
+                $dv       = $this->calcDv($ladder, $atmIndex, $liveOi, $anchorOi);
+                $dvSignal = $this->deriveDvSignal($dv['ce_dv'], $dv['pe_dv']);
                 $oiSignal = $this->buildOiSignalFromTotals($liveOi, $anchorOi);
 
-                // ── Price Signal + VWAP Slope: candle series = ATM strike's CE row history ──
-                $candles      = $this->buildAtmCeCandles($config, $symbol, $date, $time, $atmStrike);
-                $priceResult  = $this->checkBuyPriceLogic($candles);
-                $priceSignal  = $this->buildPriceSignalOutput($priceResult);
-
                 $slot = [
-                    'time'           => substr($time, 0, 5),
-                    'no_data'        => false,
-                    'atm_strike'     => $atmStrike,
-                    'delta_t_hours'  => $deltaT,
-                    'decay_velocity' => $decay,
-                    'decay_signal'   => $decaySig['signal'],
-                    'decay_strength' => $decaySig['strength'],
-                    'oi_signal'      => $oiSignal,
-                    'price_signal'   => $priceSignal,
+                    'time'       => substr($time, 0, 5),
+                    'no_data'    => false,
+                    'atm_strike' => $atmStrike,
+                    'dv'         => $dv,
+                    'dv_signal'  => $dvSignal,
+                    'oi_signal'  => $oiSignal,
                 ];
 
                 if (self::DEBUG_MODE) {
@@ -351,7 +339,6 @@ class AdvancedOIMetricsController extends Controller
                         'live_pe_strike_count'   => count($liveOi['PE']),
                         'anchor_ce_strike_count' => count($anchorOi['CE']),
                         'anchor_pe_strike_count' => count($anchorOi['PE']),
-                        'candle_count'           => count($candles),
                     ];
                 }
 
@@ -391,80 +378,78 @@ class AdvancedOIMetricsController extends Controller
         }
     }
 
-    // ═════════════════════════ OI DECAY VELOCITY (formula corrected, per spec) ═════════════════════════
-    //
-    //   OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
-    //
-    // Computed per basket (CE / PE), summed across the ATM±1 strike ladder.
-    // OI_previous = anchor sum (prev day 15:00 close), OI_current = live
-    // sum, Δt = trading hours since today's market open (see hoursSinceOpen()).
-    // POSITIVE = OI shrinking (decaying) at that %/hr rate. NEGATIVE = OI
-    // still building. HIGHER positive value = stronger/faster decay.
+    // ═════════════════════════ DV (DECAY VELOCITY) — NEW FORMULA ═════════════════════════
 
-    private function calcDecayVelocity(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi, float $deltaT): array
-    {
-        $ce = $this->basketVelocity($ladder, $atmIndex, $liveOi['CE'], $anchorOi['CE'], $deltaT);
-        $pe = $this->basketVelocity($ladder, $atmIndex, $liveOi['PE'], $anchorOi['PE'], $deltaT);
-
-        return [
-            'ce'        => $ce,
-            'pe'        => $pe,
-            'ce_status' => $ce === null ? 'INSUFFICIENT_DATA' : ($ce >= self::DECAY_VELOCITY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-            'pe_status' => $pe === null ? 'INSUFFICIENT_DATA' : ($pe >= self::DECAY_VELOCITY_THRESHOLD ? 'TRIGGERED' : 'NOT_TRIGGERED'),
-        ];
-    }
-
-    private function basketVelocity(array $ladder, ?int $atmIndex, array $liveMap, array $anchorMap, float $deltaT): ?float
+    /**
+     * Sums OI across the 3-strike basket (ATM-1, ATM, ATM+1). Returns
+     * null if ANY of the 3 required strikes is missing from the map —
+     * no partial baskets allowed, per client rule.
+     */
+    private function basketOiSum(array $ladder, ?int $atmIndex, array $oiMap): ?int
     {
         if ($atmIndex === null) return null;
-        if ($deltaT <= 0) return null;
 
-        $liveSum = 0; $anchorSum = 0;
+        $sum = 0;
 
         foreach (self::BASKET_OFFSETS as $offset) {
             $strike = $this->strikeAtOffset($ladder, $atmIndex, $offset);
             if ($strike === null) return null;
 
             $key = $this->strikeKey($strike);
-            if (!array_key_exists($key, $liveMap) || !array_key_exists($key, $anchorMap)) return null;
+            if (!array_key_exists($key, $oiMap)) return null;
 
-            $liveSum   += $liveMap[$key];
-            $anchorSum += $anchorMap[$key];
+            $sum += $oiMap[$key];
         }
 
-        if ($anchorSum <= 0) return null;
-
-        // OI Decay Velocity = (OI_previous − OI_current) / (OI_previous × Δt) × 100
-        return round((($anchorSum - $liveSum) / ($anchorSum * $deltaT)) * 100, 4);
+        return $sum;
     }
 
     /**
-     * DECAY VELOCITY signal: HIGHER value = stronger directional pull that
-     * side (faster OI melt / wall-floor dissolution per hour). Threshold
-     * (>= DECAY_VELOCITY_THRESHOLD) marks STRONG.
+     * DV formula, applied ONCE to the 3-strike totals (never per-strike
+     * then combined):
+     *   CE_DV = ((Previous CE OI - Current CE OI) / Previous CE OI * 60) * 100
+     *   PE_DV = ((Previous PE OI - Current PE OI) / Previous PE OI * 60) * 100
+     * Returns null for a side if its basket is incomplete on either day,
+     * or if the previous-day total is 0 (division by zero).
      */
-    private function deriveDecaySignal(?float $ce, ?float $pe): array
+    private function calcDv(array $ladder, ?int $atmIndex, array $liveOi, array $anchorOi): array
     {
-        if ($ce === null && $pe === null) return ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
+        $currentCe = $this->basketOiSum($ladder, $atmIndex, $liveOi['CE']);
+        $previousCe = $this->basketOiSum($ladder, $atmIndex, $anchorOi['CE']);
+        $currentPe = $this->basketOiSum($ladder, $atmIndex, $liveOi['PE']);
+        $previousPe = $this->basketOiSum($ladder, $atmIndex, $anchorOi['PE']);
 
-        if ($ce === null) { // only PE known — one-sided decision only if it crosses its own strong threshold
-            return $pe >= self::DECAY_VELOCITY_THRESHOLD
-                ? ['signal' => 'BEARISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
-        if ($pe === null) { // only CE known
-            return $ce >= self::DECAY_VELOCITY_THRESHOLD
-                ? ['signal' => 'BULLISH', 'strength' => 'STRONG']
-                : ['signal' => 'INSUFFICIENT_DATA', 'strength' => null];
-        }
+        $ceDv = ($currentCe !== null && $previousCe !== null && $previousCe != 0)
+            ? round((($previousCe - $currentCe) / $previousCe * self::DV_TIME_FACTOR) * self::DV_PERCENT_FACTOR, 4)
+            : null;
 
-        if ($ce == $pe) return ['signal' => 'NEUTRAL', 'strength' => null];
+        $peDv = ($currentPe !== null && $previousPe !== null && $previousPe != 0)
+            ? round((($previousPe - $currentPe) / $previousPe * self::DV_TIME_FACTOR) * self::DV_PERCENT_FACTOR, 4)
+            : null;
 
-        $bullish      = $ce > $pe; // higher CE decay velocity => CE melting faster => bullish
-        $winningValue = $bullish ? $ce : $pe;
-        $strength     = $winningValue >= self::DECAY_VELOCITY_THRESHOLD ? 'STRONG' : 'DIRECTIONAL';
+        return [
+            'ce_dv'          => $ceDv,
+            'pe_dv'          => $peDv,
+            'current_ce_oi'  => $currentCe,
+            'previous_ce_oi' => $previousCe,
+            'current_pe_oi'  => $currentPe,
+            'previous_pe_oi' => $previousPe,
+        ];
+    }
 
-        return ['signal' => $bullish ? 'BULLISH' : 'BEARISH', 'strength' => $strength];
+    /**
+     * DV SIGNAL (column: dv_signal):
+     *   PE_DV > CE_DV → BULLISH
+     *   CE_DV > PE_DV → BEARISH
+     *   CE_DV == PE_DV → NEUTRAL
+     * INSUFFICIENT_DATA if either side's DV couldn't be computed
+     * (incomplete basket or previous-day total was 0).
+     */
+    private function deriveDvSignal(?float $ceDv, ?float $peDv): string
+    {
+        if ($ceDv === null || $peDv === null) return 'INSUFFICIENT_DATA';
+        if ($ceDv == $peDv) return 'NEUTRAL';
+        return $peDv > $ceDv ? 'BULLISH' : 'BEARISH';
     }
 
     // ═════════════════════════ OI SIGNAL — untouched, same logic as OIFlowSentimentController ═════════════════════════
@@ -520,257 +505,17 @@ class AdvancedOIMetricsController extends Controller
         return ['sentiment' => 'NEUTRAL', 'condition' => 'Flat', 'reason' => 'No clear OI direction'];
     }
 
-    // ═════════════════════════ PRICE SIGNAL + VWAP SLOPE (new) ═════════════════════════
-
-    /**
-     * Builds the ATM CE candle series for the price-action logic, from
-     * market open (09:15) up to and including the given snapshot time,
-     * for the strike matching $atmStrike on that symbol/date. Uses the
-     * SAME table (cp_option_ohlc_15min) — no schema changes.
-     *
-     * NOTE: cp_option_ohlc_15min (like cp_fut_ohlc_15min / cp_stock_ohlc_15min)
-     * has no `vwap` column — only open/high/low/close/volume/oi. VWAP is
-     * therefore computed here as a running cumulative value from the OHLCV
-     * data itself: typical price = (high+low+close)/3, VWAP = cumulative
-     * (typical price × volume) / cumulative volume, accumulated from
-     * market open onward — the standard intraday VWAP definition.
-     *
-     * Returns candles ordered oldest→newest, shaped for checkBuyPriceLogic():
-     * ['time','open','high','low','close','volume','vwap'].
-     */
-    private function buildAtmCeCandles(object $config, string $symbol, string $date, string $time, ?float $atmStrike): array
-    {
-        if ($atmStrike === null) return [];
-
-        $rows = DB::table(self::OPT_TABLE)
-            ->where('analysis_config_id', $config->id)
-            ->where('base_symbol', $symbol)
-            ->where('instrument_type', 'CE')
-            ->whereDate('trade_date', $date)
-            ->whereRaw('TIME(interval_time) BETWEEN ? AND ?', [self::MARKET_OPEN_TIME, $time])
-            ->where('is_missing', false)
-            ->select(['interval_time', 'strike', 'open', 'high', 'low', 'close', 'volume'])
-            ->orderBy('interval_time')
-            ->get();
-
-        $atmKey = $this->strikeKey($atmStrike);
-
-        $candles          = [];
-        $cumTradedValue   = 0.0; // Σ(typical price × volume)
-        $cumVolume        = 0.0; // Σ volume
-
-        foreach ($rows as $r) {
-            if ($this->strikeKey($r->strike) !== $atmKey) continue;
-
-            $high   = (float) $r->high;
-            $low    = (float) $r->low;
-            $close  = (float) $r->close;
-            $volume = (float) $r->volume;
-
-            $typicalPrice   = ($high + $low + $close) / 3;
-            $cumTradedValue += $typicalPrice * $volume;
-            $cumVolume      += $volume;
-
-            // Running VWAP; if no volume traded yet, fall back to close (avoids div-by-zero).
-            $vwap = $cumVolume > 0 ? round($cumTradedValue / $cumVolume, 4) : $close;
-
-            $candles[] = [
-                'time'   => substr((string) $r->interval_time, -8, 5),
-                'open'   => $r->open,
-                'high'   => $r->high,
-                'low'    => $r->low,
-                'close'  => $r->close,
-                'volume' => $r->volume,
-                'vwap'   => $vwap,
-            ];
-        }
-
-        return $candles;
-    }
-
-    /** Shapes checkBuyPriceLogic()'s output for the two new table columns. */
-    private function buildPriceSignalOutput(array $priceResult): array
-    {
-        if (!array_key_exists('vwap_rising', $priceResult)) {
-            // "Not enough candle data" early-return path from checkBuyPriceLogic().
-            return [
-                'signal'     => 'WAIT',
-                'score'      => null,
-                'vwap_slope' => 'INSUFFICIENT_DATA',
-                'reasons'    => [],
-                'reason'     => $priceResult['reason'] ?? 'Not enough candle data',
-            ];
-        }
-
-        $vwapSlope = $priceResult['vwap_rising'] ? 'RISING' : 'FALLING';
-
-        return [
-            'signal'     => $priceResult['signal'],
-            'score'      => $priceResult['price_score'],
-            'vwap_slope' => $vwapSlope,
-            'reasons'    => $priceResult['reasons'],
-            'reason'     => null,
-        ];
-    }
-
-    /**
-     * Pasted in verbatim (per spec) — untouched. Fed a candle series of
-     * ATM CE rows from cp_option_ohlc_15min (see buildAtmCeCandles()).
-     */
-    private function checkBuyPriceLogic(array $candles): array
-    {
-        $count = count($candles);
-        // Need at least 4 candles for t and t-3
-        if ($count < 4) {
-            return [
-                'signal' => 'WAIT',
-                'reason' => 'Not enough candle data'
-            ];
-        }
-        // Current candle = t
-        $t = $count - 1;
-        // Current candle values
-        $current = $candles[$t];
-        // 15 minutes ago = t-3
-        $previous15 = $candles[$t - 3];
-        $price = (float)$current['close'];
-        $vwap = (float)$current['vwap'];
-        $vwap15MinAgo = (float)$previous15['vwap'];
-        /*
-         * --------------------------------------------------
-         * 1. PRICE ABOVE VWAP
-         * --------------------------------------------------
-         */
-        $priceAboveVWAP = $price > $vwap;
-        /*
-         * --------------------------------------------------
-         * 2. VWAP IS RISING
-         * VWAP(t) > VWAP(t-3)
-         *
-         * At 10:15:
-         * VWAP(10:15) > VWAP(10:00)
-         * --------------------------------------------------
-         */
-        $vwapRising = $vwap > $vwap15MinAgo;
-        /*
-         * --------------------------------------------------
-         * 3. HIGHER LOW
-         *
-         * Compare the previous swing low with the low
-         * before it.
-         *
-         * Simple implementation:
-         * candle t-1 low > candle t-3 low
-         * --------------------------------------------------
-         */
-        $higherLow = false;
-        if ($count >= 4) {
-            $lowRecent = (float)$candles[$t - 1]['low'];
-            $lowPrevious = (float)$candles[$t - 3]['low'];
-            $higherLow = $lowRecent > $lowPrevious;
-        }
-        /*
-         * --------------------------------------------------
-         * 4. BREAKOUT OF PREVIOUS 5-MIN CANDLE HIGH
-         * --------------------------------------------------
-         */
-        $previousHigh = (float)$candles[$t - 1]['high'];
-        $breakout = $price > $previousHigh;
-        /*
-         * --------------------------------------------------
-         * 5. VOLUME CONFIRMATION
-         *
-         * Current volume > average volume
-         * of previous 5 candles
-         * --------------------------------------------------
-         */
-        $volumeConfirmation = false;
-        if ($count >= 6) {
-            $totalVolume = 0;
-            for ($i = $t - 5; $i < $t; $i++) {
-                $totalVolume += (float)$candles[$i]['volume'];
-            }
-            $averageVolume = $totalVolume / 5;
-            $currentVolume = (float)$current['volume'];
-            $volumeConfirmation = $currentVolume > $averageVolume;
-        }
-        /*
-         * --------------------------------------------------
-         * SCORE
-         * --------------------------------------------------
-         */
-        $score = 0;
-        $reasons = [];
-        if ($priceAboveVWAP) {
-            $score += 2;
-            $reasons[] = "Price above VWAP";
-        }
-        if ($vwapRising) {
-            $score += 1;
-            $reasons[] = "VWAP rising";
-        }
-        if ($higherLow) {
-            $score += 2;
-            $reasons[] = "Higher Low formed";
-        }
-        if ($breakout) {
-            $score += 2;
-            $reasons[] = "Breakout above previous 5-min high";
-        }
-        if ($volumeConfirmation) {
-            $score += 1;
-            $reasons[] = "Volume confirmation";
-        }
-        /*
-         * --------------------------------------------------
-         * FINAL PRICE SIGNAL
-         * --------------------------------------------------
-         *
-         * Maximum price score = 8
-         *
-         * Require at least 6 points.
-         * --------------------------------------------------
-         */
-        if ($score >= 6) {
-            $signal = "BUY";
-        } else {
-            $signal = "WAIT";
-        }
-        return [
-            'time' => $current['time'],
-            'price' => $price,
-            'vwap' => $vwap,
-            'vwap_15min_ago' => $vwap15MinAgo,
-            'price_above_vwap' => $priceAboveVWAP,
-            'vwap_rising' => $vwapRising,
-            'higher_low' => $higherLow,
-            'breakout' => $breakout,
-            'volume_confirmation' => $volumeConfirmation,
-            'price_score' => $score,
-            'signal' => $signal,
-            'reasons' => $reasons
-        ];
-    }
-
     private function emptySlot(string $time): array
     {
-        $ins = ['ce' => null, 'pe' => null, 'ce_status' => 'INSUFFICIENT_DATA', 'pe_status' => 'INSUFFICIENT_DATA'];
-
         return [
-            'time'           => substr($time, 0, 5),
-            'no_data'        => true,
-            'atm_strike'     => null,
-            'delta_t_hours'  => $this->hoursSinceOpen($time),
-            'decay_velocity' => $ins,
-            'decay_signal'   => 'INSUFFICIENT_DATA',
-            'decay_strength' => null,
-            'oi_signal'      => [
+            'time'       => substr($time, 0, 5),
+            'no_data'    => true,
+            'atm_strike' => null,
+            'dv'         => ['ce_dv' => null, 'pe_dv' => null, 'current_ce_oi' => null, 'previous_ce_oi' => null, 'current_pe_oi' => null, 'previous_pe_oi' => null],
+            'dv_signal'  => 'INSUFFICIENT_DATA',
+            'oi_signal'  => [
                 'sentiment' => 'NEUTRAL', 'condition' => 'No Data', 'reason' => 'No data available at this time',
                 'ce_oi_pct' => 0, 'pe_oi_pct' => 0, 'trade_action' => 'WAIT',
-            ],
-            'price_signal'   => [
-                'signal' => 'WAIT', 'score' => null, 'vwap_slope' => 'INSUFFICIENT_DATA',
-                'reasons' => [], 'reason' => 'No data available at this time',
             ],
         ];
     }
@@ -789,17 +534,6 @@ class AdvancedOIMetricsController extends Controller
             ],
             'slots' => $slots,
         ];
-    }
-
-    // ═════════════════════════ Δt HELPER ═════════════════════════
-
-    /** Hours elapsed from market open (09:15) to the given HH:MM:SS time. */
-    private function hoursSinceOpen(string $time): float
-    {
-        $open = Carbon::createFromFormat('H:i:s', self::MARKET_OPEN_TIME);
-        $t    = Carbon::createFromFormat('H:i:s', $time);
-        $minutes = $open->diffInMinutes($t, false);
-        return $minutes > 0 ? round($minutes / 60, 4) : 0.0;
     }
 
     // ═════════════════════════ STRIKE KEY / LADDER HELPERS (unchanged) ═════════════════════════
