@@ -20,6 +20,14 @@ use Illuminate\Support\Facades\Log;
  *     close ≥ open × (1 + threshold/100) → BUY CE
  *     close ≤ open × (1 − threshold/100) → BUY PE
  *   First trigger per symbol per day wins — one signal per day.
+ *
+ * HISTORY MODE:
+ *   The same /scan endpoint already accepts from_date/to_date, and
+ *   processCandles() groups candles per symbol *and* per day — so
+ *   passing a single symbol with a wider from_date/to_date naturally
+ *   returns one row per trading day for that symbol. MAX_HISTORY_DAYS
+ *   below is a guard rail so a UI-driven range scan can't be abused
+ *   into scanning years of data in one request.
  */
 class MomentumBreakoutController extends Controller
 {
@@ -30,6 +38,9 @@ class MomentumBreakoutController extends Controller
         'fut'    => 'cp_fut_ohlc_15min',
         'option' => 'cp_option_ohlc_15min',
     ];
+
+    // Guard rail for from_date/to_date range scans (single-symbol history mode)
+    private const MAX_HISTORY_DAYS = 60;
 
     // ── Page ──────────────────────────────────────────────────────────────────
 
@@ -131,6 +142,29 @@ class MomentumBreakoutController extends Controller
                 ]);
             }
 
+            // Guard rail: a wide from_date/to_date range (single-symbol history mode)
+            // shouldn't be allowed to scan an unbounded number of days at once.
+            if ($fromDate !== $toDate) {
+                try {
+                    $rangeStart = Carbon::parse($fromDate)->startOfDay();
+                    $rangeEnd   = Carbon::parse($toDate)->startOfDay();
+                } catch (\Throwable $e) {
+                    return response()->json(['success' => false, 'message' => 'Invalid date range.', 'data' => []]);
+                }
+
+                if ($rangeStart->gt($rangeEnd)) {
+                    return response()->json(['success' => false, 'message' => 'Start date must be on or before end date.', 'data' => []]);
+                }
+
+                if ($rangeStart->diffInDays($rangeEnd) > self::MAX_HISTORY_DAYS) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Date range too large — please pick at most ' . self::MAX_HISTORY_DAYS . ' days.',
+                        'data'    => [],
+                    ]);
+                }
+            }
+
             $config = $this->getActiveConfig();
             if (!$config) {
                 return response()->json([
@@ -171,6 +205,8 @@ class MomentumBreakoutController extends Controller
             $signals  = array_filter($results, fn($r) => $r['signal'] !== 'NO_TRADE');
             $noTrades = array_filter($results, fn($r) => $r['signal'] === 'NO_TRADE');
 
+            $rangeLabel = $fromDate === $toDate ? $fromDate : ($fromDate . ' → ' . $toDate);
+
             return response()->json([
                 'success'           => true,
                 'data'              => array_values($results),
@@ -179,12 +215,15 @@ class MomentumBreakoutController extends Controller
                 'buy_ce_count'      => count(array_filter($signals, fn($r) => $r['signal'] === 'BUY_CE')),
                 'buy_pe_count'      => count(array_filter($signals, fn($r) => $r['signal'] === 'BUY_PE')),
                 'no_trade_count'    => count($noTrades),
-                'message'           => count($signals) . ' signal(s) found for ' . $fromDate,
+                'message'           => count($signals) . ' signal(s) found for ' . $rangeLabel,
                 'instrument'        => strtoupper($instrument),
                 'threshold'         => $threshold,
                 'available_symbols' => $configSymbols,
                 'date'              => $fromDate,
-                'is_today'          => $fromDate === Carbon::today()->toDateString(),
+                'from_date'         => $fromDate,
+                'to_date'           => $toDate,
+                'is_range'          => $fromDate !== $toDate,
+                'is_today'          => $fromDate === Carbon::today()->toDateString() && $toDate === Carbon::today()->toDateString(),
             ]);
 
         } catch (\Exception $e) {
