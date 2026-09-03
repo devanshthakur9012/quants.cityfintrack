@@ -12,7 +12,8 @@ use Carbon\Carbon;
 /**
  * PrimeFlow — Multi-Symbol Option Scanner
  *
- * Runs the Smart Entry Engine across ALL config-scoped symbols for a given date.
+ * Runs the Smart Entry Engine across ALL config-scoped symbols for a given date,
+ * OR across a date range for a single symbol ("history" mode).
  * Data source : cp_option_ohlc_15min + cp_fut_ohlc_15min
  * Config scope: analysis_configs + analysis_config_symbols
  *
@@ -32,8 +33,8 @@ use Carbon\Carbon;
  *   OI Build           +2 — OI increasing with rising premium
  *   Volume Spike       +2 — current volume > 1.3× previous slot
  *   Futures Direction  +2 — futures moving > 0.25% in one direction
- *   Gamma Squeeze      +2 — ATM + ATM+1 both rising > 12%
- *   Momentum Accel     +2 — two consecutive rising candles accelerating
+ *   Gamma Squeeze       +2 — ATM + ATM+1 both rising > 12%
+ *   Momentum Accel      +2 — two consecutive rising candles accelerating
  *   MM Trap            +4 — price breaks OI wall with premium rising
  *
  * Trade fires when score >= 6 between 10:30–14:30.
@@ -72,6 +73,9 @@ class PrimeFlowScannerController extends Controller
     private const TARGET_MULT     = 3.0;
     private const SL_MULT         = 0.50;
 
+    // ── History mode guard rail ──────────────────────────────────────────
+    private const MAX_HISTORY_DAYS = 60;
+
     // ─────────────────────────────────────────────────────────────────────────
     //  Page
     // ─────────────────────────────────────────────────────────────────────────
@@ -80,11 +84,16 @@ class PrimeFlowScannerController extends Controller
     {
         $pageTitle   = 'PrimeFlow — Option Scanner';
         $thresh_hold = self::SCORE_THRESHOLD;
-        return view(activeTemplate() . 'user.primeflow-scanner.index', compact('pageTitle', 'thresh_hold'));
+
+        // Symbols for the "single symbol / history" dropdown
+        $config  = $this->getActiveConfig();
+        $symbols = $config ? $this->getConfigSymbols($config->id) : [];
+
+        return view(activeTemplate() . 'user.primeflow-scanner.index', compact('pageTitle', 'thresh_hold', 'symbols'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Scan data endpoint
+    //  Scan data endpoint — ALL symbols, ONE date
     // ─────────────────────────────────────────────────────────────────────────
 
     public function getData(Request $request)
@@ -152,6 +161,100 @@ class PrimeFlowScannerController extends Controller
 
         } catch (\Throwable $e) {
             Log::error('PrimeFlowScanner: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  History endpoint — ONE symbol, a DATE RANGE (one row per trading day)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function getSymbolHistory(Request $request)
+    {
+        try {
+            $symbol    = trim((string) $request->get('symbol'));
+            $startDate = $request->get('start_date');
+            $endDate   = $request->get('end_date');
+
+            if ($symbol === '' || !$startDate || !$endDate) {
+                return response()->json(['success' => false, 'message' => 'Symbol, start date and end date are required.']);
+            }
+
+            try {
+                $start = Carbon::parse($startDate)->startOfDay();
+                $end   = Carbon::parse($endDate)->startOfDay();
+            } catch (\Throwable $e) {
+                return response()->json(['success' => false, 'message' => 'Invalid date range.']);
+            }
+
+            if ($start->gt($end)) {
+                return response()->json(['success' => false, 'message' => 'Start date must be on or before end date.']);
+            }
+
+            if ($start->diffInDays($end) > self::MAX_HISTORY_DAYS) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Date range too large — please pick at most ' . self::MAX_HISTORY_DAYS . ' days.',
+                ]);
+            }
+
+            $config = $this->getActiveConfig();
+            if (!$config) {
+                return response()->json([
+                    'success'   => false,
+                    'no_config' => true,
+                    'message'   => 'No active Analysis Config for [15min]. Go to Admin → Analysis Config to create one.',
+                ]);
+            }
+
+            $configSymbols = $this->getConfigSymbols($config->id);
+            if (!in_array($symbol, $configSymbols, true)) {
+                return response()->json(['success' => false, 'message' => 'Symbol is not part of the active config.']);
+            }
+
+            $results = [];
+            $cursor  = $start->copy();
+
+            while ($cursor->lte($end)) {
+                $dateStr = $cursor->toDateString();
+
+                $hasData = DB::table(self::OPT_TABLE)
+                    ->where('analysis_config_id', $config->id)
+                    ->where('base_symbol', $symbol)
+                    ->whereDate('trade_date', $dateStr)
+                    ->exists();
+
+                if ($hasData) {
+                    try {
+                        $row = $this->scanSymbol($symbol, $dateStr, $config->id);
+                    } catch (\Throwable $e) {
+                        Log::warning("PrimeFlow history scan failed for {$symbol} on {$dateStr}: " . $e->getMessage());
+                        $row = $this->errorRow($symbol, $e->getMessage());
+                    }
+                    $row['date']   = $dateStr;
+                    $results[]     = $row;
+                }
+
+                $cursor->addDay();
+            }
+
+            // Most recent trading day first
+            $results = array_reverse($results);
+
+            return response()->json([
+                'success'      => true,
+                'symbol'       => $symbol,
+                'start_date'   => $start->toDateString(),
+                'end_date'     => $end->toDateString(),
+                'timeframe'    => self::TF,
+                'day_count'    => count($results),
+                'trade_count'  => count(array_filter($results, fn($r) => in_array($r['signal'], ['BUY_CALL', 'BUY_PUT']))),
+                'results'      => $results,
+                'scanned_at'   => now()->format('H:i:s'),
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('PrimeFlowScanner history: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

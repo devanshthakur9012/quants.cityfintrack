@@ -1449,8 +1449,9 @@ Route::controller('SiteController')->group(function () {
     });
 
     Route::middleware(['auth'])->prefix('primeflow-scanner')->name('primeflow-scanner.')->group(function () {
-        Route::get('/index', [PrimeFlowScannerController::class, 'index'])  ->name('index');
-        Route::get('/data',  [PrimeFlowScannerController::class, 'getData'])->name('data');
+        Route::get('/index',   [PrimeFlowScannerController::class, 'index'])          ->name('index');
+        Route::get('/data',    [PrimeFlowScannerController::class, 'getData'])        ->name('data');
+        Route::get('/history', [PrimeFlowScannerController::class, 'getSymbolHistory'])->name('history');
     });
 
     Route::middleware(['auth'])->prefix('straddle-strategy')->name('straddle-strategy.')->group(function () {

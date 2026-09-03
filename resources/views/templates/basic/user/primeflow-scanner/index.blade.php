@@ -4,8 +4,9 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════
-   CITYQUANTS — PRIMEFLOW SCANNER  v2.0
+   CITYQUANTS — PRIMEFLOW SCANNER  v2.1
    Dark terminal · Matches Pivot Analysis design system
+   v2.1 adds: per-symbol history mode + logic modal
 ══════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -133,6 +134,26 @@
 }
 .pf-sep { width: 1px; height: 26px; background: var(--c-border2); flex-shrink: 0; }
 
+/* Symbol select */
+.pf-symbol-select {
+    background: var(--c-panel);
+    border: 1px solid var(--c-border2);
+    border-radius: 7px; padding: 6px 10px;
+    font-family: var(--f-mono); font-size: 11px;
+    font-weight: 600; color: var(--c-text);
+    outline: none; cursor: pointer; max-width: 190px;
+    transition: border-color .2s;
+}
+.pf-symbol-select:focus { border-color: rgba(125,255,0,.45); }
+
+/* Scan-all vs history mode toggling */
+.pf-scan-controls, .pf-history-controls {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.pf-scan-controls.hide, .pf-history-controls { display: none; }
+.pf-history-controls.show { display: flex; }
+.pf-scan-controls.hide { display: none !important; }
+
 /* Date controls */
 .pf-date-wrap { display: flex; align-items: center; gap: 4px; }
 .pf-date-input {
@@ -179,6 +200,16 @@
 }
 .pf-auto-btn.on { border-color: rgba(38,166,154,.35); background: rgba(38,166,154,.1); color: var(--c-teal); }
 .pf-auto-btn:hover:not(.on) { border-color: var(--c-border2); color: var(--c-text); }
+
+/* Logic modal trigger button */
+.pf-logic-btn {
+    background: transparent; border: 1px solid rgba(0,184,212,.3);
+    color: var(--c-blue); border-radius: 7px; padding: 6px 13px;
+    font-family: var(--f-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .06em; cursor: pointer; transition: all .2s;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.pf-logic-btn:hover { background: rgba(0,184,212,.1); border-color: rgba(0,184,212,.5); }
 
 /* Filter pills */
 .pf-pills-wrap { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -313,6 +344,11 @@
     font-size: 11px; font-weight: 700; color: var(--c-blue);
     background: rgba(0,184,212,.07); border: 1px solid rgba(0,184,212,.15);
 }
+.c-date   {
+    display: inline-block; padding: 3px 10px; border-radius: 5px;
+    font-size: 11px; font-weight: 700; color: var(--c-lime);
+    background: rgba(125,255,0,.06); border: 1px solid rgba(125,255,0,.18);
+}
 .c-entry  { color: var(--c-blue);   font-weight: 700; }
 .c-target { color: var(--c-teal);   font-weight: 700; }
 .c-sl     { color: var(--c-red);    font-weight: 700; }
@@ -371,6 +407,49 @@
     margin: 0 auto 14px; font-size: 22px;
 }
 .pf-empty p { font-size: 12px; font-family: var(--f-mono); margin-top: 4px; }
+
+/* ══ LOGIC MODAL — dark terminal override (Bootstrap bs- classes) ═══ */
+#pfLogicModal .modal-content {
+    background: var(--c-surface); border: 1px solid var(--c-border2);
+    color: var(--c-text); border-radius: 12px;
+}
+#pfLogicModal .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
+#pfLogicModal .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
+#pfLogicModal .modal-body   { padding: 4px 22px 22px; }
+#pfLogicModal .modal-title  { font-family: var(--f-display); font-weight: 800; color: #fff; font-size: 18px; }
+#pfLogicModal .modal-title span { color: var(--c-lime); }
+#pfLogicModal .btn-close    { filter: invert(1); opacity: .55; }
+#pfLogicModal .btn-close:hover { opacity: .9; }
+#pfLogicModal h6 {
+    font-family: var(--f-display); color: var(--c-lime); font-size: 12.5px;
+    letter-spacing: .05em; text-transform: uppercase; margin: 22px 0 10px;
+    display: flex; align-items: center; gap: 8px;
+}
+#pfLogicModal h6::before { content: ''; width: 12px; height: 1px; background: var(--c-lime); display: inline-block; }
+#pfLogicModal h6:first-child { margin-top: 0; }
+#pfLogicModal p { font-size: 12.5px; color: var(--c-muted); line-height: 1.75; margin-bottom: 8px; }
+#pfLogicModal .table { color: var(--c-text); font-family: var(--f-mono); font-size: 11.5px; margin-bottom: 0; }
+#pfLogicModal .table > :not(caption) > * > * { background: transparent; border-color: var(--c-border); color: var(--c-text); box-shadow: none; }
+#pfLogicModal .table thead th {
+    color: var(--c-muted); font-family: var(--f-sans); font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: .07em; border-bottom-width: 1px; font-weight: 700;
+}
+#pfLogicModal .badge-w {
+    font-family: var(--f-mono); font-weight: 700; padding: 2px 9px; border-radius: 5px;
+    background: rgba(255,167,38,.1); color: var(--c-amber); border: 1px solid rgba(255,167,38,.25);
+    display: inline-block; font-size: 11px;
+}
+#pfLogicModal code { background: var(--c-panel); color: var(--c-lime); padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+#pfLogicModal .pf-flow-step {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--c-border);
+}
+#pfLogicModal .pf-flow-step:last-child { border-bottom: none; }
+#pfLogicModal .pf-flow-num {
+    width: 20px; height: 20px; border-radius: 50%; background: var(--c-lime-dim);
+    color: var(--c-lime); font-family: var(--f-mono); font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
 </style>
 
 <div class="pf-wrap">
@@ -382,7 +461,8 @@
         <h1>PrimeFlow <span>Option Scanner</span></h1>
         <p>
             Smart Entry Engine across all configured symbols — 7-signal confluence model
-            running on live option &amp; futures candle data.
+            running on live option &amp; futures candle data. Switch to a single symbol
+            to pull its historical scan results across any date range.
         </p>
     </div>
     <div class="pf-hero-icon">PF</div>
@@ -392,20 +472,42 @@
 <div class="pf-filter-bar">
     <div class="pf-filter-inner">
 
-        <span class="pf-filter-label">Date</span>
-        <div class="pf-date-wrap">
-            <button class="pf-date-nav" onclick="pfShiftDate(-1)">&#8249;</button>
-            <input type="date" id="pf-date" class="pf-date-input"
-                   value="{{ now()->toDateString() }}"
-                   max="{{ now()->toDateString() }}"
-                   onchange="pfScan()">
-            <button class="pf-date-nav" onclick="pfShiftDate(1)">&#8250;</button>
-            <button class="pf-date-nav pf-today-btn" onclick="pfToday()">TODAY</button>
-            <span id="pf-date-badge"></span>
+        <span class="pf-filter-label">Symbol</span>
+        <select id="pf-symbol-select" class="pf-symbol-select" onchange="pfSymbolChanged()">
+            <option value="">All Symbols</option>
+            @foreach($symbols ?? [] as $sym)
+                <option value="{{ $sym }}">{{ $sym }}</option>
+            @endforeach
+        </select>
+
+        <div class="pf-sep"></div>
+
+        {{-- Scan-all mode controls (default) --}}
+        <div class="pf-scan-controls" id="pf-scan-controls">
+            <span class="pf-filter-label">Date</span>
+            <div class="pf-date-wrap">
+                <button class="pf-date-nav" onclick="pfShiftDate(-1)">&#8249;</button>
+                <input type="date" id="pf-date" class="pf-date-input"
+                       value="{{ now()->toDateString() }}"
+                       max="{{ now()->toDateString() }}"
+                       onchange="pfScan()">
+                <button class="pf-date-nav" onclick="pfShiftDate(1)">&#8250;</button>
+                <button class="pf-date-nav pf-today-btn" onclick="pfToday()">TODAY</button>
+                <span id="pf-date-badge"></span>
+            </div>
+
+            <button class="pf-scan-btn" onclick="pfScan()">&#9670; Scan All</button>
+            <button class="pf-auto-btn" id="pf-auto-btn" onclick="pfToggleAuto()">&#9654; Auto 60s</button>
         </div>
 
-        <button class="pf-scan-btn" onclick="pfScan()">&#9670; Scan All</button>
-        <button class="pf-auto-btn" id="pf-auto-btn" onclick="pfToggleAuto()">&#9654; Auto 60s</button>
+        {{-- Single-symbol history mode controls (hidden until a symbol is chosen) --}}
+        <div class="pf-history-controls" id="pf-history-controls">
+            <span class="pf-filter-label">From</span>
+            <input type="date" id="pf-hist-start" class="pf-date-input" max="{{ now()->toDateString() }}">
+            <span class="pf-filter-label">To</span>
+            <input type="date" id="pf-hist-end" class="pf-date-input" max="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}">
+            <button class="pf-scan-btn" onclick="pfLoadHistory()">&#9670; Load History</button>
+        </div>
 
         <div class="pf-sep"></div>
 
@@ -419,6 +521,9 @@
         </div>
 
         <div class="pf-filter-right">
+            <button type="button" class="pf-logic-btn" data-bs-toggle="modal" data-bs-target="#pfLogicModal">
+                <i class="las la-book-open"></i> View Logic
+            </button>
             <span class="pf-last-upd" id="pf-upd"></span>
         </div>
     </div>
@@ -440,7 +545,7 @@
 
     {{-- Stats --}}
     <div class="pf-stats" id="pf-stats" style="display:none;">
-        <div class="pf-stat ps-total"><small>Total</small><strong id="st-total" style="color:var(--c-blue);">0</strong></div>
+        <div class="pf-stat ps-total"><small id="st-total-label">Total</small><strong id="st-total" style="color:var(--c-blue);">0</strong></div>
         <div class="pf-stat ps-call"><small>&#8679; Buy Call</small><strong id="st-call" style="color:var(--c-teal);">0</strong></div>
         <div class="pf-stat ps-put"><small>&#8681; Buy Put</small><strong id="st-put" style="color:var(--c-red);">0</strong></div>
         <div class="pf-stat ps-trap"><small>&#128375; MM Traps</small><strong id="st-trap" style="color:var(--c-purple);">0</strong></div>
@@ -450,7 +555,7 @@
     {{-- Table card --}}
     <div class="pf-card">
         <div class="pf-card-hdr">
-            <div class="pf-card-title">&#9670; PrimeFlow Scanner &nbsp;·&nbsp; 15 Min</div>
+            <div class="pf-card-title" id="pf-card-title">&#9670; PrimeFlow Scanner &nbsp;·&nbsp; 15 Min</div>
             <span class="pf-card-info" id="pf-card-info"></span>
         </div>
         <div class="pf-tscroll">
@@ -464,7 +569,7 @@
                     </tr>
                     <tr class="th-cols">
                         <th class="g-info">#</th>
-                        <th class="g-info" style="text-align:left;padding-left:14px;">Symbol</th>
+                        <th class="g-info" style="text-align:left;padding-left:14px;" id="pf-col-symbol-head">Symbol</th>
                         <th class="g-info">Futures Dir</th>
                         <th class="g-trade  sep-trade">Signal</th>
                         <th class="g-trade">Entry Time</th>
@@ -490,6 +595,116 @@
     </div>
 
 </div>{{-- /.pf-content --}}
+
+{{-- ══════════════════════════════════════════════════════════
+     LOGIC MODAL — Bootstrap 5 (data-bs-*), full engine breakdown
+══════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="pfLogicModal" tabindex="-1" aria-labelledby="pfLogicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pfLogicModalLabel">&#9670; PrimeFlow <span>— Complete Signal Logic</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <h6>Overview</h6>
+                <p>
+                    PrimeFlow runs a 7-signal "Smart Entry Engine" over every 15-minute candle of the
+                    trading day, for every symbol in the active Analysis Config. Each signal that fires
+                    on a candle adds weight to a Bull score (calls) and a Bear score (puts). The first
+                    candle inside the entry window whose top score crosses the threshold becomes the
+                    trade for that symbol/day — after that, the scanner stops looking for a better entry.
+                </p>
+
+                <h6>Data &amp; Scope</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr><td style="width:38%;color:#fff;">Timeframe</td><td><code>15min</code> — hardcoded, no switching</td></tr>
+                            <tr><td style="color:#fff;">Option candles</td><td><code>cp_option_ohlc_15min</code></td></tr>
+                            <tr><td style="color:#fff;">Futures candles</td><td><code>cp_fut_ohlc_15min</code></td></tr>
+                            <tr><td style="color:#fff;">Symbol scope</td><td>Active <code>analysis_configs</code> row + its <code>analysis_config_symbols</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6>Signal Engine (max score 17)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Signal</th><th>Weight</th><th>Fires when…</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="color:#fff;">Premium Expansion</td><td><span class="badge-w">+3</span></td><td>ATM option premium rises &gt; 10% while futures stay flat (&lt; 0.8% move)</td></tr>
+                            <tr><td style="color:#fff;">OI Build</td><td><span class="badge-w">+2</span></td><td>ATM open interest rises &gt; 2% AND premium rises &gt; 5% in the same slot</td></tr>
+                            <tr><td style="color:#fff;">Volume Spike</td><td><span class="badge-w">+2</span></td><td>ATM volume &gt; 1.3× the previous 15-min slot</td></tr>
+                            <tr><td style="color:#fff;">Futures Direction</td><td><span class="badge-w">+2</span></td><td>Futures move &gt; 0.25% in one direction (bullish → call side, bearish → put side)</td></tr>
+                            <tr><td style="color:#fff;">Gamma Squeeze</td><td><span class="badge-w">+2</span></td><td>Both ATM and ATM+1 strikes rise &gt; 12% together</td></tr>
+                            <tr><td style="color:#fff;">Momentum Accel</td><td><span class="badge-w">+2</span></td><td>Two consecutive rising candles, with the second rise bigger than the first</td></tr>
+                            <tr><td style="color:#fff;">MM Trap</td><td><span class="badge-w">+4</span></td><td>Futures price breaks through the call/put OI wall while premium keeps rising &gt; 10%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6>Trade Rule</h6>
+                <div class="pf-flow-step">
+                    <span class="pf-flow-num">1</span>
+                    <div><strong style="color:#fff;">Score threshold</strong> — a trade only fires when the bull or bear score reaches <code>&ge; 6</code> out of 17.</div>
+                </div>
+                <div class="pf-flow-step">
+                    <span class="pf-flow-num">2</span>
+                    <div><strong style="color:#fff;">Entry window</strong> — signals are only actionable between <code>10:30</code> and <code>14:30</code>. Only the first qualifying candle is taken per symbol per day.</div>
+                </div>
+                <div class="pf-flow-step">
+                    <span class="pf-flow-num">3</span>
+                    <div><strong style="color:#fff;">Strike selection</strong> — ATM by default; if a Gamma Squeeze or MM Trap is active on the firing side, the engine steps one strike further out (ATM+1 for calls, ATM-1 for puts) for extra leverage.</div>
+                </div>
+                <div class="pf-flow-step">
+                    <span class="pf-flow-num">4</span>
+                    <div><strong style="color:#fff;">Target / Stoploss</strong> — Target = entry premium × <code>3.0</code>. Stoploss = entry premium × <code>0.5</code>.</div>
+                </div>
+                <div class="pf-flow-step">
+                    <span class="pf-flow-num">5</span>
+                    <div><strong style="color:#fff;">Confidence</strong> — <code>round(topScore / 17 × 100)</code>, capped at 100.</div>
+                </div>
+
+                <h6>Threshold Reference</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Constant</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>PREMIUM_EXP_MIN</td><td>0.10 (10%)</td></tr>
+                            <tr><td>FUTURES_FLAT_MAX</td><td>0.008 (0.8%)</td></tr>
+                            <tr><td>OI_CHANGE_MIN</td><td>0.02 (2%)</td></tr>
+                            <tr><td>OI_PREMIUM_MIN</td><td>0.05 (5%)</td></tr>
+                            <tr><td>VOLUME_SPIKE_MIN</td><td>1.3×</td></tr>
+                            <tr><td>FUTURES_MOMENTUM</td><td>0.0025 (0.25%)</td></tr>
+                            <tr><td>GAMMA_THRESHOLD</td><td>0.12 (12%)</td></tr>
+                            <tr><td>SCORE_THRESHOLD</td><td>6 / 17</td></tr>
+                            <tr><td>TARGET_MULT / SL_MULT</td><td>3.0× / 0.5×</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6>Reading the "Active Signals" dots</h6>
+                <p>
+                    Each row's dot strip mirrors the 7 signals in order — Premium Expansion,
+                    OI Build, Volume Spike, Futures Direction, Gamma Squeeze, Momentum Accel, MM Trap
+                    (purple). A lit dot means that signal was triggered on the entry candle
+                    (or, for a No-Trade row, on the day's peak-score candle).
+                </p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm" style="background:var(--c-lime);color:#000;font-weight:700;font-family:var(--f-display);" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>{{-- /.pf-wrap --}}
 
 @endsection
@@ -497,15 +712,18 @@
 @push('script')
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  PRIMEFLOW SCANNER — Vanilla JS (no jQuery) — logic unchanged
+//  PRIMEFLOW SCANNER — Vanilla JS (no jQuery)
+//  Two modes: 'scan' (all symbols, one date) / 'history' (one symbol, date range)
 // ═══════════════════════════════════════════════════════════════
 
-var PF_SCAN_URL = '{{ route("primeflow-scanner.data") }}';
-var PF_TODAY    = '{{ now()->toDateString() }}';
+var PF_SCAN_URL    = '{{ route("primeflow-scanner.data") }}';
+var PF_HISTORY_URL = '{{ route("primeflow-scanner.history") }}';
+var PF_TODAY       = '{{ now()->toDateString() }}';
 
 var pfFilter    = 'ALL';
 var pfAutoTimer = null;
 var pfResults   = [];
+var pfMode      = 'scan'; // 'scan' | 'history'
 
 // ── DOM helpers ───────────────────────────────────────────────
 function pfHtml(id, h) { var e = document.getElementById(id); if (e) e.innerHTML = h; }
@@ -513,10 +731,49 @@ function pfText(id, t) { var e = document.getElementById(id); if (e) e.textConte
 
 document.addEventListener('DOMContentLoaded', function () {
     pfUpdateDateBadge();
+
+    // Default history range = last 7 days
+    var d = new Date();
+    d.setDate(d.getDate() - 7);
+    document.getElementById('pf-hist-start').value = d.toISOString().split('T')[0];
+
     pfScan();
 });
 
-// ── Date helpers ──────────────────────────────────────────────
+// ── Mode switching ───────────────────────────────────────────
+function pfStopAuto() {
+    if (pfAutoTimer) {
+        clearInterval(pfAutoTimer); pfAutoTimer = null;
+        var btn = document.getElementById('pf-auto-btn');
+        btn.textContent = '▶ Auto 60s';
+        btn.classList.remove('on');
+    }
+}
+
+function pfSymbolChanged() {
+    var sym = document.getElementById('pf-symbol-select').value;
+    pfStopAuto();
+
+    if (sym) {
+        pfMode = 'history';
+        document.getElementById('pf-scan-controls').classList.add('hide');
+        document.getElementById('pf-history-controls').classList.add('show');
+        pfText('pf-col-symbol-head', 'Date');
+        pfText('pf-card-title', '◆ ' + sym + ' — History');
+        pfText('st-total-label', 'Trading Days');
+        pfLoadHistory();
+    } else {
+        pfMode = 'scan';
+        document.getElementById('pf-scan-controls').classList.remove('hide');
+        document.getElementById('pf-history-controls').classList.remove('show');
+        pfText('pf-col-symbol-head', 'Symbol');
+        pfText('pf-card-title', '◆ PrimeFlow Scanner  ·  15 Min');
+        pfText('st-total-label', 'Total');
+        pfScan();
+    }
+}
+
+// ── Date helpers (scan-all mode) ───────────────────────────────
 function pfShiftDate(d) {
     var picker = document.getElementById('pf-date');
     var dt     = new Date(picker.value);
@@ -543,13 +800,11 @@ function pfUpdateDateBadge() {
         : '<span class="pf-hist-badge">&#128197; Historical</span>';
 }
 
-// ── Auto refresh ──────────────────────────────────────────────
+// ── Auto refresh (scan-all mode only) ───────────────────────────
 function pfToggleAuto() {
     var btn = document.getElementById('pf-auto-btn');
     if (pfAutoTimer) {
-        clearInterval(pfAutoTimer); pfAutoTimer = null;
-        btn.textContent = '▶ Auto 60s';
-        btn.classList.remove('on');
+        pfStopAuto();
     } else {
         if (document.getElementById('pf-date').value !== PF_TODAY) return;
         pfAutoTimer = setInterval(pfScan, 60000);
@@ -581,15 +836,11 @@ function pfApplyFilter() {
     });
 }
 
-// ── Main scan ─────────────────────────────────────────────────
+// ── Main scan — ALL symbols, ONE date ───────────────────────────
 function pfScan() {
     var date = document.getElementById('pf-date').value;
 
-    if (pfAutoTimer && date !== PF_TODAY) {
-        clearInterval(pfAutoTimer); pfAutoTimer = null;
-        document.getElementById('pf-auto-btn').textContent = '▶ Auto 60s';
-        document.getElementById('pf-auto-btn').classList.remove('on');
-    }
+    if (pfAutoTimer && date !== PF_TODAY) pfStopAuto();
 
     pfUpdateDateBadge();
     pfShowLoading();
@@ -617,8 +868,14 @@ function pfScan() {
 
         pfHideWarn();
         pfResults = res.results || [];
-        pfRenderStats(res);
-        pfRenderTable(pfResults);
+        pfRenderStats({
+            total: res.total_symbols,
+            calls: pfResults.filter(function (r) { return r.signal === 'BUY_CALL'; }).length,
+            puts:  pfResults.filter(function (r) { return r.signal === 'BUY_PUT';  }).length,
+            traps: pfCountTraps(pfResults),
+            waits: pfResults.filter(function (r) { return r.signal === 'NO TRADE'; }).length,
+        });
+        pfRenderTable(pfResults, 'scan');
         pfApplyFilter();
 
         pfText('pf-card-info', res.total_symbols + ' symbols · scanned at ' + res.scanned_at);
@@ -630,28 +887,76 @@ function pfScan() {
     });
 }
 
-// ── Render stats ──────────────────────────────────────────────
-function pfRenderStats(res) {
-    var R     = res.results || [];
-    var calls = R.filter(function (r) { return r.signal === 'BUY_CALL'; }).length;
-    var puts  = R.filter(function (r) { return r.signal === 'BUY_PUT';  }).length;
-    var traps = R.filter(function (r) {
-        return r.signals && r.signals.mmTrap &&
-               (r.signals.mmTrap.call_trap || r.signals.mmTrap.put_trap);
+// ── History load — ONE symbol, DATE RANGE ───────────────────────
+function pfLoadHistory() {
+    var sym   = document.getElementById('pf-symbol-select').value;
+    var start = document.getElementById('pf-hist-start').value;
+    var end   = document.getElementById('pf-hist-end').value;
+    if (!sym || !start || !end) return;
+
+    pfShowLoading();
+
+    var params = new URLSearchParams({ symbol: sym, start_date: start, end_date: end });
+
+    fetch(PF_HISTORY_URL + '?' + params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) {
+        if (!r.ok) throw new Error('Server error ' + r.status);
+        return r.json();
+    })
+    .then(function (res) {
+        if (res.no_config) {
+            pfShowWarn(res.message);
+            pfEmptyTable('');
+            return;
+        }
+        if (!res.success) {
+            pfHideWarn();
+            pfEmptyTable(res.message || 'No data available.');
+            return;
+        }
+
+        pfHideWarn();
+        pfResults = res.results || [];
+        pfRenderStats({
+            total: res.day_count,
+            calls: pfResults.filter(function (r) { return r.signal === 'BUY_CALL'; }).length,
+            puts:  pfResults.filter(function (r) { return r.signal === 'BUY_PUT';  }).length,
+            traps: pfCountTraps(pfResults),
+            waits: pfResults.filter(function (r) { return r.signal === 'NO TRADE'; }).length,
+        });
+        pfRenderTable(pfResults, 'history');
+        pfApplyFilter();
+
+        pfText('pf-card-info', res.day_count + ' trading days · ' + res.start_date + ' → ' + res.end_date);
+        pfText('pf-upd', 'Updated ' + new Date().toLocaleTimeString());
+    })
+    .catch(function (err) {
+        pfHideWarn();
+        pfEmptyTable('&#9888; ' + err.message);
+    });
+}
+
+function pfCountTraps(rows) {
+    return rows.filter(function (r) {
+        return r.signals && r.signals.mmTrap && (r.signals.mmTrap.call_trap || r.signals.mmTrap.put_trap);
     }).length;
-    var waits = R.filter(function (r) { return r.signal === 'NO TRADE'; }).length;
+}
 
-    pfText('st-total', res.total_symbols || 0);
-    pfText('st-call',  calls);
-    pfText('st-put',   puts);
-    pfText('st-trap',  traps);
-    pfText('st-wait',  waits);
-
+// ── Render stats ──────────────────────────────────────────────
+function pfRenderStats(s) {
+    pfText('st-total', s.total || 0);
+    pfText('st-call',  s.calls || 0);
+    pfText('st-put',   s.puts  || 0);
+    pfText('st-trap',  s.traps || 0);
+    pfText('st-wait',  s.waits || 0);
     document.getElementById('pf-stats').style.display = '';
 }
 
 // ── Render table ──────────────────────────────────────────────
-function pfRenderTable(rows) {
+function pfRenderTable(rows, mode) {
+    mode = mode || 'scan';
     if (!rows || !rows.length) { pfEmptyTable('No data.'); return; }
 
     var html = '';
@@ -704,9 +1009,14 @@ function pfRenderTable(rows) {
             ? '<span class="c-pcr">' + r.pcr + '</span>'
             : pfDash();
 
+        // First column identifies the row: Symbol in scan mode, Date in history mode
+        var idHtml = mode === 'history'
+            ? '<span class="c-date">' + pfEsc(r.date) + '</span>'
+            : '<span class="c-sym">' + pfEsc(r.symbol) + '</span>';
+
         html += '<tr class="' + rowCls + ' ' + zebra + '" data-sig="' + pfEsc(sig) + '">'
             + '<td class="c-num">' + (i + 1) + '</td>'
-            + '<td style="text-align:left;padding-left:14px;"><span class="c-sym">' + pfEsc(r.symbol) + '</span></td>'
+            + '<td style="text-align:left;padding-left:14px;">' + idHtml + '</td>'
             + '<td>' + futHtml + '</td>'
             + '<td class="sep-trade">' + sigBadge + '</td>'
             + '<td>' + timeHtml + '</td>'
@@ -767,7 +1077,7 @@ function pfShowLoading() {
     pfHtml('pf-tbody',
         '<tr><td colspan="12">'
         + '<div class="pf-loading"><div class="pf-spinner"></div>'
-        + '<div class="pf-loading-txt">Scanning all symbols…</div></div>'
+        + '<div class="pf-loading-txt">' + (pfMode === 'history' ? 'Loading history…' : 'Scanning all symbols…') + '</div></div>'
         + '</td></tr>');
     document.getElementById('pf-stats').style.display = 'none';
 }
